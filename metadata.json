@@ -1,0 +1,7 @@
+{
+  "name": "Real Estate CRM Dashboard",
+  "description": "A comprehensive dashboard for real estate sales managers to monitor team performance, track leads, and view real-time activity.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
