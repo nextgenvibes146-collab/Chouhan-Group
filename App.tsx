@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
@@ -128,16 +129,18 @@ const App: React.FC = () => {
             }
 
             if (changes.length > 0) {
+                const remarkText = `Bulk Update: ${changes.join(', ')}.`;
                 const newActivity: Activity = {
                     id: `act-${Date.now()}-${lead.id}`,
                     leadId: lead.id,
                     salespersonId: currentUser.id,
                     type: ActivityType.Note,
                     date: new Date().toISOString(),
-                    remarks: `Bulk Update: ${changes.join(', ')}.`,
+                    remarks: remarkText,
                     customerName: lead.customerName,
                 };
                 newActivities.push(newActivity);
+                updatedLead.lastRemark = remarkText;
             }
             return updatedLead;
         }
@@ -299,7 +302,14 @@ const App: React.FC = () => {
       case 'Attendance':
         return <AttendancePage />;
       case 'Reports':
-        return <ReportsPage />;
+        return <ReportsPage 
+                    leads={visibleLeads} 
+                    users={users} 
+                    currentUser={currentUser!} 
+                    onUpdateLead={handleUpdateLead}
+                    onAddActivity={handleAddActivity}
+                    activities={activities}
+                />;
       case 'Tasks':
         return <TasksPage 
                 tasks={visibleTasks}
