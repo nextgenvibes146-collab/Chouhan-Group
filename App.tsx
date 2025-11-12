@@ -217,6 +217,11 @@ const App: React.FC = () => {
 
   const handleLogin = (user: User) => {
     setCurrentUser(user);
+    if (user.role !== 'Admin') {
+      setActiveView('Leads');
+    } else {
+      setActiveView('Dashboard');
+    }
   };
 
   const handleLogout = () => {
@@ -238,6 +243,18 @@ const App: React.FC = () => {
     }
     switch (activeView) {
       case 'Dashboard':
+        if (currentUser?.role !== 'Admin') {
+          return <LeadsPage 
+                    leads={visibleLeads} 
+                    users={users}
+                    currentUser={currentUser!}
+                    onUpdateLead={handleUpdateLead}
+                    onAddActivity={handleAddActivity}
+                    activities={visibleActivities}
+                    onAssignLead={handleAssignLead}
+                    onBulkUpdate={handleBulkUpdateLeads}
+                 />;
+        }
         return <Dashboard leads={visibleLeads} users={users} activities={visibleActivities} salesTargets={salesTargets} currentUser={currentUser!} tasks={visibleTasks} />;
       case 'Leads':
         return <LeadsPage 
@@ -265,7 +282,19 @@ const App: React.FC = () => {
                 onToggleTask={handleToggleTask}
                 />;
       default:
-        return <Dashboard leads={visibleLeads} users={users} activities={visibleActivities} salesTargets={salesTargets} currentUser={currentUser!} tasks={visibleTasks} />;
+        if (currentUser?.role === 'Admin') {
+            return <Dashboard leads={visibleLeads} users={users} activities={visibleActivities} salesTargets={salesTargets} currentUser={currentUser!} tasks={visibleTasks} />;
+        }
+        return <LeadsPage 
+                  leads={visibleLeads} 
+                  users={users}
+                  currentUser={currentUser!}
+                  onUpdateLead={handleUpdateLead}
+                  onAddActivity={handleAddActivity}
+                  activities={visibleActivities}
+                  onAssignLead={handleAssignLead}
+                  onBulkUpdate={handleBulkUpdateLeads}
+               />;
     }
   };
   
@@ -275,7 +304,13 @@ const App: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-brand-light text-brand-dark font-sans">
-      <Sidebar activeView={activeView} onNavigate={setActiveView} isOpen={isSidebarOpen} setOpen={setSidebarOpen} />
+      <Sidebar 
+        activeView={activeView} 
+        onNavigate={setActiveView} 
+        isOpen={isSidebarOpen} 
+        setOpen={setSidebarOpen} 
+        currentUser={currentUser} 
+      />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header 
           searchTerm={searchTerm} 

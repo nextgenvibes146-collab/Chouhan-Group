@@ -1,5 +1,6 @@
 import React from 'react';
 import { HomeIcon, UsersIcon, ChartBarIcon, CalendarIcon, CogIcon, MapPinIcon, DocumentTextIcon } from './Icons';
+import type { User } from '../types';
 
 interface NavLinkProps {
   icon: React.ReactNode;
@@ -33,9 +34,10 @@ interface SidebarProps {
     onNavigate: (view: string) => void;
     isOpen: boolean;
     setOpen: (isOpen: boolean) => void;
+    currentUser: User;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate, isOpen, setOpen }) => {
+const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate, isOpen, setOpen, currentUser }) => {
     const handleNavigate = (view: string) => {
         onNavigate(view);
         setOpen(false); // Close sidebar on navigation in mobile
@@ -60,7 +62,9 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate, isOpen, setOp
         </div>
         <div className="flex-1 overflow-y-auto p-4">
           <nav className="space-y-2">
-            <NavLink icon={<HomeIcon className="w-6 h-6" />} label="Dashboard" isActive={activeView === 'Dashboard'} onClick={() => handleNavigate('Dashboard')} />
+            {currentUser.role === 'Admin' && (
+              <NavLink icon={<HomeIcon className="w-6 h-6" />} label="Dashboard" isActive={activeView === 'Dashboard'} onClick={() => handleNavigate('Dashboard')} />
+            )}
             <NavLink icon={<UsersIcon className="w-6 h-6" />} label="Leads" isActive={activeView === 'Leads'} onClick={() => handleNavigate('Leads')} />
             <NavLink icon={<DocumentTextIcon className="w-6 h-6" />} label="Tasks" isActive={activeView === 'Tasks'} onClick={() => handleNavigate('Tasks')} />
             <NavLink icon={<CalendarIcon className="w-6 h-6" />} label="Calendar" isActive={activeView === 'Calendar'} onClick={() => handleNavigate('Calendar')} />
