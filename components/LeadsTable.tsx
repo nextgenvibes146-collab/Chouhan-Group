@@ -49,7 +49,8 @@ const getTemperatureIndicator = (temperature?: 'Hot' | 'Warm' | 'Cold') => {
 };
 
 const LeadsTable: React.FC<LeadsTableProps> = ({ leads, users, onOpenModal, selectedLeadIds, onSelectLead, onSelectAll, allVisibleLeadsSelected }) => {
-  const userMap = new Map(users.map(user => [user.id, user]));
+  // FIX: Explicitly type the Map to ensure proper type inference for 'salesperson'.
+  const userMap = new Map<string, User>(users.map(user => [user.id, user]));
 
   return (
     <div className="bg-white rounded-xl shadow-md">

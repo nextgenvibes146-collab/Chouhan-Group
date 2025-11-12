@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { LeadStatus, Lead, User, Activity, SalesTarget, Task } from '../types';
 import MetricCard from './MetricCard';
@@ -6,6 +7,7 @@ import PerformanceChart from './PerformanceChart';
 import ActivityFeed from './ActivityFeed';
 import AttendanceCard from './AttendanceCard';
 import FollowUpChart from './FollowUpChart';
+import SalesFunnelChart from './SalesFunnelChart';
 
 interface DashboardProps {
     leads: Lead[];
@@ -42,7 +44,10 @@ const Dashboard: React.FC<DashboardProps> = ({ leads, users, activities, salesTa
         {/* Charts and Feeds */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-md">
-                <SalesPipelineChart leads={leads} />
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                    <SalesPipelineChart leads={leads} />
+                    <SalesFunnelChart leads={leads} />
+                </div>
             </div>
             <div className="bg-white p-6 rounded-xl shadow-md flex flex-col space-y-6">
                 <AttendanceCard />

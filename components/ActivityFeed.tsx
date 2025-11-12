@@ -34,7 +34,8 @@ const getActivityIcon = (type: ActivityType) => {
 };
 
 const ActivityFeed: React.FC<ActivityFeedProps> = ({ activities, users, title = "Recent Activity" }) => {
-  const userMap = new Map(users.map(user => [user.id, user]));
+  // FIX: Explicitly type the Map to ensure proper type inference for 'user'.
+  const userMap = new Map<string, User>(users.map(user => [user.id, user]));
 
   return (
     <div>
