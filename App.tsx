@@ -1,6 +1,7 @@
 
 
 
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
@@ -11,6 +12,7 @@ import AttendancePage from './components/AttendancePage';
 import ReportsPage from './components/ReportsPage';
 import TasksPage from './components/TasksPage';
 import LoginPage from './components/LoginPage';
+import SettingsPage from './components/SettingsPage';
 import { fetchSheetData } from './services/googleSheetService';
 import { Lead, User, Activity, SalesTarget, Task, LeadStatus, ActivityType, ModeOfEnquiry, Notification } from './types';
 
@@ -26,6 +28,12 @@ export interface NewLeadData {
     remarks: string;
     assignedSalespersonId: string;
 }
+
+const LoadingSpinner: React.FC = () => (
+    <div className="flex justify-center items-center h-full">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
+    </div>
+);
 
 
 const App: React.FC = () => {
@@ -279,6 +287,66 @@ const App: React.FC = () => {
       }));
   };
 
+   const handleCreateUser = (userData: { name: string; role: 'Salesperson' | 'Sales Manager'; reportsTo?: string }) => {
+        const newUser: User = {
+            id: `user-${Date.now()}`,
+            name: userData.name,
+            role: userData.role,
+            reportsTo: userData.reportsTo,
+            avatarUrl: `https://i.pravatar.cc/40?u=${userData.name.replace(/\s/g, '')}`,
+        };
+        setUsers(prev => [...prev, newUser]);
+    };
+
+    const handleDeleteUser = (userId: string) => {
+        if (!currentUser || currentUser.role !== 'Admin') return;
+
+        const admin = users.find(u => u.role === 'Admin');
+        const userToDelete = users.find(u => u.id === userId);
+        if (!admin || !userToDelete) return;
+
+        // Reassign leads
+        const newActivities: Activity[] = [];
+        const updatedLeads = leads.map(lead => {
+            if (lead.assignedSalespersonId === userId) {
+                newActivities.push({
+                    id: `act-${Date.now()}-${lead.id}`,
+                    leadId: lead.id,
+                    salespersonId: currentUser.id,
+                    type: ActivityType.Note,
+                    date: new Date().toISOString(),
+                    remarks: `Lead reassigned from ${userToDelete.name} to ${admin.name} due to account deletion.`,
+                    customerName: lead.customerName,
+                });
+                return { ...lead, assignedSalespersonId: admin.id };
+            }
+            return lead;
+        });
+        setLeads(updatedLeads);
+        if (newActivities.length > 0) {
+            setActivities(prev => [...newActivities, ...prev]);
+        }
+
+        // Reassign tasks
+        const updatedTasks = tasks.map(task => {
+            if (task.assignedToId === userId) {
+                return { ...task, assignedToId: admin.id };
+            }
+            return task;
+        });
+        setTasks(updatedTasks);
+
+        // Delete user and update reporting structure for their team
+        const remainingUsers = users.filter(u => u.id !== userId);
+        const fullyUpdatedUsers = remainingUsers.map(u => {
+            if (u.reportsTo === userId) {
+                return { ...u, reportsTo: admin.id };
+            }
+            return u;
+        });
+        setUsers(fullyUpdatedUsers);
+    };
+
   const filteredLeadsForSearch = leads.filter(lead =>
     lead.interestedProject?.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -315,7 +383,7 @@ const App: React.FC = () => {
 
   const renderContent = () => {
     if (isLoading) {
-      return <div className="flex justify-center items-center h-full"><p className="animate-pulse">Loading CRM data...</p></div>;
+      return <LoadingSpinner />;
     }
     switch (activeView) {
       case 'Dashboard':
@@ -366,6 +434,16 @@ const App: React.FC = () => {
                 onAddTask={handleAddTask}
                 onToggleTask={handleToggleTask}
                 />;
+       case 'Settings':
+         if (currentUser?.role !== 'Admin') {
+            setActiveView('Dashboard');
+            return null;
+         }
+         return <SettingsPage
+                    users={users}
+                    onCreateUser={handleCreateUser}
+                    onDeleteUser={handleDeleteUser}
+                />;
       default:
         if (currentUser?.role === 'Admin') {
             return <Dashboard leads={visibleLeads} users={users} activities={visibleActivities} salesTargets={salesTargets} currentUser={currentUser!} tasks={visibleTasks} />;
@@ -389,7 +467,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="flex h-screen bg-brand-light text-brand-dark font-sans">
+    <div className="flex h-screen bg-background text-text-primary font-sans">
       <Sidebar 
         activeView={activeView} 
         onNavigate={setActiveView} 
@@ -411,7 +489,7 @@ const App: React.FC = () => {
           onAddNotification={handleAddNotification}
           onMarkNotificationsAsRead={handleMarkNotificationsAsRead}
         />
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-brand-light p-4 md:p-6 lg:p-8">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-background p-4 md:p-6 lg:p-8">
           {renderContent()}
         </main>
       </div>

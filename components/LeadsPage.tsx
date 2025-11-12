@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useMemo, useCallback } from 'react';
 import LeadsTable from './LeadsTable';
 import LeadDetailModal from './LeadDetailModal';
@@ -225,7 +226,7 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
   const FilterButton: React.FC<{label: string; filterKey: 'showUnread' | 'showOverdue' | 'showVisits'}> = ({label, filterKey}) => (
       <button 
         onClick={() => setFilters(f => ({...f, [filterKey]: !f[filterKey]}))}
-        className={`px-3 py-1.5 text-sm rounded-full ${filters[filterKey] ? 'bg-brand-blue text-white' : 'bg-gray-200 text-brand-gray'}`}
+        className={`px-3 py-1.5 text-sm rounded-full transition-colors ${filters[filterKey] ? 'bg-primary text-white' : 'bg-gray-200 text-text-secondary hover:bg-gray-300'}`}
       >
         {label}
       </button>
@@ -247,10 +248,10 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
   return (
     <div className="space-y-6">
         <div className="flex flex-wrap gap-4 justify-between items-center">
-            <h2 className="text-2xl md:text-3xl font-bold text-brand-dark">Leads Management</h2>
+            <h2 className="text-2xl md:text-3xl font-bold text-text-primary">Leads Management</h2>
             <div className="flex items-center space-x-2">
                 {currentUser.role === 'Admin' && <ImportCSV onImport={onImportLeads} users={users} />}
-                <button onClick={exportToCSV} className="px-4 py-2 text-sm font-medium text-brand-gray border border-brand-border bg-white rounded-md hover:bg-gray-50">Export to CSV</button>
+                <button onClick={exportToCSV} className="px-4 py-2 text-sm font-medium text-text-secondary border border-border-color bg-surface rounded-md hover:bg-background">Export to CSV</button>
             </div>
         </div>
         
@@ -263,17 +264,19 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
 
         <div className="space-y-4">
              {/* Filters */}
-            <div className="bg-white p-4 rounded-xl shadow-md flex flex-wrap items-center gap-4">
-                <select value={filters.status} onChange={e => setFilters({...filters, status: e.target.value})} className="filter-select">
-                    <option value="">All Statuses</option>
-                    {Object.values(LeadStatus).map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
-                {isManagerOrAdmin && (
-                    <select value={filters.salesperson} onChange={e => setFilters({...filters, salesperson: e.target.value})} className="filter-select">
-                        <option value="">{currentUser.role === 'Admin' ? 'All Salespersons' : 'All Team Members'}</option>
-                        {manageableUsers.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+            <div className="card p-4 flex flex-wrap items-center gap-4">
+                <div className="flex items-center gap-4 flex-grow">
+                    <select value={filters.status} onChange={e => setFilters({...filters, status: e.target.value})} className="filter-select">
+                        <option value="">All Statuses</option>
+                        {Object.values(LeadStatus).map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
-                )}
+                    {isManagerOrAdmin && (
+                        <select value={filters.salesperson} onChange={e => setFilters({...filters, salesperson: e.target.value})} className="filter-select">
+                            <option value="">{currentUser.role === 'Admin' ? 'All Salespersons' : 'All Team Members'}</option>
+                            {manageableUsers.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+                        </select>
+                    )}
+                </div>
                 <div className="flex items-center gap-2">
                     <FilterButton label="Unread" filterKey="showUnread" />
                     <FilterButton label="Overdue" filterKey="showOverdue" />
@@ -282,8 +285,8 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
             </div>
 
             {selectedLeadIds.size > 0 && (
-                <div className="bg-blue-50 p-4 rounded-xl shadow-md flex flex-wrap items-center gap-4 border border-brand-blue">
-                    <p className="font-semibold text-brand-dark">{selectedLeadIds.size} lead(s) selected.</p>
+                <div className="bg-blue-50 p-4 rounded-xl shadow-md flex flex-wrap items-center gap-4 border border-primary">
+                    <p className="font-semibold text-text-primary">{selectedLeadIds.size} lead(s) selected.</p>
                     <select value={bulkStatus} onChange={e => setBulkStatus(e.target.value)} className="filter-select">
                         <option value="">Change Status...</option>
                         {Object.values(LeadStatus).map(s => <option key={s} value={s}>{s}</option>)}
@@ -294,10 +297,10 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
                             {manageableUsers.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
                         </select>
                     )}
-                    <button onClick={handleApplyBulkAction} disabled={!bulkStatus && !bulkAssignee} className="px-4 py-2 text-sm font-medium text-white bg-brand-blue rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <button onClick={handleApplyBulkAction} disabled={!bulkStatus && !bulkAssignee} className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed">
                         Apply Changes
                     </button>
-                    <button onClick={() => setSelectedLeadIds(new Set())} className="text-sm text-brand-gray hover:text-brand-dark ml-auto">
+                    <button onClick={() => setSelectedLeadIds(new Set())} className="text-sm text-text-secondary hover:text-text-primary ml-auto">
                         Clear Selection
                     </button>
                 </div>

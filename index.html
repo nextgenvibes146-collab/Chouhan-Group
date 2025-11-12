@@ -11,20 +11,27 @@
         theme: {
           extend: {
             colors: {
-              'brand-blue': '#1a73e8',
+              'primary': '#0c66e4',
+              'primary-hover': '#0055cc',
+              'secondary': '#4a5568',
+              'background': '#f7f8fa',
+              'surface': '#ffffff',
+              'text-primary': '#172b4d',
+              'text-secondary': '#6b778c',
+              'border-color': '#dfe1e6',
+              'brand-blue': '#1a73e8', // Kept for compatibility but should be phased out
               'brand-dark': '#202124',
               'brand-light': '#f8f9fa',
               'brand-gray': '#5f6368',
               'brand-border': '#dadce0',
-              'orange': {
-                '100': '#fffaf0',
-                '500': '#ed8936',
-                '600': '#dd6b20',
-              },
             },
             fontFamily: {
               sans: ['Inter', 'sans-serif'],
             },
+            boxShadow: {
+                'subtle': '0 1px 3px 0 rgb(0 0 0 / 0.07), 0 1px 2px -1px rgb(0 0 0 / 0.07)',
+                'card': '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+            }
           },
         },
       }
@@ -33,26 +40,36 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        .filter-select {
-            @apply text-sm bg-white border border-brand-border rounded-md shadow-sm focus:outline-none focus:ring-brand-blue focus:border-brand-blue py-1.5 px-3;
+        body {
+            background-color: #f7f8fa; /* Use new background color */
+        }
+        /* Base Component Styles */
+        .card {
+            @apply bg-surface rounded-xl shadow-subtle border border-border-color;
         }
         .input-style {
-            @apply mt-1 block w-full px-3 py-2 bg-white border border-brand-border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-brand-blue focus:border-brand-blue sm:text-sm;
+            @apply mt-1 block w-full px-3 py-2 bg-surface border border-border-color rounded-md shadow-sm text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm transition-shadow;
         }
         .dark-input-style {
-            @apply mt-1 block w-full px-3 py-2 bg-brand-dark border border-brand-gray rounded-md shadow-sm text-brand-light placeholder-gray-500 focus:outline-none focus:ring-brand-blue focus:border-brand-blue sm:text-sm;
+            @apply mt-1 block w-full px-3 py-2 bg-background border border-border-color rounded-md shadow-sm text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm transition-shadow;
         }
         .label-style {
-            @apply block text-sm font-medium text-brand-gray;
+            @apply block text-sm font-medium text-text-secondary;
         }
         .button-primary {
-             @apply w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-brand-blue hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-blue disabled:bg-gray-400;
+             @apply w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors;
+        }
+        .button-secondary {
+            @apply w-full flex justify-center py-2 px-4 border border-border-color rounded-md shadow-sm text-sm font-medium text-text-primary bg-surface hover:bg-background focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:bg-gray-200 disabled:cursor-not-allowed transition-colors;
         }
         .button-success {
-             @apply w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:bg-gray-400;
+             @apply w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors;
         }
         .action-button {
             @apply p-2 rounded-full transition-colors duration-200;
+        }
+        .filter-select {
+            @apply text-sm bg-surface border border-border-color rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary py-1.5 px-3;
         }
     </style>
   <script type="importmap">
@@ -66,7 +83,7 @@
 }
 </script>
 </head>
-  <body class="bg-brand-light font-sans">
+  <body class="bg-background font-sans text-text-primary">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>

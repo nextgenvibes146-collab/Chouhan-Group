@@ -3,27 +3,21 @@ import React from 'react';
 interface MetricCardProps {
   title: string;
   value: string;
-  change?: string;
-  changeType?: 'increase' | 'decrease';
   isAlert?: boolean;
+  icon: React.ReactNode;
 }
 
-const MetricCard: React.FC<MetricCardProps> = ({ title, value, change, changeType, isAlert }) => {
-  const isIncrease = changeType === 'increase';
-  const changeColor = isIncrease ? 'text-green-500' : 'text-red-500';
-  const changeIcon = isIncrease ? '▲' : '▼';
-  const valueColor = isAlert ? 'text-red-500' : 'text-brand-dark';
+const MetricCard: React.FC<MetricCardProps> = ({ title, value, isAlert, icon }) => {
+  const valueColor = isAlert ? 'text-red-500' : 'text-text-primary';
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow-md flex flex-col justify-between">
-      <p className="text-sm font-medium text-brand-gray">{title}</p>
-      <div className="mt-2">
+    <div className="card p-5 flex items-center space-x-4 transition-all duration-300 hover:shadow-md hover:-translate-y-1">
+      <div className="flex-shrink-0 bg-gray-100 rounded-full p-3">
+        {icon}
+      </div>
+      <div>
+        <p className="text-sm font-medium text-text-secondary">{title}</p>
         <p className={`text-3xl font-bold ${valueColor}`}>{value}</p>
-        {change && (
-            <p className={`text-sm font-semibold ${changeColor} mt-1`}>
-                {changeIcon} {change} vs last month
-            </p>
-        )}
       </div>
     </div>
   );

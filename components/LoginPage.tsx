@@ -36,15 +36,15 @@ const LoginPage: React.FC<LoginPageProps> = ({ users, onLogin }) => {
   };
 
   return (
-    <div className="flex items-center justify-center h-screen bg-brand-light">
-      <div className="w-full max-w-sm p-8 space-y-6 bg-white rounded-xl shadow-lg">
+    <div className="flex items-center justify-center h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+      <div className="w-full max-w-sm p-8 space-y-8 bg-surface rounded-2xl shadow-card">
         <div className="text-center">
-            <h1 className="text-2xl font-bold text-brand-dark">Chouhan Housing Group</h1>
-            <p className="mt-2 text-sm text-brand-gray">CRM Portal Login</p>
+            <h1 className="text-3xl font-bold text-text-primary">Chouhan Housing</h1>
+            <p className="mt-2 text-sm text-text-secondary">CRM Portal Login</p>
         </div>
-        <div className="space-y-4">
+        <div className="space-y-6">
             <div>
-                <label htmlFor="user-select" className="block text-sm font-medium text-brand-gray">
+                <label htmlFor="user-select" className="label-style">
                     Select User
                 </label>
                 <select
@@ -54,7 +54,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ users, onLogin }) => {
                         setSelectedUserId(e.target.value);
                         setError('');
                     }}
-                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-brand-border focus:outline-none focus:ring-brand-blue focus:border-brand-blue sm:text-sm rounded-md"
+                    className="input-style"
                 >
                     <option value="" disabled>-- Select your profile --</option>
                     {users.map((user) => (
@@ -65,7 +65,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ users, onLogin }) => {
                 </select>
             </div>
              <div>
-                <label htmlFor="password-input" className="block text-sm font-medium text-brand-gray">
+                <label htmlFor="password-input" className="label-style">
                     Password
                 </label>
                 <input
@@ -82,12 +82,12 @@ const LoginPage: React.FC<LoginPageProps> = ({ users, onLogin }) => {
                 />
                 <p className="text-xs text-gray-400 mt-1">Hint: Use 'password123'</p>
             </div>
-            {error && <p className="text-xs text-red-600">{error}</p>}
+            {error && <p className="text-xs text-red-600 text-center">{error}</p>}
         </div>
         <div>
             <button
                 onClick={handleLogin}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-brand-blue hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-blue"
+                className="button-primary"
             >
                 Login
             </button>

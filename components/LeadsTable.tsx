@@ -53,36 +53,36 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, users, onOpenModal, sele
   const userMap = new Map<string, User>(users.map(user => [user.id, user]));
 
   return (
-    <div className="bg-white rounded-xl shadow-md">
+    <div className="card">
        <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+        <table className="min-w-full divide-y divide-border-color">
+          <thead className="bg-background">
             <tr>
               <th scope="col" className="px-6 py-3">
                  <input 
                     type="checkbox"
-                    className="h-4 w-4 rounded border-gray-300 text-brand-blue focus:ring-brand-blue"
+                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                     onChange={onSelectAll}
                     checked={allVisibleLeadsSelected}
                     aria-label="Select all visible leads"
                 />
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-brand-gray uppercase tracking-wider">Customer</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-brand-gray uppercase tracking-wider">Follow-up</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-brand-gray uppercase tracking-wider">Status</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-brand-gray uppercase tracking-wider">Actions</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Customer</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Follow-up</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Status</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-surface divide-y divide-border-color">
             {leads.map(lead => {
               const salesperson = userMap.get(lead.assignedSalespersonId);
               const isOverdue = lead.nextFollowUpDate && new Date(lead.nextFollowUpDate) < new Date();
               return (
-                <tr key={lead.id} className={`hover:bg-gray-50 ${selectedLeadIds.has(lead.id) ? 'bg-blue-50' : ''}`}>
+                <tr key={lead.id} className={`transition-colors duration-200 ${selectedLeadIds.has(lead.id) ? 'bg-blue-50' : 'hover:bg-gray-50'}`}>
                   <td className="px-6 py-4">
                     <input 
                         type="checkbox"
-                        className="h-4 w-4 rounded border-gray-300 text-brand-blue focus:ring-brand-blue"
+                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                         checked={selectedLeadIds.has(lead.id)}
                         onChange={() => onSelectLead(lead.id)}
                         aria-label={`Select lead for ${lead.customerName}`}
@@ -90,32 +90,32 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, users, onOpenModal, sele
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                        {!lead.isRead && <span className="h-2 w-2 bg-blue-500 rounded-full mr-2 flex-shrink-0"></span>}
+                        {!lead.isRead && <span className="h-2 w-2 bg-primary rounded-full mr-2 flex-shrink-0" title="Unread"></span>}
                         <div>
                             <div className="flex items-center">
-                               <div className="text-sm font-medium text-brand-dark">{lead.customerName}</div>
+                               <div className="text-sm font-medium text-text-primary">{lead.customerName}</div>
                                {getTemperatureIndicator(lead.temperature)}
                             </div>
-                            <div className="text-sm text-brand-gray">{lead.mobile}</div>
-                            <div className="text-xs text-brand-gray">Assigned: {salesperson?.name || 'N/A'}</div>
+                            <div className="text-sm text-text-secondary">{lead.mobile}</div>
+                            <div className="text-xs text-text-secondary">Assigned: {salesperson?.name || 'N/A'}</div>
                         </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-normal max-w-xs">
-                     <div className={`text-sm font-medium ${isOverdue ? 'text-red-600' : 'text-brand-dark'}`}>
+                     <div className={`text-sm font-medium ${isOverdue ? 'text-red-600' : 'text-text-primary'}`}>
                         {lead.nextFollowUpDate ? new Date(lead.nextFollowUpDate).toLocaleDateString() : 'Not set'}
                      </div>
-                     <p className="text-xs text-brand-gray truncate italic">"{lead.lastRemark}"</p>
+                     <p className="text-xs text-text-secondary truncate italic">"{lead.lastRemark}"</p>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {getStatusBadge(lead.status)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex items-center space-x-3">
-                        <a href={`tel:${lead.mobile}`} title="Call" className="text-gray-400 hover:text-green-500"><PhoneIcon className="w-5 h-5"/></a>
-                        <a href={`https://wa.me/${lead.mobile}`} target="_blank" rel="noopener noreferrer" title="WhatsApp" className="text-gray-400 hover:text-green-500"><ChatBubbleIcon className="w-5 h-5"/></a>
-                        {lead.email && <a href={`mailto:${lead.email}`} title="Email" className="text-gray-400 hover:text-blue-500"><MailIcon className="w-5 h-5"/></a>}
-                        <button onClick={() => onOpenModal(lead)} className="text-brand-blue hover:text-blue-700 font-semibold">
+                    <div className="flex items-center space-x-2">
+                        <a href={`tel:${lead.mobile}`} title="Call" className="action-button text-gray-400 hover:text-green-500 hover:bg-green-100"><PhoneIcon className="w-5 h-5"/></a>
+                        <a href={`https://wa.me/${lead.mobile}`} target="_blank" rel="noopener noreferrer" title="WhatsApp" className="action-button text-gray-400 hover:text-green-500 hover:bg-green-100"><ChatBubbleIcon className="w-5 h-5"/></a>
+                        {lead.email && <a href={`mailto:${lead.email}`} title="Email" className="action-button text-gray-400 hover:text-blue-500 hover:bg-blue-100"><MailIcon className="w-5 h-5"/></a>}
+                        <button onClick={() => onOpenModal(lead)} className="text-primary hover:text-primary-hover font-semibold ml-2">
                             Update
                         </button>
                     </div>
@@ -125,7 +125,7 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, users, onOpenModal, sele
             })}
           </tbody>
         </table>
-        {leads.length === 0 && <p className="text-center text-brand-gray py-8">No leads match the current filters.</p>}
+        {leads.length === 0 && <p className="text-center text-text-secondary py-8">No leads match the current filters.</p>}
        </div>
     </div>
   );

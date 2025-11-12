@@ -17,12 +17,13 @@ const NavLink: React.FC<NavLinkProps> = ({ icon, label, isActive, onClick }) => 
         e.preventDefault();
         onClick();
       }}
-      className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-200 ${
+      className={`relative flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-200 ${
         isActive
-          ? 'bg-brand-blue text-white'
+          ? 'bg-gray-700 text-white'
           : 'text-gray-300 hover:bg-gray-700 hover:text-white'
       }`}
     >
+      {isActive && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 bg-primary rounded-r-full"></span>}
       {icon}
       <span className="ml-3">{label}</span>
     </a>
@@ -73,7 +74,14 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate, isOpen, setOp
           </nav>
         </div>
          <div className="p-4 border-t border-gray-700">
-            <NavLink icon={<CogIcon className="w-6 h-6" />} label="Settings" isActive={false} onClick={() => {}} />
+            {currentUser.role === 'Admin' && (
+                <NavLink 
+                    icon={<CogIcon className="w-6 h-6" />} 
+                    label="Settings" 
+                    isActive={activeView === 'Settings'} 
+                    onClick={() => handleNavigate('Settings')} 
+                />
+            )}
          </div>
       </div>
     </>
