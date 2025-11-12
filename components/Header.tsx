@@ -137,12 +137,12 @@ const Header: React.FC<HeaderProps> = ({ searchTerm, onSearchChange, searchResul
           </span>
           <input
             type="text"
-            placeholder="Search by project..."
+            placeholder="Search by name, phone, project..."
             value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
             className="w-full py-2 pl-10 pr-4 text-text-primary bg-background border border-border-color rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
           />
-          {searchTerm && searchResults.length > 0 && <SearchResults results={searchResults} users={users} />}
+          {searchTerm && <SearchResults results={searchResults} users={users} />}
         </div>
       </div>
       <div className="flex items-center space-x-2 md:space-x-4">

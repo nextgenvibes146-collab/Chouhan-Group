@@ -374,9 +374,17 @@ const App: React.FC = () => {
     };
   }, [currentUser, users, leads, activities, tasks]);
 
-  const filteredLeadsForSearch = useMemo(() => visibleLeads.filter(lead =>
-    lead.interestedProject?.toLowerCase().includes(searchTerm.toLowerCase())
-  ), [searchTerm, visibleLeads]);
+  const filteredLeadsForSearch = useMemo(() => {
+    if (!searchTerm) return [];
+    const lowercasedTerm = searchTerm.toLowerCase();
+    
+    // The search should also respect the user's visibility permissions.
+    return visibleLeads.filter(lead => 
+      (lead.customerName?.toLowerCase().includes(lowercasedTerm)) ||
+      (lead.mobile?.toLowerCase().includes(lowercasedTerm)) ||
+      (lead.interestedProject?.toLowerCase().includes(lowercasedTerm))
+    );
+  }, [searchTerm, visibleLeads]);
   
   const renderContent = () => {
     if (isLoading) {
