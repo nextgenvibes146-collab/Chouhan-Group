@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
@@ -344,6 +345,22 @@ const App: React.FC = () => {
         setUsers(fullyUpdatedUsers);
     };
 
+    const handleUpdateUser = (userId: string, updates: Partial<Pick<User, 'role' | 'reportsTo'>>) => {
+        setUsers(prevUsers =>
+            prevUsers.map(user => {
+                if (user.id === userId) {
+                    const updatedUser = { ...user, ...updates };
+                    // If a user is changed to a 'Sales Manager', their 'reportsTo' should be cleared.
+                    if (updates.role === 'Sales Manager') {
+                        delete updatedUser.reportsTo;
+                    }
+                    return updatedUser;
+                }
+                return user;
+            })
+        );
+    };
+
   const { visibleLeads, visibleActivities, visibleTasks } = useMemo(() => {
     if (!currentUser) {
         return { visibleLeads: [], visibleActivities: [], visibleTasks: [] };
@@ -448,6 +465,7 @@ const App: React.FC = () => {
                     users={users}
                     onCreateUser={handleCreateUser}
                     onDeleteUser={handleDeleteUser}
+                    onUpdateUser={handleUpdateUser}
                 />;
       default:
         if (currentUser?.role === 'Admin') {

@@ -5,13 +5,20 @@ interface SettingsPageProps {
   users: User[];
   onCreateUser: (userData: { name: string; role: 'Salesperson' | 'Sales Manager'; reportsTo?: string }) => void;
   onDeleteUser: (userId: string) => void;
+  onUpdateUser: (userId: string, updates: Partial<Pick<User, 'role' | 'reportsTo'>>) => void;
 }
 
-const SettingsPage: React.FC<SettingsPageProps> = ({ users, onCreateUser, onDeleteUser }) => {
+const SettingsPage: React.FC<SettingsPageProps> = ({ users, onCreateUser, onDeleteUser, onUpdateUser }) => {
   const [name, setName] = useState('');
   const [role, setRole] = useState<'Salesperson' | 'Sales Manager'>('Salesperson');
   const [reportsTo, setReportsTo] = useState('');
   const [error, setError] = useState('');
+
+  const [editingUserId, setEditingUserId] = useState<string | null>(null);
+  const [editFormData, setEditFormData] = useState<{ role: 'Salesperson' | 'Sales Manager'; reportsTo: string }>({
+    role: 'Salesperson',
+    reportsTo: '',
+  });
 
   const managers = users.filter(u => u.role === 'Sales Manager' || u.role === 'Admin');
   const teamMembers = users.filter(u => u.role !== 'Admin');
@@ -24,8 +31,8 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ users, onCreateUser, onDele
       return;
     }
     if (role === 'Salesperson' && !reportsTo) {
-        setError('A salesperson must report to a manager.');
-        return;
+      setError('A salesperson must report to a manager.');
+      return;
     }
     setError('');
 
@@ -46,6 +53,37 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ users, onCreateUser, onDele
       onDeleteUser(userId);
     }
   };
+
+  const handleEditClick = (user: User) => {
+    setEditingUserId(user.id);
+    setEditFormData({
+        role: user.role as 'Salesperson' | 'Sales Manager', // Admins cannot be edited
+        reportsTo: user.reportsTo || ''
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingUserId(null);
+  };
+
+  const handleSaveEdit = (userId: string) => {
+    if (editFormData.role === 'Salesperson' && !editFormData.reportsTo) {
+        alert('A salesperson must report to a manager.');
+        return;
+    }
+    const updates: Partial<Pick<User, 'role' | 'reportsTo'>> = {
+        role: editFormData.role,
+        reportsTo: editFormData.role === 'Salesperson' ? editFormData.reportsTo : undefined
+    };
+    onUpdateUser(userId, updates);
+    setEditingUserId(null);
+  };
+
+  const handleEditFormChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setEditFormData(prev => ({ ...prev, [name]: value }));
+  };
+
 
   return (
     <div className="space-y-6">
@@ -104,10 +142,44 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ users, onCreateUser, onDele
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">{user.role}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">{userMap.get(user.reportsTo || '') || 'N/A'}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
+                                      {editingUserId === user.id ? (
+                                          <select name="role" value={editFormData.role} onChange={handleEditFormChange} className="input-style !mt-0 py-1.5">
+                                              <option value="Salesperson">Salesperson</option>
+                                              <option value="Sales Manager">Sales Manager</option>
+                                          </select>
+                                      ) : (
+                                          user.role
+                                      )}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
+                                       {editingUserId === user.id ? (
+                                            <select 
+                                                name="reportsTo" 
+                                                value={editFormData.reportsTo} 
+                                                onChange={handleEditFormChange} 
+                                                className="input-style !mt-0 py-1.5"
+                                                disabled={editFormData.role === 'Sales Manager'}
+                                            >
+                                                <option value="">Select a manager...</option>
+                                                {managers.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                                            </select>
+                                        ) : (
+                                            userMap.get(user.reportsTo || '') || 'N/A'
+                                        )}
+                                    </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <button onClick={() => handleDelete(user.id, user.name)} className="text-red-600 hover:text-red-900">Delete</button>
+                                        {editingUserId === user.id ? (
+                                            <div className="flex items-center justify-end space-x-2">
+                                                <button onClick={() => handleSaveEdit(user.id)} className="text-green-600 hover:text-green-900 font-semibold">Save</button>
+                                                <button onClick={handleCancelEdit} className="text-gray-600 hover:text-gray-900">Cancel</button>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center justify-end space-x-4">
+                                                <button onClick={() => handleEditClick(user)} className="text-primary hover:text-primary-hover font-semibold">Edit</button>
+                                                <button onClick={() => handleDelete(user.id, user.name)} className="text-red-600 hover:text-red-900">Delete</button>
+                                            </div>
+                                        )}
                                     </td>
                                 </tr>
                             ))}
