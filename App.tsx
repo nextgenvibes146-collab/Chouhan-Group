@@ -1,7 +1,4 @@
 
-
-
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
@@ -347,10 +344,6 @@ const App: React.FC = () => {
         setUsers(fullyUpdatedUsers);
     };
 
-  const filteredLeadsForSearch = leads.filter(lead =>
-    lead.interestedProject?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-  
   const { visibleLeads, visibleActivities, visibleTasks } = useMemo(() => {
     if (!currentUser) {
         return { visibleLeads: [], visibleActivities: [], visibleTasks: [] };
@@ -381,6 +374,10 @@ const App: React.FC = () => {
     };
   }, [currentUser, users, leads, activities, tasks]);
 
+  const filteredLeadsForSearch = useMemo(() => visibleLeads.filter(lead =>
+    lead.interestedProject?.toLowerCase().includes(searchTerm.toLowerCase())
+  ), [searchTerm, visibleLeads]);
+  
   const renderContent = () => {
     if (isLoading) {
       return <LoadingSpinner />;

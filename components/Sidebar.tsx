@@ -67,7 +67,9 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate, isOpen, setOp
               <NavLink icon={<HomeIcon className="w-6 h-6" />} label="Dashboard" isActive={activeView === 'Dashboard'} onClick={() => handleNavigate('Dashboard')} />
             )}
             <NavLink icon={<UsersIcon className="w-6 h-6" />} label="Leads" isActive={activeView === 'Leads'} onClick={() => handleNavigate('Leads')} />
-            <NavLink icon={<DocumentTextIcon className="w-6 h-6" />} label="Tasks" isActive={activeView === 'Tasks'} onClick={() => handleNavigate('Tasks')} />
+            {currentUser.role !== 'Salesperson' && (
+                <NavLink icon={<DocumentTextIcon className="w-6 h-6" />} label="Tasks" isActive={activeView === 'Tasks'} onClick={() => handleNavigate('Tasks')} />
+            )}
             <NavLink icon={<CalendarIcon className="w-6 h-6" />} label="Calendar" isActive={activeView === 'Calendar'} onClick={() => handleNavigate('Calendar')} />
             <NavLink icon={<MapPinIcon className="w-6 h-6" />} label="Attendance" isActive={activeView === 'Attendance'} onClick={() => handleNavigate('Attendance')} />
             <NavLink icon={<ChartBarIcon className="w-6 h-6" />} label="Reports" isActive={activeView === 'Reports'} onClick={() => handleNavigate('Reports')} />
