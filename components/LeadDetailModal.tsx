@@ -15,6 +15,7 @@ interface LeadDetailModalProps {
 
 const LeadDetailModal: React.FC<LeadDetailModalProps> = ({ lead, users, onClose, onUpdateLead, onAddActivity, currentUser, activities }) => {
   const [newStatus, setNewStatus] = useState<LeadStatus>(lead.status);
+  const [temperature, setTemperature] = useState<Lead['temperature']>(lead.temperature);
   const [nextFollowUp, setNextFollowUp] = useState(lead.nextFollowUpDate ? new Date(lead.nextFollowUpDate).toISOString().split('T')[0] : '');
   const [activityType, setActivityType] = useState<ActivityType>(ActivityType.Call);
   const [remarks, setRemarks] = useState('');
@@ -27,7 +28,8 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({ lead, users, onClose,
     onUpdateLead({ 
         ...lead, 
         status: newStatus, 
-        nextFollowUpDate: nextFollowUp ? new Date(nextFollowUp).toISOString() : undefined 
+        nextFollowUpDate: nextFollowUp ? new Date(nextFollowUp).toISOString() : undefined,
+        temperature: temperature,
     });
   };
   
@@ -46,6 +48,18 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({ lead, users, onClose,
       }
   };
 
+  const getTemperatureBadge = (temp?: 'Hot' | 'Warm' | 'Cold') => {
+    if (!temp) return <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-gray-200 text-gray-800">Not Set</span>;
+    const baseClasses = "px-2 py-0.5 text-xs font-medium rounded-full";
+    switch (temp) {
+        case 'Hot': return <span className={`${baseClasses} bg-red-100 text-red-800`}>Hot 🔥</span>;
+        case 'Warm': return <span className={`${baseClasses} bg-yellow-100 text-yellow-800`}>Warm 🟠</span>;
+        case 'Cold': return <span className={`${baseClasses} bg-blue-100 text-blue-800`}>Cold 🔵</span>;
+        default: return null;
+    }
+  };
+
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex justify-center items-center" onClick={onClose}>
       <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl m-4 max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
@@ -53,7 +67,10 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({ lead, users, onClose,
         <div className="p-4 md:p-6 border-b flex-shrink-0">
           <div className="flex justify-between items-start">
             <div>
-              <h2 className="text-xl md:text-2xl font-bold text-brand-dark">{lead.customerName}</h2>
+                <div className="flex items-center gap-3">
+                    <h2 className="text-xl md:text-2xl font-bold text-brand-dark">{lead.customerName}</h2>
+                    {getTemperatureBadge(lead.temperature)}
+                </div>
               <p className="text-sm text-brand-gray">Project: {lead.interestedProject || 'N/A'}</p>
             </div>
             <button onClick={onClose} className="text-2xl text-brand-gray hover:text-brand-dark">&times;</button>
@@ -76,11 +93,22 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({ lead, users, onClose,
           <div className="space-y-6">
             <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
                 <h3 className="text-lg font-semibold text-brand-dark">Update Lead</h3>
-                <div>
-                    <label className="label-style">Status</label>
-                    <select value={newStatus} onChange={(e) => setNewStatus(e.target.value as LeadStatus)} className="input-style">
-                        {Object.values(LeadStatus).map(s => <option key={s} value={s}>{s}</option>)}
-                    </select>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label className="label-style">Status</label>
+                        <select value={newStatus} onChange={(e) => setNewStatus(e.target.value as LeadStatus)} className="input-style">
+                            {Object.values(LeadStatus).map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="label-style">Temperature</label>
+                        <select value={temperature || ''} onChange={(e) => setTemperature(e.target.value as Lead['temperature'])} className="input-style">
+                            <option value="">Not Set</option>
+                            <option value="Hot">Hot</option>
+                            <option value="Warm">Warm</option>
+                            <option value="Cold">Cold</option>
+                        </select>
+                    </div>
                 </div>
                 <div>
                     <label className="label-style">Next Follow-up Date</label>

@@ -14,10 +14,15 @@ interface LeadsPageProps {
   onAddActivity: (lead: Lead, activityType: ActivityType, remarks: string) => void;
   activities: Activity[];
   onAssignLead: (newLeadData: NewLeadData) => void;
+  onBulkUpdate: (leadIds: string[], newStatus?: LeadStatus, newAssignedSalespersonId?: string) => void;
 }
 
-const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpdateLead, onAddActivity, activities, onAssignLead }) => {
+const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpdateLead, onAddActivity, activities, onAssignLead, onBulkUpdate }) => {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
+  const [bulkStatus, setBulkStatus] = useState('');
+  const [bulkAssignee, setBulkAssignee] = useState('');
+
   const [filters, setFilters] = useState({
     status: '',
     salesperson: '',
@@ -59,6 +64,52 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
 
     return filtered.sort((a, b) => new Date(b.leadDate).getTime() - new Date(a.leadDate).getTime());
   }, [leads, filters]);
+
+  const allVisibleLeadsSelected = useMemo(() => {
+    if (filteredLeads.length === 0) return false;
+    return filteredLeads.every(lead => selectedLeadIds.has(lead.id));
+  }, [filteredLeads, selectedLeadIds]);
+
+  const handleSelectLead = (leadId: string) => {
+    setSelectedLeadIds(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(leadId)) {
+            newSet.delete(leadId);
+        } else {
+            newSet.add(leadId);
+        }
+        return newSet;
+    });
+  };
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const visibleIds = filteredLeads.map(l => l.id);
+      if (e.target.checked) {
+          setSelectedLeadIds(prev => new Set([...Array.from(prev), ...visibleIds]));
+      } else {
+          setSelectedLeadIds(prev => {
+              const newSet = new Set(prev);
+              visibleIds.forEach(id => newSet.delete(id));
+              return newSet;
+          });
+      }
+  };
+
+  const handleApplyBulkAction = () => {
+    const leadIds = Array.from(selectedLeadIds);
+    if (leadIds.length === 0 || (!bulkStatus && !bulkAssignee)) return;
+
+    onBulkUpdate(
+        leadIds,
+        bulkStatus ? (bulkStatus as LeadStatus) : undefined,
+        bulkAssignee || undefined
+    );
+
+    // Reset selections and form
+    setSelectedLeadIds(new Set());
+    setBulkStatus('');
+    setBulkAssignee('');
+  };
 
   const exportToCSV = () => {
     const headers = ['Customer Name', 'Mobile', 'Status', 'Sales Person', 'Lead Date', 'Next Follow-up', 'Last Remark'];
@@ -126,7 +177,37 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
                 </div>
             </div>
 
-            <LeadsTable leads={filteredLeads} users={users} onOpenModal={handleOpenModal} />
+            {selectedLeadIds.size > 0 && (
+                <div className="bg-blue-50 p-4 rounded-xl shadow-md flex flex-wrap items-center gap-4 border border-brand-blue">
+                    <p className="font-semibold text-brand-dark">{selectedLeadIds.size} lead(s) selected.</p>
+                    <select value={bulkStatus} onChange={e => setBulkStatus(e.target.value)} className="filter-select">
+                        <option value="">Change Status...</option>
+                        {Object.values(LeadStatus).map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                    {currentUser.role === 'Admin' && (
+                        <select value={bulkAssignee} onChange={e => setBulkAssignee(e.target.value)} className="filter-select">
+                            <option value="">Assign To...</option>
+                            {users.filter(u => u.role === 'Salesperson').map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+                        </select>
+                    )}
+                    <button onClick={handleApplyBulkAction} disabled={!bulkStatus && !bulkAssignee} className="px-4 py-2 text-sm font-medium text-white bg-brand-blue rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                        Apply Changes
+                    </button>
+                    <button onClick={() => setSelectedLeadIds(new Set())} className="text-sm text-brand-gray hover:text-brand-dark ml-auto">
+                        Clear Selection
+                    </button>
+                </div>
+            )}
+
+            <LeadsTable 
+              leads={filteredLeads} 
+              users={users} 
+              onOpenModal={handleOpenModal}
+              selectedLeadIds={selectedLeadIds}
+              onSelectLead={handleSelectLead}
+              onSelectAll={handleSelectAll}
+              allVisibleLeadsSelected={allVisibleLeadsSelected}
+            />
         </div>
       
         {selectedLead && (

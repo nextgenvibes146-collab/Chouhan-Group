@@ -54,9 +54,100 @@ const App: React.FC = () => {
   }, [loadData]);
   
   const handleUpdateLead = (updatedLead: Lead) => {
-    setLeads(prevLeads => prevLeads.map(lead => 
-      lead.id === updatedLead.id ? { ...updatedLead, isRead: true, lastActivityDate: new Date().toISOString() } : lead
-    ));
+    if (!currentUser) return;
+
+    const admin = users.find(u => u.role === 'Admin');
+    const adminId = admin?.id || 'admin-0';
+    let newActivity: Activity | null = null;
+
+    const newLeads = leads.map(lead => {
+      if (lead.id === updatedLead.id) {
+        const leadToUpdate = {
+          ...updatedLead,
+          isRead: true,
+          lastActivityDate: new Date().toISOString(),
+        };
+
+        if (updatedLead.status === LeadStatus.Cancelled && lead.assignedSalespersonId !== adminId) {
+          leadToUpdate.assignedSalespersonId = adminId;
+          newActivity = {
+            id: `act-${Date.now()}`,
+            leadId: leadToUpdate.id,
+            salespersonId: currentUser.id,
+            type: ActivityType.Note,
+            date: new Date().toISOString(),
+            remarks: `Lead status set to Cancelled and automatically reassigned to ${admin?.name || 'Admin'}.`,
+            customerName: leadToUpdate.customerName,
+          };
+        }
+        return leadToUpdate;
+      }
+      return lead;
+    });
+
+    setLeads(newLeads);
+    if (newActivity) {
+      setActivities(prevActivities => [newActivity, ...prevActivities]);
+    }
+  };
+
+  const handleBulkUpdateLeads = (leadIds: string[], newStatus?: LeadStatus, newAssignedSalespersonId?: string) => {
+    if (!currentUser) return;
+    
+    const admin = users.find(u => u.role === 'Admin');
+    const adminId = admin?.id || 'admin-0';
+
+    const wasCancelled = newStatus === LeadStatus.Cancelled;
+    const finalAssignedSalespersonId = wasCancelled ? adminId : newAssignedSalespersonId;
+
+    const newActivities: Activity[] = [];
+
+    const newLeads = leads.map(lead => {
+        if (leadIds.includes(lead.id)) {
+            const updatedLead = { 
+                ...lead, 
+                isRead: true, 
+                lastActivityDate: new Date().toISOString() 
+            };
+
+            const changes = [];
+            if (newStatus && lead.status !== newStatus) {
+                updatedLead.status = newStatus;
+                changes.push(`Status changed to ${newStatus}`);
+            }
+            
+            if (finalAssignedSalespersonId && lead.assignedSalespersonId !== finalAssignedSalespersonId) {
+                updatedLead.assignedSalespersonId = finalAssignedSalespersonId;
+                if (wasCancelled) {
+                    changes.push(`Automatically reassigned to ${admin?.name || 'Admin'}`);
+                } else {
+                    const newAssignee = users.find(u => u.id === finalAssignedSalespersonId);
+                    changes.push(`Assigned to ${newAssignee?.name || 'N/A'}`);
+                }
+            }
+
+            if (changes.length > 0) {
+                const newActivity: Activity = {
+                    id: `act-${Date.now()}-${lead.id}`,
+                    leadId: lead.id,
+                    salespersonId: currentUser.id,
+                    type: ActivityType.Note,
+                    date: new Date().toISOString(),
+                    remarks: `Bulk Update: ${changes.join(', ')}.`,
+                    customerName: lead.customerName,
+                };
+                newActivities.push(newActivity);
+            }
+            return updatedLead;
+        }
+        return lead;
+    });
+    
+    setLeads(newLeads);
+
+    if (newActivities.length > 0) {
+        setActivities(prev => [...newActivities, ...prev]);
+    }
   };
 
   const handleAddActivity = (lead: Lead, activityType: ActivityType, remarks: string) => {
@@ -157,6 +248,7 @@ const App: React.FC = () => {
                   onAddActivity={handleAddActivity}
                   activities={visibleActivities}
                   onAssignLead={handleAssignLead}
+                  onBulkUpdate={handleBulkUpdateLeads}
                />;
       case 'Calendar':
         return <CalendarPage leads={visibleLeads} tasks={visibleTasks} />;

@@ -7,6 +7,10 @@ interface LeadsTableProps {
   leads: Lead[];
   users: User[];
   onOpenModal: (lead: Lead) => void;
+  selectedLeadIds: Set<string>;
+  onSelectLead: (leadId: string) => void;
+  onSelectAll: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  allVisibleLeadsSelected: boolean;
 }
 
 const getStatusBadge = (status: LeadStatus) => {
@@ -31,7 +35,20 @@ const getStatusBadge = (status: LeadStatus) => {
   }
 };
 
-const LeadsTable: React.FC<LeadsTableProps> = ({ leads, users, onOpenModal }) => {
+const getTemperatureIndicator = (temperature?: 'Hot' | 'Warm' | 'Cold') => {
+    switch (temperature) {
+        case 'Hot':
+            return <span className="h-2.5 w-2.5 bg-red-500 rounded-full ml-2 flex-shrink-0" title="Hot"></span>;
+        case 'Warm':
+            return <span className="h-2.5 w-2.5 bg-yellow-400 rounded-full ml-2 flex-shrink-0" title="Warm"></span>;
+        case 'Cold':
+            return <span className="h-2.5 w-2.5 bg-blue-400 rounded-full ml-2 flex-shrink-0" title="Cold"></span>;
+        default:
+            return null;
+    }
+};
+
+const LeadsTable: React.FC<LeadsTableProps> = ({ leads, users, onOpenModal, selectedLeadIds, onSelectLead, onSelectAll, allVisibleLeadsSelected }) => {
   const userMap = new Map(users.map(user => [user.id, user]));
 
   return (
@@ -40,6 +57,15 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, users, onOpenModal }) =>
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
+              <th scope="col" className="px-6 py-3">
+                 <input 
+                    type="checkbox"
+                    className="h-4 w-4 rounded border-gray-300 text-brand-blue focus:ring-brand-blue"
+                    onChange={onSelectAll}
+                    checked={allVisibleLeadsSelected}
+                    aria-label="Select all visible leads"
+                />
+              </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-brand-gray uppercase tracking-wider">Customer</th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-brand-gray uppercase tracking-wider">Follow-up</th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-brand-gray uppercase tracking-wider">Status</th>
@@ -51,12 +77,24 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, users, onOpenModal }) =>
               const salesperson = userMap.get(lead.assignedSalespersonId);
               const isOverdue = lead.nextFollowUpDate && new Date(lead.nextFollowUpDate) < new Date();
               return (
-                <tr key={lead.id} className="hover:bg-gray-50">
+                <tr key={lead.id} className={`hover:bg-gray-50 ${selectedLeadIds.has(lead.id) ? 'bg-blue-50' : ''}`}>
+                  <td className="px-6 py-4">
+                    <input 
+                        type="checkbox"
+                        className="h-4 w-4 rounded border-gray-300 text-brand-blue focus:ring-brand-blue"
+                        checked={selectedLeadIds.has(lead.id)}
+                        onChange={() => onSelectLead(lead.id)}
+                        aria-label={`Select lead for ${lead.customerName}`}
+                    />
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                         {!lead.isRead && <span className="h-2 w-2 bg-blue-500 rounded-full mr-2 flex-shrink-0"></span>}
                         <div>
-                            <div className="text-sm font-medium text-brand-dark">{lead.customerName}</div>
+                            <div className="flex items-center">
+                               <div className="text-sm font-medium text-brand-dark">{lead.customerName}</div>
+                               {getTemperatureIndicator(lead.temperature)}
+                            </div>
                             <div className="text-sm text-brand-gray">{lead.mobile}</div>
                             <div className="text-xs text-brand-gray">Assigned: {salesperson?.name || 'N/A'}</div>
                         </div>
