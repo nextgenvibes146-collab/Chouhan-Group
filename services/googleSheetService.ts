@@ -1,4 +1,5 @@
 
+
 import { LeadStatus, ActivityType, ModeOfEnquiry, Task } from '../types';
 import type { User, Lead, Activity, SalesTarget } from '../types';
 import { newRawData } from '../data/mockData';
@@ -89,6 +90,7 @@ export const fetchSheetData = async (): Promise<{
             lastRemark: d['Followup'] || d['Visit Remark'] || 'New lead created.',
             bookingStatus: d['Booking Status'],
             isRead: false,
+            missedVisitsCount: 0,
         };
 
         const activity: Activity = {

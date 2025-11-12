@@ -62,6 +62,7 @@ export interface Lead {
   bookingStatus?: string;
   isRead: boolean;
   investmentTimeline?: string;
+  missedVisitsCount: number;
 }
 
 export interface Activity {
@@ -72,6 +73,7 @@ export interface Activity {
   date: string;
   remarks: string;
   customerName: string; 
+  duration?: number; // in minutes
 }
 
 export interface SalesTarget {
@@ -94,4 +96,12 @@ export interface Task {
     dueDate: string;
     isCompleted: boolean;
     createdBy: string;
+}
+
+export interface Notification {
+  id: string;
+  message: string;
+  createdDate: string;
+  isRead: boolean;
+  targetUserId?: string; // If undefined, it's for all users
 }

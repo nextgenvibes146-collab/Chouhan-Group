@@ -8,6 +8,7 @@ interface LoginPageProps {
 
 const LoginPage: React.FC<LoginPageProps> = ({ users, onLogin }) => {
   const [selectedUserId, setSelectedUserId] = useState<string>('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
   const handleLogin = () => {
@@ -15,11 +16,22 @@ const LoginPage: React.FC<LoginPageProps> = ({ users, onLogin }) => {
       setError('Please select a user to log in.');
       return;
     }
+    // Simple password check for demo purposes
+    if (password !== 'password123') {
+        setError('Incorrect password.');
+        return;
+    }
     const user = users.find(u => u.id === selectedUserId);
     if (user) {
       onLogin(user);
     } else {
       setError('Selected user not found.');
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+        handleLogin();
     }
   };
 
@@ -51,6 +63,24 @@ const LoginPage: React.FC<LoginPageProps> = ({ users, onLogin }) => {
                         </option>
                     ))}
                 </select>
+            </div>
+             <div>
+                <label htmlFor="password-input" className="block text-sm font-medium text-brand-gray">
+                    Password
+                </label>
+                <input
+                    id="password-input"
+                    type="password"
+                    value={password}
+                    onChange={(e) => {
+                        setPassword(e.target.value);
+                        setError('');
+                    }}
+                    onKeyPress={handleKeyPress}
+                    className="input-style"
+                    placeholder="Enter password"
+                />
+                <p className="text-xs text-gray-400 mt-1">Hint: Use 'password123'</p>
             </div>
             {error && <p className="text-xs text-red-600">{error}</p>}
         </div>

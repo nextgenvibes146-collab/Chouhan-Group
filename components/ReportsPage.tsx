@@ -1,5 +1,6 @@
 
 
+
 import React, { useState } from 'react';
 import { ChartBarIcon, PhoneIcon, ChatBubbleIcon } from './Icons';
 import { Lead, User, LeadStatus, Activity, ActivityType } from '../types';
@@ -37,7 +38,7 @@ const CancelledLeadsTable: React.FC<CancelledLeadsTableProps> = ({ leads, onOpen
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <div className="flex items-center space-x-3">
                                         <a href={`tel:${lead.mobile}`} title="Call" className="text-gray-400 hover:text-green-500"><PhoneIcon className="w-5 h-5"/></a>
-                                        <a href={`https://wa.me/${lead.mobile.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" title="WhatsApp" className="text-gray-400 hover:text-green-500"><ChatBubbleIcon className="w-5 h-5"/></a>
+                                        <a href={`httpshttps://wa.me/${lead.mobile.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" title="WhatsApp" className="text-gray-400 hover:text-green-500"><ChatBubbleIcon className="w-5 h-5"/></a>
                                         <button onClick={() => onOpenModal(lead)} className="text-brand-blue hover:text-blue-700 font-semibold">
                                             Update
                                         </button>
@@ -59,7 +60,7 @@ interface ReportsPageProps {
     users: User[];
     currentUser: User;
     onUpdateLead: (lead: Lead) => void;
-    onAddActivity: (lead: Lead, activityType: ActivityType, remarks: string) => void;
+    onAddActivity: (lead: Lead, activityType: ActivityType, remarks: string, duration?: number) => void;
     activities: Activity[];
 }
 

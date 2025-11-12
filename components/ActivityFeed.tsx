@@ -34,7 +34,6 @@ const getActivityIcon = (type: ActivityType) => {
 };
 
 const ActivityFeed: React.FC<ActivityFeedProps> = ({ activities, users, title = "Recent Activity" }) => {
-  // FIX: Explicitly type the Map to ensure proper type inference for 'user'.
   const userMap = new Map<string, User>(users.map(user => [user.id, user]));
 
   return (
@@ -44,6 +43,8 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ activities, users, title = 
         {activities.length > 0 ? activities.map(activity => {
           const user = userMap.get(activity.salespersonId);
           if (!user) return null;
+          
+          const durationText = activity.type === ActivityType.Call && activity.duration ? ` for ${activity.duration} min(s)` : '';
 
           return (
             <li key={activity.id} className="flex items-start space-x-3">
@@ -55,6 +56,7 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ activities, users, title = 
                   <span className="font-semibold text-brand-dark">{user.name}</span>
                   {' '}{activity.type.toLowerCase()}
                   {' '}<span className="font-semibold text-brand-blue">{activity.customerName}</span>
+                  {durationText}
                 </p>
                 <p className="text-xs text-brand-gray">{new Date(activity.date).toLocaleString()}</p>
                 <p className="text-sm text-brand-dark mt-1 italic">"{activity.remarks}"</p>

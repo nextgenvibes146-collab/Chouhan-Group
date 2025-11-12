@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
@@ -11,7 +12,7 @@ import ReportsPage from './components/ReportsPage';
 import TasksPage from './components/TasksPage';
 import LoginPage from './components/LoginPage';
 import { fetchSheetData } from './services/googleSheetService';
-import { Lead, User, Activity, SalesTarget, Task, LeadStatus, ActivityType, ModeOfEnquiry } from './types';
+import { Lead, User, Activity, SalesTarget, Task, LeadStatus, ActivityType, ModeOfEnquiry, Notification } from './types';
 
 export interface NewLeadData {
     customerName: string;
@@ -34,6 +35,7 @@ const App: React.FC = () => {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [salesTargets, setSalesTargets] = useState<SalesTarget[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   
@@ -154,7 +156,7 @@ const App: React.FC = () => {
     }
   };
 
-  const handleAddActivity = (lead: Lead, activityType: ActivityType, remarks: string) => {
+  const handleAddActivity = (lead: Lead, activityType: ActivityType, remarks: string, duration?: number) => {
     if (!currentUser) return;
     const newActivity: Activity = {
       id: `act-${Date.now()}`,
@@ -164,6 +166,7 @@ const App: React.FC = () => {
       date: new Date().toISOString(),
       remarks: remarks,
       customerName: lead.customerName,
+      duration: duration,
     };
     setActivities(prevActivities => [newActivity, ...prevActivities]);
     // Also update the lead
@@ -201,6 +204,7 @@ const App: React.FC = () => {
         visitStatus: 'No',
         lastRemark: newLeadData.remarks || 'New lead assigned by admin.',
         isRead: false,
+        missedVisitsCount: 0,
     };
     setLeads(prevLeads => [newLead, ...prevLeads]);
 
@@ -219,6 +223,26 @@ const App: React.FC = () => {
     }
   };
 
+  const handleImportLeads = (newLeads: Omit<Lead, 'id' | 'isRead' | 'missedVisitsCount' | 'lastActivityDate' | 'month'>[]) => {
+      const salespersonNameToId = new Map(users.map(u => [u.name.toLowerCase(), u.id]));
+
+      const createdLeads: Lead[] = newLeads.map((l, index) => {
+          // Attempt to find user, default to current user if not found
+          const assignedSalespersonId = salespersonNameToId.get(l.assignedSalespersonId.toLowerCase()) || currentUser!.id;
+          
+          return {
+              ...l,
+              id: `imported-${Date.now()}-${index}`,
+              assignedSalespersonId,
+              isRead: false,
+              missedVisitsCount: 0,
+              lastActivityDate: new Date().toISOString(),
+              month: new Date(l.leadDate).toLocaleString('default', { month: 'long', year: 'numeric' }),
+          };
+      });
+      setLeads(prev => [...createdLeads, ...prev]);
+  };
+
   const handleLogin = (user: User) => {
     setCurrentUser(user);
     if (user.role !== 'Admin') {
@@ -231,6 +255,28 @@ const App: React.FC = () => {
   const handleLogout = () => {
     setCurrentUser(null);
     setActiveView('Dashboard');
+  };
+
+  const handleAddNotification = (message: string, targetUserId?: string) => {
+      const newNotification: Notification = {
+          id: `notif-${Date.now()}`,
+          message,
+          targetUserId,
+          createdDate: new Date().toISOString(),
+          isRead: false,
+      };
+      setNotifications(prev => [newNotification, ...prev]);
+  };
+
+  const handleMarkNotificationsAsRead = () => {
+      if (!currentUser) return;
+      setNotifications(prev => prev.map(n => {
+          const isOwnNotification = !n.targetUserId || n.targetUserId === currentUser.id;
+          if (isOwnNotification) {
+              return { ...n, isRead: true };
+          }
+          return n;
+      }));
   };
 
   const filteredLeadsForSearch = leads.filter(lead =>
@@ -283,6 +329,7 @@ const App: React.FC = () => {
                     activities={visibleActivities}
                     onAssignLead={handleAssignLead}
                     onBulkUpdate={handleBulkUpdateLeads}
+                    onImportLeads={handleImportLeads}
                  />;
         }
         return <Dashboard leads={visibleLeads} users={users} activities={visibleActivities} salesTargets={salesTargets} currentUser={currentUser!} tasks={visibleTasks} />;
@@ -296,6 +343,7 @@ const App: React.FC = () => {
                   activities={visibleActivities}
                   onAssignLead={handleAssignLead}
                   onBulkUpdate={handleBulkUpdateLeads}
+                  onImportLeads={handleImportLeads}
                />;
       case 'Calendar':
         return <CalendarPage leads={visibleLeads} tasks={visibleTasks} />;
@@ -331,6 +379,7 @@ const App: React.FC = () => {
                   activities={visibleActivities}
                   onAssignLead={handleAssignLead}
                   onBulkUpdate={handleBulkUpdateLeads}
+                  onImportLeads={handleImportLeads}
                />;
     }
   };
@@ -358,6 +407,9 @@ const App: React.FC = () => {
           onLogout={handleLogout}
           onRefresh={loadData}
           onToggleSidebar={() => setSidebarOpen(!isSidebarOpen)}
+          notifications={notifications}
+          onAddNotification={handleAddNotification}
+          onMarkNotificationsAsRead={handleMarkNotificationsAsRead}
         />
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-brand-light p-4 md:p-6 lg:p-8">
           {renderContent()}

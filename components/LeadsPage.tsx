@@ -1,10 +1,11 @@
 
-import React, { useState, useMemo } from 'react';
+
+import React, { useState, useMemo, useCallback } from 'react';
 import LeadsTable from './LeadsTable';
 import LeadDetailModal from './LeadDetailModal';
 import AssignLeadForm from './AssignLeadForm';
 import type { Lead, User, ActivityType, Activity } from '../types';
-import { LeadStatus } from '../types';
+import { LeadStatus, ModeOfEnquiry } from '../types';
 import type { NewLeadData } from '../App';
 
 interface LeadsPageProps {
@@ -12,13 +13,94 @@ interface LeadsPageProps {
   users: User[];
   currentUser: User;
   onUpdateLead: (lead: Lead) => void;
-  onAddActivity: (lead: Lead, activityType: ActivityType, remarks: string) => void;
+  onAddActivity: (lead: Lead, activityType: ActivityType, remarks: string, duration?: number) => void;
   activities: Activity[];
   onAssignLead: (newLeadData: NewLeadData) => void;
   onBulkUpdate: (leadIds: string[], newStatus?: LeadStatus, newAssignedSalespersonId?: string) => void;
+  onImportLeads: (newLeads: Omit<Lead, 'id' | 'isRead' | 'missedVisitsCount' | 'lastActivityDate' | 'month'>[]) => void;
 }
 
-const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpdateLead, onAddActivity, activities, onAssignLead, onBulkUpdate }) => {
+const ImportCSV: React.FC<{onImport: Function, users: User[]}> = ({ onImport, users }) => {
+    const [isParsing, setIsParsing] = useState(false);
+    const [error, setError] = useState('');
+
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        setIsParsing(true);
+        setError('');
+        
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const text = e.target?.result;
+            if (typeof text === 'string') {
+                try {
+                    const lines = text.split(/\r\n|\n/);
+                    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+                    
+                    // Simple validation of headers
+                    const requiredHeaders = ['Customer Name', 'Mobile', 'Status', 'Sales Person', 'Lead Date'];
+                    const hasHeaders = requiredHeaders.every(h => headers.includes(h));
+                    if (!hasHeaders) {
+                        throw new Error(`CSV must include headers: ${requiredHeaders.join(', ')}`);
+                    }
+
+                    const leadsToImport = lines.slice(1).map(line => {
+                        const data = line.split(',');
+                        if (data.length < headers.length) return null;
+
+                        const leadData = headers.reduce((obj, header, index) => {
+                            obj[header] = data[index]?.trim().replace(/"/g, '');
+                            return obj;
+                        }, {} as {[key: string]: string});
+
+                        // Basic data validation
+                        if (!leadData['Customer Name'] || !leadData['Mobile']) return null;
+
+                        return {
+                            customerName: leadData['Customer Name'],
+                            mobile: leadData['Mobile'],
+                            email: leadData['Email'] || '',
+                            city: leadData['City'] || '',
+                            platform: leadData['Source / Platform'] || 'Imported',
+                            interestedProject: leadData['Interested Project'] || '',
+                            interestedUnit: leadData['Property Type'] || '',
+                            investmentTimeline: '',
+                            lastRemark: leadData['Last Remark'] || 'Imported lead.',
+                            assignedSalespersonId: leadData['Sales Person'] || users[0].name, // a bit of a hack
+                            status: (leadData['Status'] as LeadStatus) || LeadStatus.New,
+                            leadDate: new Date(leadData['Lead Date']).toISOString(),
+                            modeOfEnquiry: ModeOfEnquiry.Digital,
+                            visitStatus: 'No',
+                        };
+                    }).filter(Boolean);
+
+                    onImport(leadsToImport);
+
+                } catch (err: any) {
+                    setError(err.message || 'Failed to parse CSV file.');
+                } finally {
+                    setIsParsing(false);
+                }
+            }
+        };
+        reader.readAsText(file);
+        event.target.value = ''; // Reset file input
+    };
+
+    return (
+        <div className="flex items-center space-x-2">
+            <label htmlFor="csv-importer" className={`px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 cursor-pointer ${isParsing ? 'opacity-50' : ''}`}>
+                {isParsing ? 'Importing...' : 'Import from CSV'}
+            </label>
+            <input id="csv-importer" type="file" accept=".csv" onChange={handleFileChange} className="hidden" disabled={isParsing} />
+            {error && <p className="text-xs text-red-500">{error}</p>}
+        </div>
+    );
+};
+
+const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpdateLead, onAddActivity, activities, onAssignLead, onBulkUpdate, onImportLeads }) => {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
   const [bulkStatus, setBulkStatus] = useState('');
@@ -113,16 +195,21 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
   };
 
   const exportToCSV = () => {
-    const headers = ['Customer Name', 'Mobile', 'Status', 'Sales Person', 'Lead Date', 'Next Follow-up', 'Last Remark'];
+    const headers = ['Customer Name', 'Mobile', 'Email', 'City', 'Source / Platform', 'Interested Project', 'Property Type', 'Status', 'Sales Person', 'Lead Date', 'Next Follow-up', 'Last Remark'];
     const userMap = new Map(users.map(u => [u.id, u.name]));
     const rows = filteredLeads.map(lead => [
         `"${lead.customerName}"`,
         lead.mobile,
+        lead.email || '',
+        lead.city || '',
+        lead.platform || '',
+        `"${lead.interestedProject || ''}"`,
+        lead.interestedUnit || '',
         lead.status,
         `"${userMap.get(lead.assignedSalespersonId) || 'N/A'}"`,
         new Date(lead.leadDate).toLocaleDateString(),
         lead.nextFollowUpDate ? new Date(lead.nextFollowUpDate).toLocaleDateString() : 'N/A',
-        `"${lead.lastRemark.replace(/"/g, '""')}"`
+        `"${(lead.lastRemark || '').replace(/"/g, '""')}"`
     ].join(','));
 
     const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows].join('\n');
@@ -159,9 +246,12 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
 
   return (
     <div className="space-y-6">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-wrap gap-4 justify-between items-center">
             <h2 className="text-2xl md:text-3xl font-bold text-brand-dark">Leads Management</h2>
-            <button onClick={exportToCSV} className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700">Export to CSV</button>
+            <div className="flex items-center space-x-2">
+                {currentUser.role === 'Admin' && <ImportCSV onImport={onImportLeads} users={users} />}
+                <button onClick={exportToCSV} className="px-4 py-2 text-sm font-medium text-brand-gray border border-brand-border bg-white rounded-md hover:bg-gray-50">Export to CSV</button>
+            </div>
         </div>
         
         {currentUser.role === 'Admin' && (
