@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
+
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import Dashboard from './components/Dashboard';
@@ -233,9 +234,35 @@ const App: React.FC = () => {
     lead.interestedProject?.toLowerCase().includes(searchTerm.toLowerCase())
   );
   
-  const visibleLeads = currentUser?.role === 'Admin' ? leads : leads.filter(l => l.assignedSalespersonId === currentUser?.id);
-  const visibleActivities = currentUser?.role === 'Admin' ? activities : activities.filter(a => a.salespersonId === currentUser?.id);
-  const visibleTasks = currentUser?.role === 'Admin' ? tasks : tasks.filter(t => t.assignedToId === currentUser?.id);
+  const { visibleLeads, visibleActivities, visibleTasks } = useMemo(() => {
+    if (!currentUser) {
+        return { visibleLeads: [], visibleActivities: [], visibleTasks: [] };
+    }
+
+    if (currentUser.role === 'Admin') {
+        return { visibleLeads: leads, visibleActivities: activities, visibleTasks: tasks };
+    }
+
+    if (currentUser.role === 'Sales Manager') {
+        const managedUserIds = users
+            .filter(u => u.reportsTo === currentUser.id)
+            .map(u => u.id);
+        const teamIds = [currentUser.id, ...managedUserIds];
+
+        return {
+            visibleLeads: leads.filter(l => teamIds.includes(l.assignedSalespersonId)),
+            visibleActivities: activities.filter(a => teamIds.includes(a.salespersonId)),
+            visibleTasks: tasks.filter(t => teamIds.includes(t.assignedToId)),
+        };
+    }
+
+    // Default is 'Salesperson'
+    return {
+        visibleLeads: leads.filter(l => l.assignedSalespersonId === currentUser.id),
+        visibleActivities: activities.filter(a => a.salespersonId === currentUser.id),
+        visibleTasks: tasks.filter(t => t.assignedToId === currentUser.id),
+    };
+  }, [currentUser, users, leads, activities, tasks]);
 
   const renderContent = () => {
     if (isLoading) {

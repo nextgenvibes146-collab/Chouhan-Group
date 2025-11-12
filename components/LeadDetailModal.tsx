@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useMemo } from 'react';
 import { type Lead, type User, LeadStatus, ActivityType, type Activity } from '../types';
 import { PhoneIcon, MailIcon, MapPinIcon, ChatBubbleIcon } from './Icons';
 import ActivityFeed from './ActivityFeed';
@@ -22,7 +23,21 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({ lead, users, onClose,
   const [transferToId, setTransferToId] = useState('');
   
   const salesperson = users.find(u => u.id === lead.assignedSalespersonId);
-  const isAdmin = currentUser.role === 'Admin';
+  const isManagerOrAdmin = currentUser.role === 'Admin' || currentUser.role === 'Sales Manager';
+
+  const assignableUsers = useMemo(() => {
+    if (currentUser.role === 'Admin') {
+      return users.filter(u => u.role !== 'Admin' && u.id !== lead.assignedSalespersonId);
+    }
+    if (currentUser.role === 'Sales Manager') {
+      // Manager can assign to themselves or their reports, excluding the current assignee
+      return users.filter(u => 
+        (u.id === currentUser.id || u.reportsTo === currentUser.id) && u.id !== lead.assignedSalespersonId
+      );
+    }
+    return [];
+  }, [currentUser, users, lead.assignedSalespersonId]);
+
 
   const handleUpdate = () => {
     onUpdateLead({ 
@@ -128,13 +143,13 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({ lead, users, onClose,
                 </form>
             </div>
             
-            {isAdmin && (
+            {isManagerOrAdmin && (
                  <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
                     <h3 className="text-lg font-semibold text-brand-dark">Transfer Lead</h3>
                     <div className="flex items-center space-x-2">
                         <select value={transferToId} onChange={e => setTransferToId(e.target.value)} className="input-style">
                             <option value="">Select salesperson...</option>
-                            {users.filter(u => u.role === 'Salesperson' && u.id !== lead.assignedSalespersonId).map(u => (
+                            {assignableUsers.map(u => (
                                 <option key={u.id} value={u.id}>{u.name}</option>
                             ))}
                         </select>

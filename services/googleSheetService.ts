@@ -1,3 +1,4 @@
+
 import { LeadStatus, ActivityType, ModeOfEnquiry, Task } from '../types';
 import type { User, Lead, Activity, SalesTarget } from '../types';
 import { newRawData } from '../data/mockData';
@@ -30,13 +31,13 @@ export const fetchSheetData = async (): Promise<{
     // Adding an Admin user to the list of users
     const users: User[] = [
       { id: 'admin-0', name: 'Admin', role: 'Admin', avatarUrl: 'https://i.pravatar.cc/40?u=admin' },
-      { id: 'user-1', name: 'Amit Naithani', role: 'Salesperson', avatarUrl: 'https://i.pravatar.cc/40?u=amit' },
-      { id: 'user-2', name: 'Neeraj Tripathi', role: 'Salesperson', avatarUrl: 'https://i.pravatar.cc/40?u=neeraj' },
-      { id: 'user-3', name: 'Pinki Sahu', role: 'Salesperson', avatarUrl: 'https://i.pravatar.cc/40?u=pinki' },
+      { id: 'user-1', name: 'Amit Naithani', role: 'Sales Manager', avatarUrl: 'https://i.pravatar.cc/40?u=amit' },
+      { id: 'user-2', name: 'Neeraj Tripathi', role: 'Salesperson', avatarUrl: 'https://i.pravatar.cc/40?u=neeraj', reportsTo: 'user-1' },
+      { id: 'user-3', name: 'Pinki Sahu', role: 'Salesperson', avatarUrl: 'https://i.pravatar.cc/40?u=pinki', reportsTo: 'user-1' },
       { id: 'user-4', name: 'Sher Singh', role: 'Salesperson', avatarUrl: 'https://i.pravatar.cc/40?u=sher' },
-      { id: 'user-5', name: 'Umakant Sharma', role: 'Salesperson', avatarUrl: 'https://i.pravatar.cc/40?u=umakant' },
-      { id: 'user-6', name: 'Vimal Shrivastav', role: 'Salesperson', avatarUrl: 'https://i.pravatar.cc/40?u=vimal' },
-      { id: 'user-7', name: 'Parth Das', role: 'Salesperson', avatarUrl: 'https://i.pravatar.cc/40?u=parth' },
+      { id: 'user-5', name: 'Umakant Sharma', role: 'Sales Manager', avatarUrl: 'https://i.pravatar.cc/40?u=umakant' },
+      { id: 'user-6', name: 'Vimal Shrivastav', role: 'Salesperson', avatarUrl: 'https://i.pravatar.cc/40?u=vimal', reportsTo: 'user-5' },
+      { id: 'user-7', name: 'Parth Das', role: 'Salesperson', avatarUrl: 'https://i.pravatar.cc/40?u=parth', reportsTo: 'user-5' },
     ];
     
     const salespersonNameMap = new Map(users.map(u => [u.name.toLowerCase(), u.id]));

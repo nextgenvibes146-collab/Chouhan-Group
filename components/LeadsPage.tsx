@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import LeadsTable from './LeadsTable';
 import LeadDetailModal from './LeadDetailModal';
@@ -143,6 +144,19 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
       </button>
   );
 
+  const isManagerOrAdmin = currentUser.role === 'Admin' || currentUser.role === 'Sales Manager';
+
+  const manageableUsers = useMemo(() => {
+    if (currentUser.role === 'Admin') {
+      return users.filter(u => u.role !== 'Admin');
+    }
+    if (currentUser.role === 'Sales Manager') {
+      // Manager can see/assign to themselves or their reports
+      return users.filter(u => u.id === currentUser.id || u.reportsTo === currentUser.id);
+    }
+    return [];
+  }, [currentUser, users]);
+
   return (
     <div className="space-y-6">
         <div className="flex justify-between items-center">
@@ -164,10 +178,10 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
                     <option value="">All Statuses</option>
                     {Object.values(LeadStatus).map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
-                {currentUser.role === 'Admin' && (
+                {isManagerOrAdmin && (
                     <select value={filters.salesperson} onChange={e => setFilters({...filters, salesperson: e.target.value})} className="filter-select">
-                        <option value="">All Salespersons</option>
-                        {users.filter(u => u.role === 'Salesperson').map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+                        <option value="">{currentUser.role === 'Admin' ? 'All Salespersons' : 'All Team Members'}</option>
+                        {manageableUsers.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
                     </select>
                 )}
                 <div className="flex items-center gap-2">
@@ -184,10 +198,10 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
                         <option value="">Change Status...</option>
                         {Object.values(LeadStatus).map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
-                    {currentUser.role === 'Admin' && (
+                    {isManagerOrAdmin && (
                         <select value={bulkAssignee} onChange={e => setBulkAssignee(e.target.value)} className="filter-select">
                             <option value="">Assign To...</option>
-                            {users.filter(u => u.role === 'Salesperson').map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+                            {manageableUsers.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
                         </select>
                     )}
                     <button onClick={handleApplyBulkAction} disabled={!bulkStatus && !bulkAssignee} className="px-4 py-2 text-sm font-medium text-white bg-brand-blue rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
