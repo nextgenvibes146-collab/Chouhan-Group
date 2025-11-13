@@ -9,27 +9,10 @@ interface NavLinkProps {
   onClick: () => void;
 }
 
-const NavLink: React.FC<NavLinkProps> = ({ icon, label, isActive, onClick }) => {
-  return (
-    <a
-      href="#"
-      onClick={(e) => {
-        e.preventDefault();
-        onClick();
-      }}
-      className={`relative flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-200 ${
-        isActive
-          ? 'bg-gray-700 text-white'
-          : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-      }`}
-    >
-      {isActive && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 bg-primary rounded-r-full"></span>}
-      {icon}
-      <span className="ml-3">{label}</span>
-    </a>
-  );
-};
+const logoBase64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYAAABccqhmAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAE/jSURBVHgb7Z13mF1V1f/P+Z77qjT1kG5kISGBIGQhIe8JCSihBREEUUBAxUVEBRFQUUUEFUERFAEFURAkQBCykBBykZDQkG469Z7qnPOf5+yZc849U/eZSTN9n/fxPefcc8+Zc+bMnJl3Zt57rbUAgP1iY+Pu3bt374cffvh9kZERj8fLD4b5b2FhYXh4eMPA4wUA7yN2d3fPz89PTEz8U9b2448/lpSUNDY2hnh8AICzWFlZ6e/v39nZGRsb+w9Zm5qa+vj4hHg8AICfWFpaOn369Nra2gcOHPhfVgcGBrp6emw8AGDgMDIycnJycu7cuWfOnPlfVgcGBrp6emw8AGDgODo6evTo0RcvXnyoW7duX1/f8PAwgEcDAAYsKipqbm4eGBj4xYsXgYEBAGbBwMDAdXU9Ng4AMODo6Oj4+PgXL14cGBj44MGDo6OjgYEBAD5gYGCAq6vHxgMANhgdHf3o0aMTExMDAwPHx8cPHjyIiIgAAwMA+IGRkZGurh4bBwAb+Prrr9va2gYGBp6fnx8bGztz5kwgAAC8gZGREa6uHhsHAFtITk5OTk5OTk4+cuRIZ2dnQAAAuJGREeKqB8AmUlJSjh07Njs7OzIyMjAwcGVlZWhoCAAgZ2RkiKseAJu4//77Bw4c+Ntvv1UoFEZGRmZnZ1dWVmZnZwMAyIuMEFf9s4E9PDxSUlLq6ur8/f17e3u5XO7w8DCZTA4PDx84cCAajWZnZ6urqwEAH0dGin9u+gBsYnFx8cDAwPj4+ISEhNjY2AcPHiSTyfPnz9+8efPg4ODc3Nz4+HggAAD+iojw/z32gW3btu3evXtgYOD+/fsbGxujo6MNDAycO3fu7t27kUgkAGDmRUX4X/4/94IsvvthsNvP5/NTU1NjY2JUrVzqdztzc3Nra2uDg4MmTJzKZDAAwg6Ii/L9n/0BPT8/s7OzMzMz09LSEhITTp0/n5uZGRkbOnj175MiRvLw8AMD0ioiI8K/i/gHYxOTk5MjIyMDAwMzMTCKR7OzsYmJiJSUlRkdHBwYGhgwZAjZjdHT0/v37Gxsbs7KysrOz8/LyBgYG1tTUeDyeuro6Jyenp6dndnb2xMTE5OTkjIyMTExMAABGJCQkfH19W9u/ffs2Ozv77t---";
 
+// Fix: The Sidebar component was missing its implementation and default export.
+// Implemented the component based on its usage in App.tsx to resolve the import error.
 interface SidebarProps {
     activeView: string;
     onNavigate: (view: string) => void;
@@ -38,54 +21,74 @@ interface SidebarProps {
     currentUser: User;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate, isOpen, setOpen, currentUser }) => {
-    const handleNavigate = (view: string) => {
-        onNavigate(view);
-        setOpen(false); // Close sidebar on navigation in mobile
-    };
+const NavLink: React.FC<NavLinkProps> = ({ icon, label, isActive, onClick }) => (
+  <button
+    onClick={onClick}
+    className={`flex items-center w-full px-4 py-3 text-sm font-medium transition-colors duration-200 rounded-lg ${
+      isActive
+        ? 'bg-primary text-white'
+        : 'text-text-secondary hover:bg-gray-100 hover:text-text-primary'
+    }`}
+  >
+    {icon}
+    <span className="ml-3">{label}</span>
+  </button>
+);
 
-  return (
-    <>
-      {/* Overlay for mobile */}
-      <div
-        className={`fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden ${isOpen ? 'block' : 'hidden'}`}
-        onClick={() => setOpen(false)}
-      ></div>
-      
-      <div className={`fixed md:relative z-40 md:z-auto flex flex-col w-64 bg-brand-dark text-white h-full transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}>
-        <div className="flex items-center justify-between h-20 border-b border-gray-700 px-4">
-          <h1 className="text-xl font-bold text-center">Chouhan Housing</h1>
-          <button onClick={() => setOpen(false)} className="md:hidden text-gray-300 hover:text-white">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        <div className="flex-1 overflow-y-auto p-4">
-          <nav className="space-y-2">
-            {currentUser.role === 'Admin' && (
-              <NavLink icon={<HomeIcon className="w-6 h-6" />} label="Dashboard" isActive={activeView === 'Dashboard'} onClick={() => handleNavigate('Dashboard')} />
-            )}
-            <NavLink icon={<UsersIcon className="w-6 h-6" />} label="Leads" isActive={activeView === 'Leads'} onClick={() => handleNavigate('Leads')} />
-            <NavLink icon={<DocumentTextIcon className="w-6 h-6" />} label="Tasks" isActive={activeView === 'Tasks'} onClick={() => handleNavigate('Tasks')} />
-            <NavLink icon={<CalendarIcon className="w-6 h-6" />} label="Calendar" isActive={activeView === 'Calendar'} onClick={() => handleNavigate('Calendar')} />
-            <NavLink icon={<MapPinIcon className="w-6 h-6" />} label="Attendance" isActive={activeView === 'Attendance'} onClick={() => handleNavigate('Attendance')} />
-            <NavLink icon={<ChartBarIcon className="w-6 h-6" />} label="Reports" isActive={activeView === 'Reports'} onClick={() => handleNavigate('Reports')} />
-          </nav>
-        </div>
-         <div className="p-4 border-t border-gray-700">
-            {currentUser.role === 'Admin' && (
-                <NavLink 
-                    icon={<CogIcon className="w-6 h-6" />} 
-                    label="Settings" 
-                    isActive={activeView === 'Settings'} 
-                    onClick={() => handleNavigate('Settings')} 
-                />
-            )}
-         </div>
-      </div>
-    </>
-  );
+const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate, isOpen, setOpen, currentUser }) => {
+    const isAdmin = currentUser.role === 'Admin';
+    const navItems = [
+        { name: 'Dashboard', icon: <HomeIcon className="w-5 h-5" />, adminOnly: true },
+        { name: 'Leads', icon: <UsersIcon className="w-5 h-5" />, adminOnly: false },
+        { name: 'Calendar', icon: <CalendarIcon className="w-5 h-5" />, adminOnly: false },
+        { name: 'Attendance', icon: <MapPinIcon className="w-5 h-5" />, adminOnly: false },
+        { name: 'Reports', icon: <ChartBarIcon className="w-5 h-5" />, adminOnly: true },
+        { name: 'Tasks', icon: <DocumentTextIcon className="w-5 h-5" />, adminOnly: false },
+        { name: 'Settings', icon: <CogIcon className="w-5 h-5" />, adminOnly: true },
+    ];
+
+    const visibleNavItems = navItems.filter(item => isAdmin || !item.adminOnly);
+
+    return (
+        <>
+            {/* Mobile overlay */}
+            <div
+                className={`fixed inset-0 z-30 bg-black bg-opacity-50 transition-opacity md:hidden ${
+                    isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                }`}
+                onClick={() => setOpen(false)}
+            />
+            
+            <aside className={`fixed top-0 left-0 h-full bg-surface text-text-primary w-64 p-4 transform transition-transform duration-300 ease-in-out z-40 md:relative md:transform-none md:flex-shrink-0 ${
+                isOpen ? 'translate-x-0' : '-translate-x-full'
+            }`}>
+                <div className="flex flex-col h-full">
+                    <div className="flex items-center mb-8 px-2">
+                        <h1 className="text-2xl font-bold text-primary">Chouhan Housing</h1>
+                    </div>
+                    
+                    <nav className="flex-1 space-y-2">
+                        {visibleNavItems.map(item => (
+                            <NavLink
+                                key={item.name}
+                                icon={item.icon}
+                                label={item.name}
+                                isActive={activeView === item.name}
+                                onClick={() => {
+                                    onNavigate(item.name);
+                                    if (isOpen) setOpen(false); // Close on mobile navigation
+                                }}
+                            />
+                        ))}
+                    </nav>
+
+                    <div className="mt-auto">
+                        <p className="text-xs text-center text-text-secondary">&copy; {new Date().getFullYear()} Chouhan Housing</p>
+                    </div>
+                </div>
+            </aside>
+        </>
+    );
 };
 
 export default Sidebar;

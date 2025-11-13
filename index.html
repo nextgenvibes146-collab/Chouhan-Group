@@ -11,19 +11,19 @@
         theme: {
           extend: {
             colors: {
-              'primary': '#0c66e4',
-              'primary-hover': '#0055cc',
-              'secondary': '#4a5568',
-              'background': '#f7f8fa',
+              'primary': '#EA580C',
+              'primary-hover': '#C2410C',
+              'secondary': '#475569',
+              'background': '#f8fafc',
               'surface': '#ffffff',
-              'text-primary': '#172b4d',
-              'text-secondary': '#6b778c',
-              'border-color': '#dfe1e6',
-              'brand-blue': '#1a73e8', // Kept for compatibility but should be phased out
-              'brand-dark': '#202124',
-              'brand-light': '#f8f9fa',
-              'brand-gray': '#5f6368',
-              'brand-border': '#dadce0',
+              'sidebar': '#0f172a',
+              'text-primary': '#1e293b',
+              'text-secondary': '#64748b',
+              'border-color': '#e2e8f0',
+              'success': '#16a34a',
+              'success-hover': '#15803d',
+              'warning': '#f59e0b',
+              'danger': '#dc2626',
             },
             fontFamily: {
               sans: ['Inter', 'sans-serif'],
@@ -41,7 +41,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
-            background-color: #f7f8fa; /* Use new background color */
+            background-color: #f8fafc; /* Use new background color */
         }
         /* Base Component Styles */
         .card {
@@ -63,7 +63,7 @@
             @apply w-full flex justify-center py-2 px-4 border border-border-color rounded-md shadow-sm text-sm font-medium text-text-primary bg-surface hover:bg-background focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:bg-gray-200 disabled:cursor-not-allowed transition-colors;
         }
         .button-success {
-             @apply w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors;
+             @apply w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-success hover:bg-success-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-success disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors;
         }
         .action-button {
             @apply p-2 rounded-full transition-colors duration-200;
