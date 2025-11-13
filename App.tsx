@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
@@ -285,12 +286,11 @@ const App: React.FC = () => {
       }));
   };
 
-   const handleCreateUser = (userData: { name: string; role: 'Salesperson' | 'Sales Manager'; reportsTo?: string }) => {
+   const handleCreateUser = (userData: { name: string }) => {
         const newUser: User = {
             id: `user-${Date.now()}`,
             name: userData.name,
-            role: userData.role,
-            reportsTo: userData.reportsTo,
+            role: 'Salesperson',
             avatarUrl: `https://i.pravatar.cc/40?u=${userData.name.replace(/\s/g, '')}`,
         };
         setUsers(prev => [...prev, newUser]);
@@ -334,31 +334,9 @@ const App: React.FC = () => {
         });
         setTasks(updatedTasks);
 
-        // Delete user and update reporting structure for their team
+        // Delete user
         const remainingUsers = users.filter(u => u.id !== userId);
-        const fullyUpdatedUsers = remainingUsers.map(u => {
-            if (u.reportsTo === userId) {
-                return { ...u, reportsTo: admin.id };
-            }
-            return u;
-        });
-        setUsers(fullyUpdatedUsers);
-    };
-
-    const handleUpdateUser = (userId: string, updates: Partial<Pick<User, 'role' | 'reportsTo'>>) => {
-        setUsers(prevUsers =>
-            prevUsers.map(user => {
-                if (user.id === userId) {
-                    const updatedUser = { ...user, ...updates };
-                    // If a user is changed to a 'Sales Manager', their 'reportsTo' should be cleared.
-                    if (updates.role === 'Sales Manager') {
-                        delete updatedUser.reportsTo;
-                    }
-                    return updatedUser;
-                }
-                return user;
-            })
-        );
+        setUsers(remainingUsers);
     };
 
   const { visibleLeads, visibleActivities, visibleTasks } = useMemo(() => {
@@ -369,20 +347,7 @@ const App: React.FC = () => {
     if (currentUser.role === 'Admin') {
         return { visibleLeads: leads, visibleActivities: activities, visibleTasks: tasks };
     }
-
-    if (currentUser.role === 'Sales Manager') {
-        const managedUserIds = users
-            .filter(u => u.reportsTo === currentUser.id)
-            .map(u => u.id);
-        const teamIds = [currentUser.id, ...managedUserIds];
-
-        return {
-            visibleLeads: leads.filter(l => teamIds.includes(l.assignedSalespersonId)),
-            visibleActivities: activities.filter(a => teamIds.includes(a.salespersonId)),
-            visibleTasks: tasks.filter(t => teamIds.includes(t.assignedToId)),
-        };
-    }
-
+    
     // Default is 'Salesperson'
     return {
         visibleLeads: leads.filter(l => l.assignedSalespersonId === currentUser.id),
@@ -465,7 +430,6 @@ const App: React.FC = () => {
                     users={users}
                     onCreateUser={handleCreateUser}
                     onDeleteUser={handleDeleteUser}
-                    onUpdateUser={handleUpdateUser}
                 />;
       default:
         if (currentUser?.role === 'Admin') {

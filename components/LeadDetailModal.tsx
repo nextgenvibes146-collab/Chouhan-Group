@@ -2,6 +2,8 @@
 
 
 
+
+
 import React, { useState, useMemo } from 'react';
 import { type Lead, type User, LeadStatus, ActivityType, type Activity } from '../types';
 import { PhoneIcon, MailIcon, MapPinIcon, ChatBubbleIcon } from './Icons';
@@ -39,17 +41,11 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({ lead, users, onClose,
   const [rescheduleDate, setRescheduleDate] = useState('');
   
   const salesperson = users.find(u => u.id === lead.assignedSalespersonId);
-  const isManagerOrAdmin = currentUser.role === 'Admin' || currentUser.role === 'Sales Manager';
   const isAdmin = currentUser.role === 'Admin';
 
   const assignableUsers = useMemo(() => {
     if (currentUser.role === 'Admin') {
       return users.filter(u => u.role !== 'Admin' && u.id !== lead.assignedSalespersonId);
-    }
-    if (currentUser.role === 'Sales Manager') {
-      return users.filter(u => 
-        (u.id === currentUser.id || u.reportsTo === currentUser.id) && u.id !== lead.assignedSalespersonId
-      );
     }
     return [];
   }, [currentUser, users, lead.assignedSalespersonId]);
@@ -194,7 +190,7 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({ lead, users, onClose,
                         <p>Last Activity: <span className="font-medium text-text-primary">{new Date(lead.lastActivityDate).toLocaleString()}</span></p>
                         <p>Enquiry Mode: <span className="font-medium text-text-primary">{lead.modeOfEnquiry}</span></p>
                     </div>
-                    {isManagerOrAdmin && (
+                    {isAdmin && (
                          <div className="space-y-4 bg-surface p-4 rounded-lg card">
                             <h3 className="text-lg font-semibold text-text-primary">Transfer Lead</h3>
                             <div className="flex items-center space-x-2">

@@ -2,6 +2,8 @@
 
 
 
+
+
 import React, { useState, useMemo, useCallback } from 'react';
 import LeadsTable from './LeadsTable';
 import LeadDetailModal from './LeadDetailModal';
@@ -239,15 +241,11 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
       </button>
   );
 
-  const isManagerOrAdmin = currentUser.role === 'Admin' || currentUser.role === 'Sales Manager';
+  const isAdmin = currentUser.role === 'Admin';
 
   const manageableUsers = useMemo(() => {
     if (currentUser.role === 'Admin') {
       return users.filter(u => u.role !== 'Admin');
-    }
-    if (currentUser.role === 'Sales Manager') {
-      // Manager can see/assign to themselves or their reports
-      return users.filter(u => u.id === currentUser.id || u.reportsTo === currentUser.id);
     }
     return [];
   }, [currentUser, users]);
@@ -277,10 +275,10 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
                         <option value="">All Statuses</option>
                         {Object.values(LeadStatus).map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
-                    {isManagerOrAdmin && (
+                    {isAdmin && (
                         <>
                             <select value={filters.salesperson} onChange={e => setFilters({...filters, salesperson: e.target.value})} className="filter-select">
-                                <option value="">{currentUser.role === 'Admin' ? 'All Salespersons' : 'All Team Members'}</option>
+                                <option value="">All Salespersons</option>
                                 {manageableUsers.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
                             </select>
                              <select value={filters.enquiryType} onChange={e => setFilters({...filters, enquiryType: e.target.value})} className="filter-select">
@@ -304,7 +302,7 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
                         <option value="">Change Status...</option>
                         {Object.values(LeadStatus).map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
-                    {isManagerOrAdmin && (
+                    {isAdmin && (
                         <select value={bulkAssignee} onChange={e => setBulkAssignee(e.target.value)} className="filter-select">
                             <option value="">Assign To...</option>
                             {manageableUsers.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}

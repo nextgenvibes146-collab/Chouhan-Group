@@ -1,5 +1,6 @@
 
 
+
 export enum LeadStatus {
   New = 'New',
   Contacted = 'Contacted',
@@ -32,9 +33,8 @@ export enum ModeOfEnquiry {
 export interface User {
   id: string;
   name: string;
-  role: 'Admin' | 'Sales Manager' | 'Salesperson';
+  role: 'Admin' | 'Salesperson';
   avatarUrl: string;
-  reportsTo?: string;
 }
 
 export interface Lead {
