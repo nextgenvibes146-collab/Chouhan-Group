@@ -64,7 +64,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate, isOpen, setOp
             }`}>
                 <div className="flex flex-col h-full">
                     <div className="flex items-center mb-8 px-2">
-                        <h1 className="text-2xl font-bold text-primary">Chouhan Housing</h1>
+                        <h1 className="text-xl font-bold text-primary">Chouhan Housing Private Limited</h1>
                     </div>
                     
                     <nav className="flex-1 space-y-2">
@@ -83,7 +83,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate, isOpen, setOp
                     </nav>
 
                     <div className="mt-auto">
-                        <p className="text-xs text-center text-text-secondary">&copy; {new Date().getFullYear()} Chouhan Housing</p>
+                        <p className="text-xs text-center text-text-secondary">&copy; {new Date().getFullYear()} Chouhan Housing Private Limited</p>
                     </div>
                 </div>
             </aside>

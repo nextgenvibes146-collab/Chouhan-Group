@@ -1,5 +1,5 @@
 {
-  "name": "Real Estate CRM Dashboard",
+  "name": "Chouhan Housing Private Limited CRM",
   "description": "A comprehensive dashboard for real estate sales managers to monitor team performance, track leads, and view real-time activity.",
   "requestFramePermissions": [
     "geolocation"

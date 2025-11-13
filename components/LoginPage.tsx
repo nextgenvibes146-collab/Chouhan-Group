@@ -39,7 +39,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ users, onLogin }) => {
     <div className="flex items-center justify-center h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <div className="w-full max-w-sm p-8 space-y-8 bg-surface rounded-2xl shadow-card">
         <div className="text-center">
-            <h1 className="text-3xl font-bold text-text-primary">Chouhan Housing</h1>
+            <h1 className="text-2xl font-bold text-text-primary">Chouhan Housing Private Limited</h1>
             <p className="mt-2 text-sm text-text-secondary">CRM Portal Login</p>
         </div>
         <div className="space-y-6">
