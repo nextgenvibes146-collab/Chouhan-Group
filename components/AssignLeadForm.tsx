@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { User } from '../types';
+import { ModeOfEnquiry } from '../types';
 import type { NewLeadData } from '../App';
 
 interface AssignLeadFormProps {
@@ -95,7 +96,12 @@ const AssignLeadForm: React.FC<AssignLeadFormProps> = ({ salesAgents, onAssignLe
                     <div className="space-y-3">
                         <div>
                             <label htmlFor="platform" className="label-style">Source / Platform</label>
-                            <input type="text" id="platform" name="platform" value={formData.platform} onChange={handleChange} className="input-style" placeholder="e.g., Facebook, Reference" />
+                            <select id="platform" name="platform" value={formData.platform} onChange={handleChange} className="input-style">
+                                <option value="" disabled>Select a source...</option>
+                                {Object.values(ModeOfEnquiry).map(mode => (
+                                    <option key={mode} value={mode}>{mode}</option>
+                                ))}
+                            </select>
                         </div>
                         <div>
                             <label htmlFor="interestedProject" className="label-style">Interested Project</label>

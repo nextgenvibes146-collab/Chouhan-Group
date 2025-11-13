@@ -1,10 +1,14 @@
 
 
 
+
 import React, { useState } from 'react';
 import { ChartBarIcon, PhoneIcon, ChatBubbleIcon } from './Icons';
 import { Lead, User, LeadStatus, Activity, ActivityType } from '../types';
 import LeadDetailModal from './LeadDetailModal';
+import SalesPipelineChart from './SalesPipelineChart';
+import SalesFunnelChart from './SalesFunnelChart';
+import ActivityFeed from './ActivityFeed';
 
 interface CancelledLeadsTableProps {
     leads: Lead[];
@@ -92,17 +96,23 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ leads, users, currentUser, on
         <div className="space-y-6">
             <h2 className="text-2xl md:text-3xl font-bold text-brand-dark">Reporting</h2>
 
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="card p-6">
+                    <SalesPipelineChart leads={leads} />
+                </div>
+                <div className="card p-6">
+                    <SalesFunnelChart leads={leads} />
+                </div>
+            </div>
+
+            <div className="card p-6">
+                <ActivityFeed activities={activities} users={users} title="Full Activity Log" />
+            </div>
+
             <div className="space-y-4">
                 <h3 className="text-xl font-semibold text-brand-dark">Cancelled Leads Report</h3>
                 <p className="text-sm text-brand-gray">A log of all leads that have been marked as cancelled.</p>
                 <CancelledLeadsTable leads={cancelledLeads} onOpenModal={handleOpenModal} />
-            </div>
-
-            <div className="bg-white p-6 rounded-xl shadow-md text-center mt-8">
-                <div className="flex justify-center items-center mb-4">
-                    <ChartBarIcon className="w-16 h-16 text-brand-blue opacity-50" />
-                </div>
-                <p className="text-brand-gray">More advanced reporting tools to analyze sales performance, lead conversion rates, and team productivity will be built here.</p>
             </div>
 
             {selectedLead && (

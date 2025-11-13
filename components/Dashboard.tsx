@@ -3,7 +3,6 @@
 import React from 'react';
 import { LeadStatus, Lead, User, Activity, SalesTarget, Task } from '../types';
 import MetricCard from './MetricCard';
-import SalesPipelineChart from './SalesPipelineChart';
 import PerformanceChart from './PerformanceChart';
 import ActivityFeed from './ActivityFeed';
 import AttendanceCard from './AttendanceCard';
@@ -43,17 +42,9 @@ const Dashboard: React.FC<DashboardProps> = ({ leads, users, activities, salesTa
             <MetricCard title="Upcoming Visits" value={upcomingVisits.toString()} icon={<CalendarDaysIcon className="w-8 h-8 text-purple-500" />} />
         </div>
         
-        {/* Charts and Feeds */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 card p-6">
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                    <SalesPipelineChart leads={leads} />
-                    <SalesFunnelChart leads={leads} />
-                </div>
-            </div>
-            <div className="card p-6 flex flex-col space-y-6">
+        <div className="grid grid-cols-1 gap-6">
+            <div className="card p-6">
                 <AttendanceCard />
-                <ActivityFeed activities={activities.slice(0, 5)} users={users} />
             </div>
         </div>
         

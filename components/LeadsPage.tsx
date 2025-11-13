@@ -145,7 +145,9 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
         filtered = filtered.filter(l => !l.isRead);
     }
     if (filters.showOverdue) {
-        filtered = filtered.filter(l => l.nextFollowUpDate && new Date(l.nextFollowUpDate) < new Date());
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Set to start of the current day
+        filtered = filtered.filter(l => l.nextFollowUpDate && new Date(l.nextFollowUpDate) < today);
     }
     if(filters.showVisits) {
         filtered = filtered.filter(l => l.status === LeadStatus.VisitScheduled);
