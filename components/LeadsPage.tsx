@@ -1,6 +1,7 @@
 
 
 
+
 import React, { useState, useMemo, useCallback } from 'react';
 import LeadsTable from './LeadsTable';
 import LeadDetailModal from './LeadDetailModal';
@@ -113,7 +114,8 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
     dateRange: '', // e.g., 'today', 'this_week'
     showUnread: false,
     showOverdue: false,
-    showVisits: false
+    showVisits: false,
+    enquiryType: '',
   });
 
   const handleOpenModal = (lead: Lead) => {
@@ -135,6 +137,9 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
     }
     if (filters.salesperson) {
         filtered = filtered.filter(l => l.assignedSalespersonId === filters.salesperson);
+    }
+    if (filters.enquiryType) {
+        filtered = filtered.filter(l => l.modeOfEnquiry === filters.enquiryType);
     }
     if (filters.showUnread) {
         filtered = filtered.filter(l => !l.isRead);
@@ -271,10 +276,16 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
                         {Object.values(LeadStatus).map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
                     {isManagerOrAdmin && (
-                        <select value={filters.salesperson} onChange={e => setFilters({...filters, salesperson: e.target.value})} className="filter-select">
-                            <option value="">{currentUser.role === 'Admin' ? 'All Salespersons' : 'All Team Members'}</option>
-                            {manageableUsers.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
-                        </select>
+                        <>
+                            <select value={filters.salesperson} onChange={e => setFilters({...filters, salesperson: e.target.value})} className="filter-select">
+                                <option value="">{currentUser.role === 'Admin' ? 'All Salespersons' : 'All Team Members'}</option>
+                                {manageableUsers.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+                            </select>
+                             <select value={filters.enquiryType} onChange={e => setFilters({...filters, enquiryType: e.target.value})} className="filter-select">
+                                <option value="">All Enquiry Types</option>
+                                {Object.values(ModeOfEnquiry).map(s => <option key={s} value={s}>{s}</option>)}
+                            </select>
+                        </>
                     )}
                 </div>
                 <div className="flex items-center gap-2">
