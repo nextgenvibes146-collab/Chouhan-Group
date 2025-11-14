@@ -12,6 +12,15 @@ import type { Lead, User, ActivityType, Activity } from '../types';
 import { LeadStatus, ModeOfEnquiry } from '../types';
 import type { NewLeadData } from '../App';
 
+// Allowed lead sources to display
+const ALLOWED_SOURCES = [
+  ModeOfEnquiry.Website,
+  ModeOfEnquiry.Facebook,
+  ModeOfEnquiry.Instagram,
+  ModeOfEnquiry.IVR,
+  ModeOfEnquiry.WalkIn,
+];
+
 interface LeadsPageProps {
   leads: Lead[];
   users: User[];
@@ -283,7 +292,7 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
                             </select>
                              <select value={filters.enquiryType} onChange={e => setFilters({...filters, enquiryType: e.target.value})} className="filter-select">
                                 <option value="">All Enquiry Types</option>
-                                {Object.values(ModeOfEnquiry).map(s => <option key={s} value={s}>{s}</option>)}
+                                {ALLOWED_SOURCES.map(s => <option key={s} value={s}>{s}</option>)}
                             </select>
                         </>
                     )}

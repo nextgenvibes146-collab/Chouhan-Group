@@ -21,6 +21,8 @@ export enum ActivityType {
 
 export enum ModeOfEnquiry {
   Website = 'Website',
+  Facebook = 'Facebook',
+  Instagram = 'Instagram',
   WalkIn = 'Walk-in',
   Call = 'Call',
   Reference = 'Reference',
