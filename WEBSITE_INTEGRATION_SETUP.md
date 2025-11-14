@@ -185,6 +185,7 @@ Add webhook secret authentication:
 ### Lead not appearing in CRM:
 1. Check browser console for errors
 2. Verify webhook URL is correct
+
 3. Check webhook endpoint logs
 4. Verify required fields (name, mobile) are being sent
 
@@ -336,4 +337,5 @@ Once set up, all leads from your website will automatically:
 - Be saved to Google Sheets
 - Show notifications to admin users
 - Be assigned to the default salesperson
+
 
