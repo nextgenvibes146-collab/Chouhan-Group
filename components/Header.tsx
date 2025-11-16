@@ -75,7 +75,7 @@ const BroadcastModal: React.FC<{ users: User[], onSend: (message: string, target
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center" onClick={onClose}>
             <div className="bg-white rounded-lg shadow-xl w-full max-w-md m-4" onClick={e => e.stopPropagation()}>
                 <div className="p-6 border-b">
-                    <h3 className="text-lg font-semibold text-brand-dark">Broadcast Message</h3>
+                    <h3 className="text-lg font-semibold text-text-primary">Broadcast Message</h3>
                 </div>
                 <div className="p-6 space-y-4">
                     <div>

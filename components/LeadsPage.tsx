@@ -56,6 +56,13 @@ const ImportCSV: React.FC<{onImport: Function, users: User[]}> = ({ onImport, us
                         // Basic data validation
                         if (!leadData['Customer Name'] || !leadData['Mobile']) return null;
 
+                        // Fix: The 'leadDate' from CSV could be of an unknown type, causing a type error with the `new Date()` constructor.
+                        // By explicitly converting it to a string and validating it, we ensure type safety and handle potential invalid date formats gracefully.
+                        const parsedDate = new Date(String(leadData['Lead Date']));
+                        const leadDateISO = (leadData['Lead Date'] && !isNaN(parsedDate.getTime()))
+                            ? parsedDate.toISOString()
+                            : new Date().toISOString();
+
                         return {
                             customerName: leadData['Customer Name'],
                             mobile: leadData['Mobile'],
@@ -68,9 +75,7 @@ const ImportCSV: React.FC<{onImport: Function, users: User[]}> = ({ onImport, us
                             lastRemark: leadData['Last Remark'] || 'Imported lead.',
                             assignedSalespersonId: leadData['Sales Person'] || users[0].name, // a bit of a hack
                             status: (leadData['Status'] as LeadStatus) || LeadStatus.New,
-                            // FIX: Handle cases where the date string from the CSV might be missing, empty, or invalid.
-                            // This resolves the type error and prevents potential runtime crashes.
-                            leadDate: (leadData['Lead Date'] && !isNaN(new Date(leadData['Lead Date'] as string).getTime()) ? new Date(leadData['Lead Date'] as string) : new Date()).toISOString(),
+                            leadDate: leadDateISO,
                             modeOfEnquiry: ModeOfEnquiry.Digital,
                             visitStatus: 'No',
                         };

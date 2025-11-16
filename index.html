@@ -40,6 +40,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        html {
+            color-scheme: light;
+        }
         body {
             background-color: #f8fafc; /* Use new background color */
         }
@@ -48,10 +51,10 @@
             @apply bg-surface rounded-xl shadow-subtle border border-border-color;
         }
         .input-style {
-            @apply mt-1 block w-full px-3 py-2 bg-white border border-border-color rounded-md shadow-sm text-black placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm transition-shadow;
+            @apply mt-1 block w-full px-3 py-2 bg-surface border border-border-color rounded-md shadow-sm text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm transition-shadow;
         }
         .dark-input-style {
-            @apply mt-1 block w-full px-3 py-2 bg-white border border-border-color rounded-md shadow-sm text-black placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm transition-shadow;
+            @apply mt-1 block w-full px-3 py-2 bg-surface border border-border-color rounded-md shadow-sm text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm transition-shadow;
         }
         .label-style {
             @apply block text-sm font-medium text-text-secondary;
@@ -69,7 +72,7 @@
             @apply p-2 rounded-full transition-colors duration-200;
         }
         .filter-select {
-            @apply text-sm bg-surface border border-border-color rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary py-1.5 px-3;
+            @apply text-sm bg-surface border border-border-color rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary py-1.5 px-3 text-text-primary;
         }
     </style>
   <script type="importmap">
