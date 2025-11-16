@@ -34,16 +34,16 @@ const AttendanceCard: React.FC = () => {
     const getStatusMessage = () => {
         switch (status) {
             case 'NotClockedIn':
-                return <p className="text-sm text-brand-gray">You are not clocked in.</p>;
+                return <p className="text-sm text-text-secondary">You are not clocked in.</p>;
             case 'ClockingIn':
-                 return <p className="text-sm text-brand-gray animate-pulse">Clocking in...</p>;
+                 return <p className="text-sm text-text-secondary animate-pulse">Clocking in...</p>;
             case 'ClockedIn':
                 return (
                     <div>
                         <p className="text-sm font-semibold text-green-600">
                             Clocked in at: {clockInTime?.toLocaleTimeString()}
                         </p>
-                        <p className="text-xs text-brand-gray flex items-center mt-1">
+                        <p className="text-xs text-text-secondary flex items-center mt-1">
                             <MapPinIcon className="w-4 h-4 mr-1" />
                             {location}
                         </p>
@@ -56,14 +56,14 @@ const AttendanceCard: React.FC = () => {
 
     return (
         <div>
-            <h3 className="text-lg font-semibold text-brand-dark mb-4">Attendance</h3>
-            <div className="bg-brand-light p-4 rounded-lg">
+            <h3 className="text-lg font-semibold text-text-primary mb-4">Attendance</h3>
+            <div className="bg-gray-50 p-4 rounded-lg">
                 <div className="flex items-center justify-between">
                     {getStatusMessage()}
                     <button
                         onClick={handleClockIn}
                         disabled={status === 'ClockedIn' || status === 'ClockingIn'}
-                        className="px-4 py-2 text-sm font-semibold text-white bg-brand-blue rounded-lg shadow-sm hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-blue transition-colors"
+                        className="px-4 py-2 text-sm font-semibold text-white bg-primary rounded-lg shadow-sm hover:bg-primary-hover disabled:bg-gray-400 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors"
                     >
                        {status === 'ClockedIn' ? 'Clocked In' : 'Clock In'}
                     </button>

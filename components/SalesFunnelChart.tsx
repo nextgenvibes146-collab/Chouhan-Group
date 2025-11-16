@@ -1,4 +1,5 @@
 
+
 import React, { useMemo } from 'react';
 import { ResponsiveContainer, FunnelChart, Funnel, Tooltip, LabelList, Cell } from 'recharts';
 import type { Lead } from '../types';
@@ -8,7 +9,7 @@ interface SalesFunnelChartProps {
   leads: Lead[];
 }
 
-const COLORS = ['#1a73e8', '#4285f4', '#73a5f7', '#a6c6fa', '#d9e7fd', '#e8f0fe'].reverse();
+const COLORS = ['#fbe5bf', '#f9d79f', '#f7c980', '#f5bb60', '#f3ad40', '#f19f21'];
 
 const SalesFunnelChart: React.FC<SalesFunnelChartProps> = ({ leads }) => {
   const chartData = useMemo(() => {
@@ -52,15 +53,15 @@ const SalesFunnelChart: React.FC<SalesFunnelChartProps> = ({ leads }) => {
   if (!chartData || chartData.length === 0) {
       return (
         <div>
-          <h3 className="text-lg font-semibold text-brand-dark mb-4">Sales Funnel</h3>
-          <p className="text-brand-gray text-center py-10">Not enough data to display funnel.</p>
+          <h3 className="text-lg font-semibold text-text-primary mb-4">Sales Funnel</h3>
+          <p className="text-text-secondary text-center py-10">Not enough data to display funnel.</p>
         </div>
       );
   }
 
   return (
     <div>
-      <h3 className="text-lg font-semibold text-brand-dark mb-4">Sales Funnel</h3>
+      <h3 className="text-lg font-semibold text-text-primary mb-4">Sales Funnel</h3>
       <div style={{ width: '100%', height: 300 }}>
         <ResponsiveContainer>
           <FunnelChart>

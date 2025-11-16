@@ -54,13 +54,13 @@ const CalendarPage: React.FC<CalendarPageProps> = ({ leads, tasks }) => {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl md:text-3xl font-bold text-brand-dark">My Agenda</h2>
+      <h2 className="text-2xl md:text-3xl font-bold text-text-primary">My Agenda</h2>
       <div className="bg-white p-6 rounded-xl shadow-md">
         {sortedDates.length > 0 ? (
           <div className="space-y-6">
             {sortedDates.map(dateKey => (
               <div key={dateKey}>
-                <h3 className="text-lg font-semibold text-brand-blue pb-2 mb-3 border-b border-brand-border">
+                <h3 className="text-lg font-semibold text-primary pb-2 mb-3 border-b border-border-color">
                     {new Date(dateKey).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                 </h3>
                 <ul className="space-y-4">
@@ -70,8 +70,8 @@ const CalendarPage: React.FC<CalendarPageProps> = ({ leads, tasks }) => {
                                 {item.type === 'Task' ? <DocumentTextIcon className="w-5 h-5 text-orange-600" /> : <UsersIcon className="w-5 h-5 text-purple-600" />}
                             </div>
                             <div>
-                                <p className="font-semibold text-brand-dark">{item.title}</p>
-                                <p className="text-sm text-brand-gray">{item.details}</p>
+                                <p className="font-semibold text-text-primary">{item.title}</p>
+                                <p className="text-sm text-text-secondary">{item.details}</p>
                             </div>
                         </li>
                     ))}
@@ -81,8 +81,8 @@ const CalendarPage: React.FC<CalendarPageProps> = ({ leads, tasks }) => {
           </div>
         ) : (
           <div className="text-center py-10">
-            <CalendarIcon className="w-16 h-16 text-brand-blue opacity-50 mx-auto mb-4" />
-            <p className="text-brand-gray">You have no upcoming tasks or follow-ups scheduled.</p>
+            <CalendarIcon className="w-16 h-16 text-primary opacity-50 mx-auto mb-4" />
+            <p className="text-text-secondary">You have no upcoming tasks or follow-ups scheduled.</p>
           </div>
         )}
       </div>

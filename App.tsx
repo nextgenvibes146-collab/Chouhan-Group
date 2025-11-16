@@ -14,7 +14,6 @@ import LoginPage from './components/LoginPage';
 import SettingsPage from './components/SettingsPage';
 import { fetchSheetData } from './services/googleSheetService';
 import { Lead, User, Activity, SalesTarget, Task, LeadStatus, ActivityType, ModeOfEnquiry, Notification } from './types';
-import { processWebsiteLead, type WebsiteLeadData } from './services/websiteLeadCapture';
 
 export interface NewLeadData {
     customerName: string;
@@ -64,53 +63,6 @@ const App: React.FC = () => {
   useEffect(() => {
     loadData();
   }, [loadData]);
-
-  // Handle incoming website leads from webhook
-  const handleWebsiteLead = useCallback(async (websiteLeadData: WebsiteLeadData) => {
-    try {
-      const accessToken = (import.meta as any).env?.VITE_GOOGLE_SHEETS_ACCESS_TOKEN;
-      
-      // Process the website lead
-      const newLead = await processWebsiteLead(websiteLeadData, users, accessToken);
-
-      // Check for duplicates by mobile number
-      const existingLead = leads.find(l => l.mobile === newLead.mobile);
-      if (existingLead) {
-        console.log('Duplicate lead detected, skipping:', newLead.mobile);
-        return;
-      }
-
-      // Add to leads state
-      setLeads(prevLeads => [newLead, ...prevLeads]);
-      
-      // Create activity for new lead
-      const newActivity: Activity = {
-        id: `act-${Date.now()}-${newLead.id}`,
-        leadId: newLead.id,
-        salespersonId: newLead.assignedSalespersonId,
-        type: ActivityType.Note,
-        date: new Date().toISOString(),
-        remarks: `New lead automatically imported from website: ${websiteLeadData.sourceUrl || 'chouhan-park-view-xi.vercel.app'}`,
-        customerName: newLead.customerName,
-      };
-      setActivities(prev => [newActivity, ...prev]);
-
-      // Show notification
-      handleAddNotification(
-        `New lead from ${websiteLeadData.sourceUrl || 'website'}: ${newLead.customerName}`,
-        currentUser?.id
-      );
-    } catch (error) {
-      console.error('Error processing website lead:', error);
-    }
-  }, [users, leads, currentUser]);
-
-  // Expose handleWebsiteLead globally for webhook to call (development/testing)
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      (window as any).handleWebsiteLead = handleWebsiteLead;
-    }
-  }, [handleWebsiteLead]);
   
   const handleUpdateLead = (updatedLead: Lead) => {
     if (!currentUser) return;

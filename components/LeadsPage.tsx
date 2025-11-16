@@ -1,9 +1,3 @@
-
-
-
-
-
-
 import React, { useState, useMemo, useCallback } from 'react';
 import LeadsTable from './LeadsTable';
 import LeadDetailModal from './LeadDetailModal';
@@ -11,15 +5,6 @@ import AssignLeadForm from './AssignLeadForm';
 import type { Lead, User, ActivityType, Activity } from '../types';
 import { LeadStatus, ModeOfEnquiry } from '../types';
 import type { NewLeadData } from '../App';
-
-// Allowed lead sources to display
-const ALLOWED_SOURCES = [
-  ModeOfEnquiry.Website,
-  ModeOfEnquiry.Facebook,
-  ModeOfEnquiry.Instagram,
-  ModeOfEnquiry.IVR,
-  ModeOfEnquiry.WalkIn,
-];
 
 interface LeadsPageProps {
   leads: Lead[];
@@ -66,7 +51,7 @@ const ImportCSV: React.FC<{onImport: Function, users: User[]}> = ({ onImport, us
                         const leadData = headers.reduce((obj, header, index) => {
                             obj[header] = data[index]?.trim().replace(/"/g, '');
                             return obj;
-                        }, {} as {[key: string]: string});
+                        }, {} as {[key: string]: any});
 
                         // Basic data validation
                         if (!leadData['Customer Name'] || !leadData['Mobile']) return null;
@@ -83,7 +68,9 @@ const ImportCSV: React.FC<{onImport: Function, users: User[]}> = ({ onImport, us
                             lastRemark: leadData['Last Remark'] || 'Imported lead.',
                             assignedSalespersonId: leadData['Sales Person'] || users[0].name, // a bit of a hack
                             status: (leadData['Status'] as LeadStatus) || LeadStatus.New,
-                            leadDate: new Date(leadData['Lead Date']).toISOString(),
+                            // FIX: Handle cases where the date string from the CSV might be missing, empty, or invalid.
+                            // This resolves the type error and prevents potential runtime crashes.
+                            leadDate: (leadData['Lead Date'] && !isNaN(new Date(leadData['Lead Date'] as string).getTime()) ? new Date(leadData['Lead Date'] as string) : new Date()).toISOString(),
                             modeOfEnquiry: ModeOfEnquiry.Digital,
                             visitStatus: 'No',
                         };
@@ -127,6 +114,7 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
     showOverdue: false,
     showVisits: false,
     enquiryType: '',
+    month: '',
   });
 
   const handleOpenModal = (lead: Lead) => {
@@ -140,6 +128,11 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
     setSelectedLead(null);
   };
   
+  const uniqueMonths = useMemo(() => {
+    const months = new Set(leads.map(l => l.month).filter(Boolean));
+    return Array.from(months).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+  }, [leads]);
+
   const filteredLeads = useMemo(() => {
     let filtered = [...leads];
     
@@ -148,6 +141,9 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
     }
     if (filters.salesperson) {
         filtered = filtered.filter(l => l.assignedSalespersonId === filters.salesperson);
+    }
+    if (filters.month) {
+        filtered = filtered.filter(l => l.month === filters.month);
     }
     if (filters.enquiryType) {
         filtered = filtered.filter(l => l.modeOfEnquiry === filters.enquiryType);
@@ -277,27 +273,44 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
         )}
 
         <div className="space-y-4">
-             {/* Filters */}
-            <div className="card p-4 flex flex-wrap items-center gap-4">
-                <div className="flex items-center gap-4 flex-grow">
-                    <select value={filters.status} onChange={e => setFilters({...filters, status: e.target.value})} className="filter-select">
-                        <option value="">All Statuses</option>
-                        {Object.values(LeadStatus).map(s => <option key={s} value={s}>{s}</option>)}
-                    </select>
+            {/* Filters */}
+            <div className="card p-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                    <div>
+                        <label className="text-xs font-medium text-text-secondary">Status</label>
+                        <select value={filters.status} onChange={e => setFilters({...filters, status: e.target.value})} className="filter-select w-full mt-1">
+                            <option value="">All Statuses</option>
+                            {Object.values(LeadStatus).map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                    </div>
                     {isAdmin && (
                         <>
-                            <select value={filters.salesperson} onChange={e => setFilters({...filters, salesperson: e.target.value})} className="filter-select">
-                                <option value="">All Salespersons</option>
-                                {manageableUsers.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
-                            </select>
-                             <select value={filters.enquiryType} onChange={e => setFilters({...filters, enquiryType: e.target.value})} className="filter-select">
-                                <option value="">All Enquiry Types</option>
-                                {ALLOWED_SOURCES.map(s => <option key={s} value={s}>{s}</option>)}
-                            </select>
+                            <div>
+                                <label className="text-xs font-medium text-text-secondary">Salesperson</label>
+                                <select value={filters.salesperson} onChange={e => setFilters({...filters, salesperson: e.target.value})} className="filter-select w-full mt-1">
+                                    <option value="">All Salespersons</option>
+                                    {manageableUsers.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="text-xs font-medium text-text-secondary">Month</label>
+                                <select value={filters.month} onChange={e => setFilters({...filters, month: e.target.value})} className="filter-select w-full mt-1">
+                                    <option value="">All Months</option>
+                                    {uniqueMonths.map(m => <option key={m} value={m}>{m}</option>)}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="text-xs font-medium text-text-secondary">Enquiry Type</label>
+                                <select value={filters.enquiryType} onChange={e => setFilters({...filters, enquiryType: e.target.value})} className="filter-select w-full mt-1">
+                                    <option value="">All Enquiry Types</option>
+                                    {Object.values(ModeOfEnquiry).map(s => <option key={s} value={s}>{s}</option>)}
+                                </select>
+                            </div>
                         </>
                     )}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border-color flex-wrap">
+                    <span className="text-sm font-medium text-text-secondary mr-2">Quick Filters:</span>
                     <FilterButton label="Unread" filterKey="showUnread" />
                     <FilterButton label="Overdue" filterKey="showOverdue" />
                     <FilterButton label="Visits" filterKey="showVisits" />

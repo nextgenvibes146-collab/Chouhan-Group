@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import type { SalesTarget } from '../types';
@@ -16,7 +17,7 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({ targets }) => {
     
   return (
     <div>
-      <h3 className="text-lg font-semibold text-brand-dark mb-4">Salesperson Performance (Bookings)</h3>
+      <h3 className="text-lg font-semibold text-text-primary mb-4">Salesperson Performance (Bookings)</h3>
        <div style={{ width: '100%', height: 300 }}>
         <ResponsiveContainer>
           <BarChart

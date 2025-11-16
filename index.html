@@ -5,9 +5,73 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Chouhan Housing Private Limited CRM</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'primary': '#f19f21',
+              'primary-hover': '#d98e1e',
+              'secondary': '#475569',
+              'background': '#f8fafc',
+              'surface': '#ffffff',
+              'sidebar': '#0f172a',
+              'text-primary': '#1e293b',
+              'text-secondary': '#64748b',
+              'border-color': '#e2e8f0',
+              'success': '#16a34a',
+              'success-hover': '#15803d',
+              'warning': '#f59e0b',
+              'danger': '#dc2626',
+            },
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
+            boxShadow: {
+                'subtle': '0 1px 3px 0 rgb(0 0 0 / 0.07), 0 1px 2px -1px rgb(0 0 0 / 0.07)',
+                'card': '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+            }
+          },
+        },
+      }
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8fafc; /* Use new background color */
+        }
+        /* Base Component Styles */
+        .card {
+            @apply bg-surface rounded-xl shadow-subtle border border-border-color;
+        }
+        .input-style {
+            @apply mt-1 block w-full px-3 py-2 bg-white border border-border-color rounded-md shadow-sm text-black placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm transition-shadow;
+        }
+        .dark-input-style {
+            @apply mt-1 block w-full px-3 py-2 bg-white border border-border-color rounded-md shadow-sm text-black placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm transition-shadow;
+        }
+        .label-style {
+            @apply block text-sm font-medium text-text-secondary;
+        }
+        .button-primary {
+             @apply w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors;
+        }
+        .button-secondary {
+            @apply w-full flex justify-center py-2 px-4 border border-border-color rounded-md shadow-sm text-sm font-medium text-text-primary bg-surface hover:bg-background focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:bg-gray-200 disabled:cursor-not-allowed transition-colors;
+        }
+        .button-success {
+             @apply w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-success hover:bg-success-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-success disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors;
+        }
+        .action-button {
+            @apply p-2 rounded-full transition-colors duration-200;
+        }
+        .filter-select {
+            @apply text-sm bg-surface border border-border-color rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary py-1.5 px-3;
+        }
+    </style>
   <script type="importmap">
 {
   "imports": {

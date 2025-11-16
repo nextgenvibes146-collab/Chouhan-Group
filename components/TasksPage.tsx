@@ -16,11 +16,11 @@ const TaskItem: React.FC<{task: Task, user?: User, onToggle: (id: string) => voi
                 type="checkbox" 
                 checked={task.isCompleted} 
                 onChange={() => onToggle(task.id)}
-                className="h-5 w-5 rounded border-gray-300 text-brand-blue focus:ring-brand-blue"
+                className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary"
             />
             <div className="ml-3">
-                <p className={`text-sm font-medium ${task.isCompleted ? 'line-through text-gray-500' : 'text-brand-dark'}`}>{task.title}</p>
-                <p className="text-xs text-brand-gray">
+                <p className={`text-sm font-medium ${task.isCompleted ? 'line-through text-gray-500' : 'text-text-primary'}`}>{task.title}</p>
+                <p className="text-xs text-text-secondary">
                     Due: {new Date(task.dueDate).toLocaleDateString()} | Assignee: {user?.name || 'N/A'}
                 </p>
             </div>
@@ -49,7 +49,7 @@ const AddTaskForm: React.FC<{users: User[], currentUser: User, onAddTask: (task:
 
     return (
         <div className="bg-white p-6 rounded-xl shadow-md">
-            <h3 className="text-lg font-semibold text-brand-dark mb-4">Create a New Task</h3>
+            <h3 className="text-lg font-semibold text-text-primary mb-4">Create a New Task</h3>
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                     <label htmlFor="taskTitle" className="label-style">Task Title</label>
@@ -96,19 +96,19 @@ const TasksPage: React.FC<TasksPageProps> = ({ tasks, users, currentUser, onAddT
 
     return (
         <div className="space-y-6">
-            <h2 className="text-2xl md:text-3xl font-bold text-brand-dark">Task Management</h2>
+            <h2 className="text-2xl md:text-3xl font-bold text-text-primary">Task Management</h2>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 space-y-6">
                     <div className="bg-white p-6 rounded-xl shadow-md">
-                        <h3 className="text-lg font-semibold text-brand-dark mb-4">Today's Tasks ({todaysTasks.length})</h3>
+                        <h3 className="text-lg font-semibold text-text-primary mb-4">Today's Tasks ({todaysTasks.length})</h3>
                         <div className="space-y-3 max-h-60 overflow-y-auto">
-                            {todaysTasks.length > 0 ? todaysTasks.map(t => <TaskItem key={t.id} task={t} user={userMap.get(t.assignedToId)} onToggle={onToggleTask}/>) : <p className="text-brand-gray text-sm">No tasks due today.</p>}
+                            {todaysTasks.length > 0 ? todaysTasks.map(t => <TaskItem key={t.id} task={t} user={userMap.get(t.assignedToId)} onToggle={onToggleTask}/>) : <p className="text-text-secondary text-sm">No tasks due today.</p>}
                         </div>
                     </div>
                      <div className="bg-white p-6 rounded-xl shadow-md">
-                        <h3 className="text-lg font-semibold text-brand-dark mb-4">Open Tasks ({openTasks.length})</h3>
+                        <h3 className="text-lg font-semibold text-text-primary mb-4">Open Tasks ({openTasks.length})</h3>
                          <div className="space-y-3 max-h-60 overflow-y-auto">
-                            {openTasks.length > 0 ? openTasks.map(t => <TaskItem key={t.id} task={t} user={userMap.get(t.assignedToId)} onToggle={onToggleTask}/>) : <p className="text-brand-gray text-sm">No open tasks.</p>}
+                            {openTasks.length > 0 ? openTasks.map(t => <TaskItem key={t.id} task={t} user={userMap.get(t.assignedToId)} onToggle={onToggleTask}/>) : <p className="text-text-secondary text-sm">No open tasks.</p>}
                         </div>
                     </div>
                 </div>
@@ -117,9 +117,9 @@ const TasksPage: React.FC<TasksPageProps> = ({ tasks, users, currentUser, onAddT
                 </div>
             </div>
             <div className="bg-white p-6 rounded-xl shadow-md">
-                <h3 className="text-lg font-semibold text-brand-dark mb-4">Recently Completed</h3>
+                <h3 className="text-lg font-semibold text-text-primary mb-4">Recently Completed</h3>
                  <div className="space-y-3 max-h-60 overflow-y-auto">
-                    {completedTasks.length > 0 ? completedTasks.map(t => <TaskItem key={t.id} task={t} user={userMap.get(t.assignedToId)} onToggle={onToggleTask}/>) : <p className="text-brand-gray text-sm">No tasks completed recently.</p>}
+                    {completedTasks.length > 0 ? completedTasks.map(t => <TaskItem key={t.id} task={t} user={userMap.get(t.assignedToId)} onToggle={onToggleTask}/>) : <p className="text-text-secondary text-sm">No tasks completed recently.</p>}
                 </div>
             </div>
         </div>

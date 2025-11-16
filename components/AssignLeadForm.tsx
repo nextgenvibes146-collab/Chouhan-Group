@@ -3,15 +3,6 @@ import type { User } from '../types';
 import { ModeOfEnquiry } from '../types';
 import type { NewLeadData } from '../App';
 
-// Allowed lead sources to display
-const ALLOWED_SOURCES = [
-  ModeOfEnquiry.Website,
-  ModeOfEnquiry.Facebook,
-  ModeOfEnquiry.Instagram,
-  ModeOfEnquiry.IVR,
-  ModeOfEnquiry.WalkIn,
-];
-
 interface AssignLeadFormProps {
   salesAgents: User[];
   onAssignLead: (newLeadData: NewLeadData) => void;
@@ -107,7 +98,7 @@ const AssignLeadForm: React.FC<AssignLeadFormProps> = ({ salesAgents, onAssignLe
                             <label htmlFor="platform" className="label-style">Source / Platform</label>
                             <select id="platform" name="platform" value={formData.platform} onChange={handleChange} className="input-style">
                                 <option value="" disabled>Select a source...</option>
-                                {ALLOWED_SOURCES.map(mode => (
+                                {Object.values(ModeOfEnquiry).map(mode => (
                                     <option key={mode} value={mode}>{mode}</option>
                                 ))}
                             </select>

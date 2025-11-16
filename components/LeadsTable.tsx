@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Lead, User } from '../types';
-import { LeadStatus, ModeOfEnquiry } from '../types';
+import { LeadStatus } from '../types';
 import { PhoneIcon, MailIcon, ChatBubbleIcon } from './Icons';
 
 interface LeadsTableProps {
@@ -48,30 +48,6 @@ const getTemperatureIndicator = (temperature?: 'Hot' | 'Warm' | 'Cold') => {
     }
 };
 
-const getSourceBadge = (source: ModeOfEnquiry) => {
-    const baseClasses = "px-2 py-1 text-xs font-semibold rounded-full leading-tight inline-flex items-center";
-    switch (source) {
-        case ModeOfEnquiry.Website:
-            return <span className={`${baseClasses} bg-blue-100 text-blue-800`}>🌐 Website</span>;
-        case ModeOfEnquiry.Facebook:
-            return <span className={`${baseClasses} bg-blue-600 text-white`}>📘 Facebook</span>;
-        case ModeOfEnquiry.Instagram:
-            return <span className={`${baseClasses} bg-pink-500 text-white`}>📷 Instagram</span>;
-        case ModeOfEnquiry.WalkIn:
-            return <span className={`${baseClasses} bg-green-100 text-green-800`}>🚶 Walk-in</span>;
-        case ModeOfEnquiry.IVR:
-            return <span className={`${baseClasses} bg-purple-100 text-purple-800`}>📞 IVR</span>;
-        case ModeOfEnquiry.Call:
-            return <span className={`${baseClasses} bg-teal-100 text-teal-800`}>☎️ Call</span>;
-        case ModeOfEnquiry.Reference:
-            return <span className={`${baseClasses} bg-orange-100 text-orange-800`}>👥 Reference</span>;
-        case ModeOfEnquiry.Digital:
-            return <span className={`${baseClasses} bg-indigo-100 text-indigo-800`}>💻 Digital</span>;
-        default:
-            return <span className={`${baseClasses} bg-gray-100 text-gray-800`}>{source}</span>;
-    }
-};
-
 const LeadsTable: React.FC<LeadsTableProps> = ({ leads, users, onOpenModal, selectedLeadIds, onSelectLead, onSelectAll, allVisibleLeadsSelected }) => {
   // FIX: Explicitly type the Map to ensure proper type inference for 'salesperson'.
   const userMap = new Map<string, User>(users.map(user => [user.id, user]));
@@ -92,7 +68,6 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, users, onOpenModal, sele
                 />
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Customer</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Source</th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Follow-up</th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Status</th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Actions</th>
@@ -125,9 +100,6 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, users, onOpenModal, sele
                             <div className="text-xs text-text-secondary">Assigned: {salesperson?.name || 'N/A'}</div>
                         </div>
                     </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {getSourceBadge(lead.modeOfEnquiry)}
                   </td>
                   <td className="px-6 py-4 whitespace-normal max-w-xs">
                      <div className={`text-sm font-medium ${isOverdue ? 'text-red-600' : 'text-text-primary'}`}>
