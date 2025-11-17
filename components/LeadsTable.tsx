@@ -1,7 +1,6 @@
 import React from 'react';
 import type { Lead, User } from '../types';
 import { LeadStatus } from '../types';
-import { PhoneIcon, MailIcon, ChatBubbleIcon } from './Icons';
 
 interface LeadsTableProps {
   leads: Lead[];
@@ -13,52 +12,50 @@ interface LeadsTableProps {
   allVisibleLeadsSelected: boolean;
 }
 
-const getStatusBadge = (status: LeadStatus) => {
-  const baseClasses = "px-2 py-1 text-xs font-semibold rounded-full leading-tight";
-  switch (status) {
-    case LeadStatus.New:
-      return <span className={`${baseClasses} bg-blue-100 text-blue-800`}>New</span>;
-    case LeadStatus.Contacted:
-      return <span className={`${baseClasses} bg-yellow-100 text-yellow-800`}>Contacted</span>;
-    case LeadStatus.VisitScheduled:
-      return <span className={`${baseClasses} bg-purple-100 text-purple-800`}>Visit Scheduled</span>;
-    case LeadStatus.VisitDone:
-      return <span className={`${baseClasses} bg-indigo-100 text-indigo-800`}>Visit Done</span>;
-    case LeadStatus.Negotiation:
-        return <span className={`${baseClasses} bg-orange-100 text-orange-800`}>Negotiation</span>;
-    case LeadStatus.Booked:
-      return <span className={`${baseClasses} bg-green-100 text-green-800`}>Booked</span>;
-    case LeadStatus.Cancelled:
-      return <span className={`${baseClasses} bg-gray-100 text-gray-800`}>Cancelled</span>;
-    default:
-      return <span className={`${baseClasses} bg-gray-100 text-gray-800`}>Unknown</span>;
-  }
-};
+const StatusBadge: React.FC<{ type: 'visit' | 'temp' | 'status', value?: string }> = ({ type, value }) => {
+    if (!value) return null;
 
-const getTemperatureIndicator = (temperature?: 'Hot' | 'Warm' | 'Cold') => {
-    switch (temperature) {
-        case 'Hot':
-            return <span className="h-2.5 w-2.5 bg-red-500 rounded-full ml-2 flex-shrink-0" title="Hot"></span>;
-        case 'Warm':
-            return <span className="h-2.5 w-2.5 bg-yellow-400 rounded-full ml-2 flex-shrink-0" title="Warm"></span>;
-        case 'Cold':
-            return <span className="h-2.5 w-2.5 bg-blue-400 rounded-full ml-2 flex-shrink-0" title="Cold"></span>;
-        default:
-            return null;
+    let bgColor = 'bg-gray-100';
+    let textColor = 'text-gray-800';
+
+    if (type === 'visit') {
+        switch (value.toLowerCase()) {
+            case 'yes': bgColor = 'bg-green-100'; textColor = 'text-green-800'; break;
+            case 'no': bgColor = 'bg-red-100'; textColor = 'text-red-800'; break;
+            case 'will come': bgColor = 'bg-yellow-100'; textColor = 'text-yellow-800'; break;
+        }
+    } else if (type === 'temp') {
+        switch (value.toLowerCase()) {
+            case 'hot': bgColor = 'bg-red-100'; textColor = 'text-red-800'; break;
+            case 'warm': bgColor = 'bg-yellow-100'; textColor = 'text-yellow-800'; break;
+            case 'cold': bgColor = 'bg-blue-100'; textColor = 'text-blue-800'; break;
+        }
+    } else if (type === 'status') {
+         switch (value) {
+            case LeadStatus.New: bgColor = 'bg-blue-100'; textColor = 'text-blue-800'; break;
+            case LeadStatus.Contacted: bgColor = 'bg-yellow-100'; textColor = 'text-yellow-800'; break;
+            case LeadStatus.VisitScheduled: bgColor = 'bg-purple-100'; textColor = 'text-purple-800'; break;
+            case LeadStatus.VisitDone: bgColor = 'bg-indigo-100'; textColor = 'text-indigo-800'; break;
+            case LeadStatus.Negotiation: bgColor = 'bg-orange-100'; textColor = 'text-orange-800'; break;
+            case LeadStatus.Booked: bgColor = 'bg-green-100'; textColor = 'text-green-800'; break;
+            case LeadStatus.Cancelled: bgColor = 'bg-gray-100'; textColor = 'text-gray-800'; break;
+        }
     }
-};
+    
+    return <span className={`px-2.5 py-1 text-xs font-semibold rounded-full inline-block ${bgColor} ${textColor}`}>{value}</span>;
+}
+
 
 const LeadsTable: React.FC<LeadsTableProps> = ({ leads, users, onOpenModal, selectedLeadIds, onSelectLead, onSelectAll, allVisibleLeadsSelected }) => {
-  // FIX: Explicitly type the Map to ensure proper type inference for 'salesperson'.
   const userMap = new Map<string, User>(users.map(user => [user.id, user]));
 
   return (
     <div className="card">
        <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-border-color">
-          <thead className="bg-background">
+        <table className="min-w-full divide-y divide-border-color text-sm">
+          <thead className="bg-green-50">
             <tr>
-              <th scope="col" className="px-6 py-3">
+              <th scope="col" className="px-4 py-2">
                  <input 
                     type="checkbox"
                     className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
@@ -67,19 +64,24 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, users, onOpenModal, sele
                     aria-label="Select all visible leads"
                 />
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Customer</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Follow-up</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Status</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Actions</th>
+              <th scope="col" className="px-4 py-2 text-left text-xs font-bold text-text-secondary uppercase tracking-wider">S.No.</th>
+              <th scope="col" className="px-4 py-2 text-left text-xs font-bold text-text-secondary uppercase tracking-wider">Customer</th>
+              <th scope="col" className="px-4 py-2 text-left text-xs font-bold text-text-secondary uppercase tracking-wider">Lead Info</th>
+              <th scope="col" className="px-4 py-2 text-left text-xs font-bold text-text-secondary uppercase tracking-wider">Sales Person</th>
+              <th scope="col" className="px-4 py-2 text-left text-xs font-bold text-text-secondary uppercase tracking-wider">Visit</th>
+              <th scope="col" className="px-4 py-2 text-left text-xs font-bold text-text-secondary uppercase tracking-wider">Project</th>
+              <th scope="col" className="px-4 py-2 text-left text-xs font-bold text-text-secondary uppercase tracking-wider">Status</th>
+              <th scope="col" className="px-4 py-2 text-left text-xs font-bold text-text-secondary uppercase tracking-wider">Temperature</th>
+              <th scope="col" className="px-4 py-2 text-left text-xs font-bold text-text-secondary uppercase tracking-wider">Last Remark</th>
+              <th scope="col" className="px-4 py-2 text-left text-xs font-bold text-text-secondary uppercase tracking-wider">Action</th>
             </tr>
           </thead>
           <tbody className="bg-surface divide-y divide-border-color">
-            {leads.map(lead => {
+            {leads.map((lead, index) => {
               const salesperson = userMap.get(lead.assignedSalespersonId);
-              const isOverdue = lead.nextFollowUpDate && new Date(lead.nextFollowUpDate) < new Date();
               return (
                 <tr key={lead.id} className={`transition-colors duration-200 ${selectedLeadIds.has(lead.id) ? 'bg-blue-50' : 'hover:bg-gray-50'}`}>
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-2">
                     <input 
                         type="checkbox"
                         className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
@@ -88,37 +90,34 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, users, onOpenModal, sele
                         aria-label={`Select lead for ${lead.customerName}`}
                     />
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                   <td className="px-4 py-2 whitespace-nowrap text-text-secondary">{index + 1}</td>
+                  <td className="px-4 py-2 whitespace-nowrap">
                     <div className="flex items-center">
                         {!lead.isRead && <span className="h-2 w-2 bg-primary rounded-full mr-2 flex-shrink-0" title="Unread"></span>}
                         <div>
-                            <div className="flex items-center">
-                               <div className="text-sm font-medium text-text-primary">{lead.customerName}</div>
-                               {getTemperatureIndicator(lead.temperature)}
-                            </div>
-                            <div className="text-sm text-text-secondary">{lead.mobile}</div>
-                            <div className="text-xs text-text-secondary">Assigned: {salesperson?.name || 'N/A'}</div>
+                            <div className="font-medium text-text-primary">{lead.customerName}</div>
+                            <div className="text-text-secondary">{lead.mobile}</div>
                         </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-normal max-w-xs">
-                     <div className={`text-sm font-medium ${isOverdue ? 'text-red-600' : 'text-text-primary'}`}>
-                        {lead.nextFollowUpDate ? new Date(lead.nextFollowUpDate).toLocaleDateString() : 'Not set'}
-                     </div>
-                     <p className="text-xs text-text-secondary truncate italic">"{lead.lastRemark}"</p>
+                  <td className="px-4 py-2 whitespace-nowrap text-text-secondary">
+                      <div>{new Date(lead.leadDate).toLocaleDateString()}</div>
+                      <div>{lead.month}</div>
+                      <div>{lead.modeOfEnquiry}</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {getStatusBadge(lead.status)}
+                  <td className="px-4 py-2 whitespace-nowrap text-text-secondary">{salesperson?.name || 'N/A'}</td>
+                  <td className="px-4 py-2 whitespace-nowrap text-text-secondary">
+                      <StatusBadge type="visit" value={lead.visitStatus} />
+                      <div className="mt-1">{lead.visitDate || ''}</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex items-center space-x-2">
-                        <a href={`tel:${lead.mobile}`} title="Call" className="action-button text-gray-400 hover:text-green-500 hover:bg-green-100"><PhoneIcon className="w-5 h-5"/></a>
-                        <a href={`https://wa.me/${lead.mobile}`} target="_blank" rel="noopener noreferrer" title="WhatsApp" className="action-button text-gray-400 hover:text-green-500 hover:bg-green-100"><ChatBubbleIcon className="w-5 h-5"/></a>
-                        {lead.email && <a href={`mailto:${lead.email}`} title="Email" className="action-button text-gray-400 hover:text-blue-500 hover:bg-blue-100"><MailIcon className="w-5 h-5"/></a>}
-                        <button onClick={() => onOpenModal(lead)} className="text-primary hover:text-primary-hover font-semibold ml-2">
-                            Update
-                        </button>
-                    </div>
+                  <td className="px-4 py-2 whitespace-nowrap text-text-secondary">{lead.interestedProject || 'N/A'}</td>
+                  <td className="px-4 py-2 whitespace-nowrap"><StatusBadge type="status" value={lead.status} /></td>
+                  <td className="px-4 py-2 whitespace-nowrap"><StatusBadge type="temp" value={lead.temperature} /></td>
+                  <td className="px-4 py-2 text-text-secondary whitespace-normal max-w-xs truncate" title={lead.lastRemark}>{lead.lastRemark}</td>
+                  <td className="px-4 py-2 whitespace-nowrap text-sm font-medium">
+                    <button onClick={() => onOpenModal(lead)} className="text-primary hover:text-primary-hover font-semibold">
+                        Details
+                    </button>
                   </td>
                 </tr>
               );

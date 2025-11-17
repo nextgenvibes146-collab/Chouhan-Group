@@ -1,7 +1,8 @@
 
 
 
-import { LeadStatus, ActivityType, ModeOfEnquiry, Task } from '../types';
+
+import { LeadStatus, ActivityType, ModeOfEnquiry, Task, VisitStatus } from '../types';
 import type { User, Lead, Activity, SalesTarget } from '../types';
 import { newRawData } from '../data/mockData';
 
@@ -68,6 +69,11 @@ export const fetchSheetData = async (): Promise<{
             status = LeadStatus.Contacted;
         }
         
+        const visitStatusStr = (d['Visit YES/No'] || '').toLowerCase();
+        let visitStatus: VisitStatus = 'No';
+        if (visitStatusStr === 'yes') visitStatus = 'Yes';
+        else if (visitStatusStr.includes('will')) visitStatus = 'Will Come';
+        
         const leadDate = parseDate(d['Lead Date']);
         const lastRemarkDate = parseDate(d['Remark Date']);
 
@@ -85,7 +91,7 @@ export const fetchSheetData = async (): Promise<{
             interestedProject: d['Project'],
             interestedUnit: d['Unit'],
             temperature: temperature,
-            visitStatus: d['Visit YES/No']?.toLowerCase() === 'yes' ? 'Yes' : 'No',
+            visitStatus: visitStatus,
             visitDate: d['Visit Date'],
             nextFollowUpDate: parseDate(d['Date']),
             lastRemark: d['Followup'] || d['Visit Remark'] || 'New lead created.',

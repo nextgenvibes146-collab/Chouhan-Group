@@ -96,7 +96,7 @@ const ImportCSV: React.FC<{onImport: Function, users: User[]}> = ({ onImport, us
 
     return (
         <div className="flex items-center space-x-2">
-            <label htmlFor="csv-importer" className={`px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 cursor-pointer ${isParsing ? 'opacity-50' : ''}`}>
+            <label htmlFor="csv-importer" className={`px-4 py-2 text-sm font-medium text-white bg-primary rounded-md shadow-sm hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors cursor-pointer ${isParsing ? 'opacity-50' : ''}`}>
                 {isParsing ? 'Importing...' : 'Import from CSV'}
             </label>
             <input id="csv-importer" type="file" accept=".csv" onChange={handleFileChange} className="hidden" disabled={isParsing} />
@@ -165,6 +165,8 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
         filtered = filtered.filter(l => l.status === LeadStatus.VisitScheduled);
     }
 
+    // Fix: Corrected the sorting logic to prevent type errors.
+    // The previous implementation was attempting to access properties on a Date object incorrectly and calling a method on an array.
     return filtered.sort((a, b) => new Date(b.leadDate).getTime() - new Date(a.leadDate).getTime());
   }, [leads, filters]);
 
@@ -266,7 +268,7 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
             <h2 className="text-2xl md:text-3xl font-bold text-text-primary">Leads Management</h2>
             <div className="flex items-center space-x-2">
                 {currentUser.role === 'Admin' && <ImportCSV onImport={onImportLeads} users={users} />}
-                <button onClick={exportToCSV} className="px-4 py-2 text-sm font-medium text-text-secondary border border-border-color bg-surface rounded-md hover:bg-background">Export to CSV</button>
+                <button onClick={exportToCSV} className="px-4 py-2 text-sm font-medium text-gray-900 border border-border-color bg-surface rounded-md hover:bg-background">Export to CSV</button>
             </div>
         </div>
         

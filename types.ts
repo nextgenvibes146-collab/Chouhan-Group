@@ -37,6 +37,8 @@ export interface User {
   avatarUrl: string;
 }
 
+export type VisitStatus = 'Yes' | 'No' | 'Will Come' | 'Planned';
+
 export interface Lead {
   id: string;
   customerName: string;
@@ -53,7 +55,7 @@ export interface Lead {
   interestedUnit?: string;
   temperature?: 'Hot' | 'Warm' | 'Cold';
   remarks?: string;
-  visitStatus: 'Yes' | 'No' | 'Planned';
+  visitStatus: VisitStatus;
   visitDate?: string;
   city?: string;
   platform?: string;

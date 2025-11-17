@@ -4,6 +4,7 @@
 
 
 
+
 import React, { useState, useMemo } from 'react';
 import { type Lead, type User, LeadStatus, ActivityType, type Activity } from '../types';
 import { PhoneIcon, MailIcon, MapPinIcon, ChatBubbleIcon } from './Icons';
@@ -27,6 +28,17 @@ const TabButton: React.FC<{ label: string, isActive: boolean, onClick: () => voi
         {label}
     </button>
 );
+
+const DetailItem: React.FC<{label: string, value?: string | null}> = ({ label, value }) => {
+    if (!value) return null;
+    return (
+        <div>
+            <p className="text-xs text-text-secondary">{label}</p>
+            <p className="font-medium text-text-primary">{value}</p>
+        </div>
+    );
+};
+
 
 const LeadDetailModal: React.FC<LeadDetailModalProps> = ({ lead, users, onClose, onUpdateLead, onAddActivity, currentUser, activities }) => {
   const [activeTab, setActiveTab] = useState('Details');
@@ -184,11 +196,17 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({ lead, users, onClose,
                         </div>
                         <button onClick={handleUpdate} className="button-primary">Save Changes</button>
                     </div>
-                     <div className="text-xs text-text-secondary bg-surface p-4 rounded-lg card">
-                        <p>Assigned to: <span className="font-medium text-text-primary">{salesperson?.name || 'N/A'}</span></p>
-                        <p>Lead Date: <span className="font-medium text-text-primary">{new Date(lead.leadDate).toLocaleDateString()}</span></p>
-                        <p>Last Activity: <span className="font-medium text-text-primary">{new Date(lead.lastActivityDate).toLocaleString()}</span></p>
-                        <p>Enquiry Mode: <span className="font-medium text-text-primary">{lead.modeOfEnquiry}</span></p>
+                     <div className="bg-surface p-4 rounded-lg card">
+                        <h3 className="text-lg font-semibold text-text-primary mb-3">Lead Information</h3>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                           <DetailItem label="Assigned To" value={salesperson?.name} />
+                           <DetailItem label="Lead Date" value={new Date(lead.leadDate).toLocaleDateString()} />
+                           <DetailItem label="Last Activity" value={new Date(lead.lastActivityDate).toLocaleString()} />
+                           <DetailItem label="Enquiry Mode" value={lead.modeOfEnquiry} />
+                           <DetailItem label="Platform" value={lead.platform} />
+                           <DetailItem label="Occupation" value={lead.occupation} />
+                           <DetailItem label="Interested Unit" value={lead.interestedUnit} />
+                        </div>
                     </div>
                     {isAdmin && (
                          <div className="space-y-4 bg-surface p-4 rounded-lg card">
