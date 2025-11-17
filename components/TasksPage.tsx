@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import type { Task, User } from '../types';
+import { TrashIcon } from './Icons';
 
 interface TasksPageProps {
     tasks: Task[];
@@ -7,26 +8,49 @@ interface TasksPageProps {
     currentUser: User;
     onAddTask: (task: Omit<Task, 'id'>) => void;
     onToggleTask: (taskId: string) => void;
+    onDeleteTask: (taskId: string) => void;
 }
 
-const TaskItem: React.FC<{task: Task, user?: User, onToggle: (id: string) => void}> = ({ task, user, onToggle }) => (
-    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-        <div className="flex items-center">
-            <input 
-                type="checkbox" 
-                checked={task.isCompleted} 
-                onChange={() => onToggle(task.id)}
-                className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary"
-            />
-            <div className="ml-3">
-                <p className={`text-sm font-medium ${task.isCompleted ? 'line-through text-gray-500' : 'text-text-primary'}`}>{task.title}</p>
-                <p className="text-xs text-text-secondary">
-                    Due: {new Date(task.dueDate).toLocaleDateString()} | Assignee: {user?.name || 'N/A'}
-                </p>
+const TaskItem: React.FC<{
+    task: Task;
+    user?: User;
+    onToggle: (id: string) => void;
+    onDelete: (id: string) => void;
+}> = ({ task, user, onToggle, onDelete }) => {
+    const handleDeleteClick = (e: React.MouseEvent) => {
+        e.stopPropagation(); // Prevent toggling the task when clicking delete
+        if (window.confirm(`Are you sure you want to delete this task: "${task.title}"?`)) {
+            onDelete(task.id);
+        }
+    };
+
+    return (
+        <div className="group flex items-center justify-between p-3 bg-base-300/50 rounded-lg hover:bg-base-300/70 transition-colors duration-200">
+            <div className="flex items-center flex-1 min-w-0">
+                <input 
+                    type="checkbox" 
+                    checked={task.isCompleted} 
+                    onChange={() => onToggle(task.id)}
+                    className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary flex-shrink-0"
+                    aria-label={`Mark task ${task.title} as ${task.isCompleted ? 'incomplete' : 'complete'}`}
+                />
+                <div className="ml-3 min-w-0">
+                    <p className={`text-sm font-medium truncate ${task.isCompleted ? 'line-through text-muted-content' : 'text-base-content'}`}>{task.title}</p>
+                    <p className="text-xs text-muted-content">
+                        Due: {new Date(task.dueDate).toLocaleDateString()} | Assignee: {user?.name || 'N/A'}
+                    </p>
+                </div>
             </div>
+            <button
+                onClick={handleDeleteClick}
+                className="ml-2 p-1 text-muted-content hover:text-danger opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity flex-shrink-0"
+                aria-label={`Delete task ${task.title}`}
+            >
+                <TrashIcon className="w-5 h-5" />
+            </button>
         </div>
-    </div>
-);
+    );
+};
 
 const AddTaskForm: React.FC<{users: User[], currentUser: User, onAddTask: (task: Omit<Task, 'id'>) => void}> = ({ users, currentUser, onAddTask }) => {
     const [title, setTitle] = useState('');
@@ -48,14 +72,14 @@ const AddTaskForm: React.FC<{users: User[], currentUser: User, onAddTask: (task:
     };
 
     return (
-        <div className="bg-white p-6 rounded-xl shadow-md">
-            <h3 className="text-lg font-semibold text-text-primary mb-4">Create a New Task</h3>
+        <>
+            <h3 className="text-lg font-bold text-base-content mb-4">Create a New Task</h3>
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                     <label htmlFor="taskTitle" className="label-style">Task Title</label>
                     <input id="taskTitle" type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g., Follow up with high-priority leads" className="input-style" />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label htmlFor="dueDate" className="label-style">Due Date</label>
                         <input id="dueDate" type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="input-style" />
@@ -67,13 +91,13 @@ const AddTaskForm: React.FC<{users: User[], currentUser: User, onAddTask: (task:
                         </select>
                     </div>
                 </div>
-                <button type="submit" className="button-primary">Add Task</button>
+                <button type="submit" className="button-primary !w-auto px-6">Add Task</button>
             </form>
-        </div>
+        </>
     );
 };
 
-const TasksPage: React.FC<TasksPageProps> = ({ tasks, users, currentUser, onAddTask, onToggleTask }) => {
+const TasksPage: React.FC<TasksPageProps> = ({ tasks, users, currentUser, onAddTask, onToggleTask, onDeleteTask }) => {
     const userMap = new Map(users.map(u => [u.id, u]));
 
     const { todaysTasks, openTasks, completedTasks } = useMemo(() => {
@@ -82,7 +106,7 @@ const TasksPage: React.FC<TasksPageProps> = ({ tasks, users, currentUser, onAddT
         const open: Task[] = [];
         const completed: Task[] = [];
 
-        tasks.forEach(task => {
+        [...tasks].sort((a,b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()).forEach(task => {
             if (task.isCompleted) {
                 completed.push(task);
             } else if (new Date(task.dueDate).toDateString() === today) {
@@ -91,35 +115,35 @@ const TasksPage: React.FC<TasksPageProps> = ({ tasks, users, currentUser, onAddT
                 open.push(task);
             }
         });
-        return { todaysTasks: todays, openTasks: open, completedTasks: completed.slice(0, 10) }; // show last 10 completed
+        return { todaysTasks: todays, openTasks: open, completedTasks: completed.reverse().slice(0, 10) }; // show last 10 completed
     }, [tasks]);
 
     return (
         <div className="space-y-6">
-            <h2 className="text-2xl md:text-3xl font-bold text-text-primary">Task Management</h2>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 space-y-6">
-                    <div className="bg-white p-6 rounded-xl shadow-md">
-                        <h3 className="text-lg font-semibold text-text-primary mb-4">Today's Tasks ({todaysTasks.length})</h3>
-                        <div className="space-y-3 max-h-60 overflow-y-auto">
-                            {todaysTasks.length > 0 ? todaysTasks.map(t => <TaskItem key={t.id} task={t} user={userMap.get(t.assignedToId)} onToggle={onToggleTask}/>) : <p className="text-text-secondary text-sm">No tasks due today.</p>}
-                        </div>
-                    </div>
-                     <div className="bg-white p-6 rounded-xl shadow-md">
-                        <h3 className="text-lg font-semibold text-text-primary mb-4">Open Tasks ({openTasks.length})</h3>
-                         <div className="space-y-3 max-h-60 overflow-y-auto">
-                            {openTasks.length > 0 ? openTasks.map(t => <TaskItem key={t.id} task={t} user={userMap.get(t.assignedToId)} onToggle={onToggleTask}/>) : <p className="text-text-secondary text-sm">No open tasks.</p>}
-                        </div>
-                    </div>
-                </div>
-                <div className="lg:col-span-1">
-                    <AddTaskForm users={users} currentUser={currentUser} onAddTask={onAddTask} />
-                </div>
+            <h2 className="text-2xl md:text-3xl font-bold text-base-content">Task Management</h2>
+            
+            <div className="card p-6">
+                <AddTaskForm users={users} currentUser={currentUser} onAddTask={onAddTask} />
             </div>
-            <div className="bg-white p-6 rounded-xl shadow-md">
-                <h3 className="text-lg font-semibold text-text-primary mb-4">Recently Completed</h3>
-                 <div className="space-y-3 max-h-60 overflow-y-auto">
-                    {completedTasks.length > 0 ? completedTasks.map(t => <TaskItem key={t.id} task={t} user={userMap.get(t.assignedToId)} onToggle={onToggleTask}/>) : <p className="text-text-secondary text-sm">No tasks completed recently.</p>}
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                 <div className="card p-6">
+                    <h3 className="text-lg font-bold text-base-content mb-4">Today's Tasks ({todaysTasks.length})</h3>
+                    <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
+                        {todaysTasks.length > 0 ? todaysTasks.map(t => <TaskItem key={t.id} task={t} user={userMap.get(t.assignedToId)} onToggle={onToggleTask} onDelete={onDeleteTask} />) : <p className="text-muted-content text-sm text-center py-4">No tasks due today.</p>}
+                    </div>
+                </div>
+                 <div className="card p-6">
+                    <h3 className="text-lg font-bold text-base-content mb-4">Open Tasks ({openTasks.length})</h3>
+                     <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
+                        {openTasks.length > 0 ? openTasks.map(t => <TaskItem key={t.id} task={t} user={userMap.get(t.assignedToId)} onToggle={onToggleTask} onDelete={onDeleteTask} />) : <p className="text-muted-content text-sm text-center py-4">No other open tasks.</p>}
+                    </div>
+                </div>
+                <div className="card p-6">
+                    <h3 className="text-lg font-bold text-base-content mb-4">Recently Completed</h3>
+                     <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
+                        {completedTasks.length > 0 ? completedTasks.map(t => <TaskItem key={t.id} task={t} user={userMap.get(t.assignedToId)} onToggle={onToggleTask} onDelete={onDeleteTask}/>) : <p className="text-muted-content text-sm text-center py-4">No tasks completed recently.</p>}
+                    </div>
                 </div>
             </div>
         </div>

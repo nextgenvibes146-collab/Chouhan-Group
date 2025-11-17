@@ -1,9 +1,3 @@
-
-
-
-
-
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
@@ -212,6 +206,10 @@ const App: React.FC = () => {
   
   const handleToggleTask = (taskId: string) => {
       setTasks(prev => prev.map(t => t.id === taskId ? {...t, isCompleted: !t.isCompleted} : t));
+  };
+  
+  const handleDeleteTask = (taskId: string) => {
+      setTasks(prev => prev.filter(t => t.id !== taskId));
   };
 
   const handleAssignLead = (newLeadData: NewLeadData) => {
@@ -443,6 +441,7 @@ const App: React.FC = () => {
                 currentUser={currentUser!}
                 onAddTask={handleAddTask}
                 onToggleTask={handleToggleTask}
+                onDeleteTask={handleDeleteTask}
                 />;
        case 'Settings':
          if (currentUser?.role !== 'Admin') {
