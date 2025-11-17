@@ -14,7 +14,8 @@ const SalesPipelineChart: React.FC<SalesPipelineChartProps> = ({ leads }) => {
     const statusOrder = [
       LeadStatus.New,
       LeadStatus.Contacted,
-      LeadStatus.VisitScheduled,
+// Fix: Corrected enum member access from 'VisitScheduled' to 'SiteVisitScheduled'.
+      LeadStatus.SiteVisitScheduled,
       LeadStatus.Negotiation,
       LeadStatus.Booked
     ];

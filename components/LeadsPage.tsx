@@ -162,7 +162,8 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
         filtered = filtered.filter(l => l.nextFollowUpDate && new Date(l.nextFollowUpDate) < today);
     }
     if(filters.showVisits) {
-        filtered = filtered.filter(l => l.status === LeadStatus.VisitScheduled);
+// Fix: Corrected enum member access from 'VisitScheduled' to 'SiteVisitScheduled'.
+        filtered = filtered.filter(l => l.status === LeadStatus.SiteVisitScheduled);
     }
 
     // Fix: Corrected the sorting logic to prevent type errors.

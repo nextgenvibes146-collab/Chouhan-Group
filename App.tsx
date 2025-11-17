@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import Sidebar from './components/Sidebar';
-import Header from './components/Header';
+import BottomNavBar from './components/BottomNavBar';
 import Dashboard from './components/Dashboard';
 import LeadsPage from './components/LeadsPage';
 import CalendarPage from './components/CalendarPage';
@@ -40,11 +39,9 @@ const App: React.FC = () => {
   const [salesTargets, setSalesTargets] = useState<SalesTarget[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [isSidebarOpen, setSidebarOpen] = useState(false);
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
@@ -70,21 +67,19 @@ const App: React.FC = () => {
 
     const newLeads = leads.map(lead => {
       if (lead.id === updatedLead.id) {
-        const originalLead = lead; // This is the old state of the lead
+        const originalLead = lead;
         let finalUpdatedLead = { ...updatedLead };
 
         const visitDateStr = originalLead.visitDate || originalLead.nextFollowUpDate;
-        const wasVisitScheduled = originalLead.status === LeadStatus.VisitScheduled;
+        const wasVisitScheduled = originalLead.status === LeadStatus.SiteVisitScheduled;
         
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const isVisitDatePast = visitDateStr && new Date(visitDateStr) < today;
         
-        const didVisitNotHappen = finalUpdatedLead.status !== LeadStatus.VisitDone && finalUpdatedLead.status !== LeadStatus.Booked;
+        const didVisitNotHappen = finalUpdatedLead.status !== LeadStatus.SiteVisitDone && finalUpdatedLead.status !== LeadStatus.Booking;
 
-        // If a scheduled visit date is in the past, and the status is changed to something other than Visit Done/Booked, count it as a missed visit.
         if (wasVisitScheduled && isVisitDatePast && didVisitNotHappen) {
-            // Only increment if the status is actually changing, to avoid incrementing on every save without status change.
             if (originalLead.status !== finalUpdatedLead.status) {
                 finalUpdatedLead.missedVisitsCount = (originalLead.missedVisitsCount || 0) + 1;
             }
@@ -96,7 +91,7 @@ const App: React.FC = () => {
           lastActivityDate: new Date().toISOString(),
         };
 
-        if (updatedLead.status === LeadStatus.Cancelled && lead.assignedSalespersonId !== adminId) {
+        if (updatedLead.status === LeadStatus.Lost && lead.assignedSalespersonId !== adminId) {
           leadToUpdate.assignedSalespersonId = adminId;
           newActivity = {
             id: `act-${Date.now()}`,
@@ -104,7 +99,7 @@ const App: React.FC = () => {
             salespersonId: currentUser.id,
             type: ActivityType.Note,
             date: new Date().toISOString(),
-            remarks: `Lead status set to Cancelled and automatically reassigned to ${admin?.name || 'Admin'}.`,
+            remarks: `Lead status set to Lost and automatically reassigned to ${admin?.name || 'Admin'}.`,
             customerName: leadToUpdate.customerName,
           };
         }
@@ -125,7 +120,7 @@ const App: React.FC = () => {
     const admin = users.find(u => u.role === 'Admin');
     const adminId = admin?.id || 'admin-0';
 
-    const wasCancelled = newStatus === LeadStatus.Cancelled;
+    const wasCancelled = newStatus === LeadStatus.Lost;
     const finalAssignedSalespersonId = wasCancelled ? adminId : newAssignedSalespersonId;
 
     const newActivities: Activity[] = [];
@@ -193,7 +188,6 @@ const App: React.FC = () => {
       duration: duration,
     };
     setActivities(prevActivities => [newActivity, ...prevActivities]);
-    // Also update the lead
     setLeads(prevLeads => prevLeads.map(l => 
       l.id === lead.id ? { ...l, lastActivityDate: new Date().toISOString(), isRead: true, lastRemark: remarks } : l
     ));
@@ -233,6 +227,7 @@ const App: React.FC = () => {
         lastRemark: newLeadData.remarks || 'New lead assigned by admin.',
         isRead: false,
         missedVisitsCount: 0,
+        labels: ['Hot'],
     };
     setLeads(prevLeads => [newLead, ...prevLeads]);
 
@@ -241,7 +236,7 @@ const App: React.FC = () => {
         const newActivity: Activity = {
             id: `act-${Date.now()}`,
             leadId: newLead.id,
-            salespersonId: currentUser.id, // Logged as the admin who did the action
+            salespersonId: currentUser.id,
             type: ActivityType.Note,
             date: new Date().toISOString(),
             remarks: newLeadData.remarks ? `Initial Remark: ${newLeadData.remarks}` : `Lead assigned to ${assignedToUser?.name || 'N/A'}.`,
@@ -255,7 +250,6 @@ const App: React.FC = () => {
       const salespersonNameToId = new Map(users.map(u => [u.name.toLowerCase(), u.id]));
 
       const createdLeads: Lead[] = newLeads.map((l, index) => {
-          // Attempt to find user, default to current user if not found
           const assignedSalespersonId = salespersonNameToId.get(l.assignedSalespersonId.toLowerCase()) || currentUser!.id;
           
           return {
@@ -273,92 +267,12 @@ const App: React.FC = () => {
 
   const handleLogin = (user: User) => {
     setCurrentUser(user);
-    if (user.role !== 'Admin') {
-      setActiveView('Leads');
-    } else {
-      setActiveView('Dashboard');
-    }
+    setActiveView('Dashboard');
   };
 
   const handleLogout = () => {
     setCurrentUser(null);
-    setActiveView('Dashboard');
   };
-
-  const handleAddNotification = (message: string, targetUserId?: string) => {
-      const newNotification: Notification = {
-          id: `notif-${Date.now()}`,
-          message,
-          targetUserId,
-          createdDate: new Date().toISOString(),
-          isRead: false,
-      };
-      setNotifications(prev => [newNotification, ...prev]);
-  };
-
-  const handleMarkNotificationsAsRead = () => {
-      if (!currentUser) return;
-      setNotifications(prev => prev.map(n => {
-          const isOwnNotification = !n.targetUserId || n.targetUserId === currentUser.id;
-          if (isOwnNotification) {
-              return { ...n, isRead: true };
-          }
-          return n;
-      }));
-  };
-
-   const handleCreateUser = (userData: { name: string }) => {
-        const newUser: User = {
-            id: `user-${Date.now()}`,
-            name: userData.name,
-            role: 'Salesperson',
-            avatarUrl: `https://i.pravatar.cc/40?u=${userData.name.replace(/\s/g, '')}`,
-        };
-        setUsers(prev => [...prev, newUser]);
-    };
-
-    const handleDeleteUser = (userId: string) => {
-        if (!currentUser || currentUser.role !== 'Admin') return;
-
-        const admin = users.find(u => u.role === 'Admin');
-        const userToDelete = users.find(u => u.id === userId);
-        if (!admin || !userToDelete) return;
-
-        // Reassign leads
-        const newActivities: Activity[] = [];
-        const updatedLeads = leads.map(lead => {
-            if (lead.assignedSalespersonId === userId) {
-                newActivities.push({
-                    id: `act-${Date.now()}-${lead.id}`,
-                    leadId: lead.id,
-                    salespersonId: currentUser.id,
-                    type: ActivityType.Note,
-                    date: new Date().toISOString(),
-                    remarks: `Lead reassigned from ${userToDelete.name} to ${admin.name} due to account deletion.`,
-                    customerName: lead.customerName,
-                });
-                return { ...lead, assignedSalespersonId: admin.id };
-            }
-            return lead;
-        });
-        setLeads(updatedLeads);
-        if (newActivities.length > 0) {
-            setActivities(prev => [...newActivities, ...prev]);
-        }
-
-        // Reassign tasks
-        const updatedTasks = tasks.map(task => {
-            if (task.assignedToId === userId) {
-                return { ...task, assignedToId: admin.id };
-            }
-            return task;
-        });
-        setTasks(updatedTasks);
-
-        // Delete user
-        const remainingUsers = users.filter(u => u.id !== userId);
-        setUsers(remainingUsers);
-    };
 
   const { visibleLeads, visibleActivities, visibleTasks } = useMemo(() => {
     if (!currentUser) {
@@ -369,46 +283,20 @@ const App: React.FC = () => {
         return { visibleLeads: leads, visibleActivities: activities, visibleTasks: tasks };
     }
     
-    // Default is 'Salesperson'
     return {
         visibleLeads: leads.filter(l => l.assignedSalespersonId === currentUser.id),
         visibleActivities: activities.filter(a => a.salespersonId === currentUser.id),
         visibleTasks: tasks.filter(t => t.assignedToId === currentUser.id),
     };
-  }, [currentUser, users, leads, activities, tasks]);
-
-  const filteredLeadsForSearch = useMemo(() => {
-    if (!searchTerm) return [];
-    const lowercasedTerm = searchTerm.toLowerCase();
-    
-    // The search should also respect the user's visibility permissions.
-    return visibleLeads.filter(lead => 
-      (lead.customerName?.toLowerCase().includes(lowercasedTerm)) ||
-      (lead.mobile?.toLowerCase().includes(lowercasedTerm)) ||
-      (lead.interestedProject?.toLowerCase().includes(lowercasedTerm))
-    );
-  }, [searchTerm, visibleLeads]);
+  }, [currentUser, leads, activities, tasks]);
   
   const renderContent = () => {
     if (isLoading) {
-      return <LoadingSpinner />;
+      return <div className="flex-1 flex items-center justify-center"><LoadingSpinner /></div>;
     }
     switch (activeView) {
       case 'Dashboard':
-        if (currentUser?.role !== 'Admin') {
-          return <LeadsPage 
-                    leads={visibleLeads} 
-                    users={users}
-                    currentUser={currentUser!}
-                    onUpdateLead={handleUpdateLead}
-                    onAddActivity={handleAddActivity}
-                    activities={visibleActivities}
-                    onAssignLead={handleAssignLead}
-                    onBulkUpdate={handleBulkUpdateLeads}
-                    onImportLeads={handleImportLeads}
-                 />;
-        }
-        return <Dashboard leads={visibleLeads} users={users} activities={visibleActivities} salesTargets={salesTargets} currentUser={currentUser!} tasks={visibleTasks} />;
+        return <Dashboard leads={visibleLeads} users={users} activities={visibleActivities} currentUser={currentUser!} />;
       case 'Leads':
         return <LeadsPage 
                   leads={visibleLeads} 
@@ -421,19 +309,6 @@ const App: React.FC = () => {
                   onBulkUpdate={handleBulkUpdateLeads}
                   onImportLeads={handleImportLeads}
                />;
-      case 'Calendar':
-        return <CalendarPage leads={visibleLeads} tasks={visibleTasks} />;
-      case 'Attendance':
-        return <AttendancePage />;
-      case 'Reports':
-        return <ReportsPage 
-                    leads={visibleLeads} 
-                    users={users} 
-                    currentUser={currentUser!} 
-                    onUpdateLead={handleUpdateLead}
-                    onAddActivity={handleAddActivity}
-                    activities={activities}
-                />;
       case 'Tasks':
         return <TasksPage 
                 tasks={visibleTasks}
@@ -443,31 +318,8 @@ const App: React.FC = () => {
                 onToggleTask={handleToggleTask}
                 onDeleteTask={handleDeleteTask}
                 />;
-       case 'Settings':
-         if (currentUser?.role !== 'Admin') {
-            setActiveView('Dashboard');
-            return null;
-         }
-         return <SettingsPage
-                    users={users}
-                    onCreateUser={handleCreateUser}
-                    onDeleteUser={handleDeleteUser}
-                />;
       default:
-        if (currentUser?.role === 'Admin') {
-            return <Dashboard leads={visibleLeads} users={users} activities={visibleActivities} salesTargets={salesTargets} currentUser={currentUser!} tasks={visibleTasks} />;
-        }
-        return <LeadsPage 
-                  leads={visibleLeads} 
-                  users={users}
-                  currentUser={currentUser!}
-                  onUpdateLead={handleUpdateLead}
-                  onAddActivity={handleAddActivity}
-                  activities={visibleActivities}
-                  onAssignLead={handleAssignLead}
-                  onBulkUpdate={handleBulkUpdateLeads}
-                  onImportLeads={handleImportLeads}
-               />;
+        return <Dashboard leads={visibleLeads} users={users} activities={visibleActivities} currentUser={currentUser!} />;
     }
   };
   
@@ -476,32 +328,11 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="flex h-screen bg-base-200 text-base-content font-sans">
-      <Sidebar 
-        activeView={activeView} 
-        onNavigate={setActiveView} 
-        isOpen={isSidebarOpen} 
-        setOpen={setSidebarOpen} 
-        currentUser={currentUser} 
-      />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header 
-          searchTerm={searchTerm} 
-          onSearchChange={setSearchTerm}
-          searchResults={filteredLeadsForSearch}
-          users={users}
-          currentUser={currentUser}
-          onLogout={handleLogout}
-          onRefresh={loadData}
-          onToggleSidebar={() => setSidebarOpen(!isSidebarOpen)}
-          notifications={notifications}
-          onAddNotification={handleAddNotification}
-          onMarkNotificationsAsRead={handleMarkNotificationsAsRead}
-        />
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-base-200 p-4 md:p-6 lg:p-8">
+    <div className="flex flex-col h-screen bg-base-200 text-base-content font-sans">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto pb-20">
           {renderContent()}
         </main>
-      </div>
+        <BottomNavBar activeView={activeView} onNavigate={setActiveView} />
     </div>
   );
 };

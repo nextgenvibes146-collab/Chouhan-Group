@@ -1,14 +1,19 @@
-
-
-
 export enum LeadStatus {
-  New = 'New',
-  Contacted = 'Contacted',
-  VisitScheduled = 'Visit Scheduled',
-  VisitDone = 'Visit Done',
+  New = 'New Lead',
+  Qualified = 'Qualified',
+  Disqualified = 'Disqualified',
+  SiteVisitPending = 'Site Visit Pending',
+  SiteVisitScheduled = 'Site Visit Scheduled',
+  SiteVisitDone = 'Site Visit Done',
+  ProposalSent = 'Proposal Sent',
+  ProposalFinalized = 'Proposal Finalized',
   Negotiation = 'Negotiation',
-  Booked = 'Booked',
-  Cancelled = 'Cancelled', // Was 'Junk'
+  Booking = 'Booking',
+  Lost = 'Lost',
+  // Below are legacy statuses for mapping
+  Contacted = 'Contacted',
+  Booked = 'Booked', // Legacy
+  Cancelled = 'Cancelled'
 }
 
 export enum ActivityType {
@@ -65,6 +70,7 @@ export interface Lead {
   isRead: boolean;
   investmentTimeline?: string;
   missedVisitsCount: number;
+  labels?: string[];
 }
 
 export interface Activity {

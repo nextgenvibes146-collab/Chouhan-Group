@@ -63,7 +63,8 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({ lead, users, onClose,
         nextFollowUpDate: nextFollowUp ? new Date(nextFollowUp).toISOString() : undefined,
         temperature: temperature,
     };
-    if (newStatus === LeadStatus.VisitScheduled && updatedLead.nextFollowUpDate) {
+    // Fix: Corrected enum member access from 'VisitScheduled' to 'SiteVisitScheduled'.
+    if (newStatus === LeadStatus.SiteVisitScheduled && updatedLead.nextFollowUpDate) {
         updatedLead.visitDate = updatedLead.nextFollowUpDate;
     }
     onUpdateLead(updatedLead);
@@ -87,7 +88,8 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({ lead, users, onClose,
   };
 
   const handleMarkVisitDone = () => {
-    onUpdateLead({ ...lead, status: LeadStatus.VisitDone });
+    // Fix: Corrected enum member access from 'VisitDone' to 'SiteVisitDone'.
+    onUpdateLead({ ...lead, status: LeadStatus.SiteVisitDone });
     onAddActivity(lead, ActivityType.Visit, 'Visit marked as completed.');
   };
 
@@ -97,7 +99,8 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({ lead, users, onClose,
       ...lead, 
       nextFollowUpDate: new Date(rescheduleDate).toISOString(),
       visitDate: new Date(rescheduleDate).toISOString(),
-      status: LeadStatus.VisitScheduled,
+      // Fix: Corrected enum member access from 'VisitScheduled' to 'SiteVisitScheduled'.
+      status: LeadStatus.SiteVisitScheduled,
       missedVisitsCount: (lead.missedVisitsCount || 0) + 1,
     };
     onUpdateLead(updatedLead);
@@ -120,7 +123,8 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({ lead, users, onClose,
     }
   };
 
-  const isVisitScheduled = lead.status === LeadStatus.VisitScheduled;
+  // Fix: Corrected enum member access from 'VisitScheduled' to 'SiteVisitScheduled'.
+  const isVisitScheduled = lead.status === LeadStatus.SiteVisitScheduled;
   const visitDateString = lead.nextFollowUpDate || lead.visitDate;
   const isVisitMissed = isVisitScheduled && visitDateString && new Date(new Date(visitDateString).toDateString()) < new Date(new Date().toDateString());
 
