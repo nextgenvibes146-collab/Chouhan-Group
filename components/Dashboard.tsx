@@ -58,14 +58,14 @@ const LeadsTrendChart: React.FC<{ leads: Lead[] }> = ({ leads }) => {
 
 const SalesFunnelView: React.FC<{ leads: Lead[] }> = ({ leads }) => {
     const funnelStages = [
-        { name: LeadStatus.New, color: 'bg-purple-500' },
+        { name: LeadStatus.New, color: 'bg-purple-600' },
         { name: LeadStatus.Qualified, color: 'bg-green-500' },
         { name: LeadStatus.Disqualified, color: 'bg-orange-500' },
         { name: LeadStatus.SiteVisitPending, color: 'bg-pink-500' },
         { name: LeadStatus.SiteVisitScheduled, color: 'bg-blue-500' },
-        { name: LeadStatus.ProposalSent, color: 'bg-yellow-500' },
-        { name: LeadStatus.ProposalFinalized, color: 'bg-lime-500' },
-        { name: LeadStatus.Negotiation, color: 'bg-indigo-500' },
+        { name: LeadStatus.ProposalSent, color: 'bg-amber-500' },
+        { name: LeadStatus.ProposalFinalized, color: 'bg-lime-600' },
+        { name: LeadStatus.Negotiation, color: 'bg-indigo-600' },
         { name: LeadStatus.Booking, color: 'bg-teal-500' },
         { name: LeadStatus.Lost, color: 'bg-red-500' },
     ];
@@ -78,18 +78,17 @@ const SalesFunnelView: React.FC<{ leads: Lead[] }> = ({ leads }) => {
     }, [leads]);
 
     return (
-        <div className="p-4 space-y-1">
+        <div className="p-4 space-y-2">
             {leadCounts.map((stage, index) => (
-                <div key={index} className="flex items-center text-white text-sm font-medium">
-                    <div
-                        className={`w-full h-10 flex items-center justify-between px-4 ${stage.color}`}
-                        style={{
-                            clipPath: `polygon(0 0, 100% 0, ${100 - (index * 2 + 2)}% 100%, ${index * 2 + 2}% 100%)`
-                        }}
-                    >
-                        <span>{stage.count} {stage.name} Leads</span>
-                        <span>₹0 Sale Value</span>
-                    </div>
+                <div
+                    key={index}
+                    className={`w-full h-10 flex items-center justify-between px-4 rounded-md text-white text-sm font-semibold ${stage.color}`}
+                    style={{
+                        textShadow: '0 1px 3px rgba(0, 0, 0, 0.4)'
+                    }}
+                >
+                    <span>{stage.count} {stage.name} Leads</span>
+                    <span>₹0 Sale Value</span>
                 </div>
             ))}
         </div>
