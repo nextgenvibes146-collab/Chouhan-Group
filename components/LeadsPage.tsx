@@ -1,10 +1,11 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import LeadsTable from './LeadsTable';
 import LeadDetailModal from './LeadDetailModal';
 import AssignLeadForm from './AssignLeadForm';
 import type { Lead, User, ActivityType, Activity } from '../types';
 import { LeadStatus, ModeOfEnquiry } from '../types';
 import type { NewLeadData } from '../App';
+import { AdjustmentsHorizontalIcon, CogIcon, UserCircleIcon, ArrowLeftOnRectangleIcon } from './Icons';
 
 interface LeadsPageProps {
   leads: Lead[];
@@ -16,7 +17,69 @@ interface LeadsPageProps {
   onAssignLead: (newLeadData: NewLeadData) => void;
   onBulkUpdate: (leadIds: string[], newStatus?: LeadStatus, newAssignedSalespersonId?: string) => void;
   onImportLeads: (newLeads: Omit<Lead, 'id' | 'isRead' | 'missedVisitsCount' | 'lastActivityDate' | 'month'>[]) => void;
+  onLogout: () => void;
+  onNavigate: (view: string) => void;
 }
+
+const UserControlPanel: React.FC<{ 
+    user: User; 
+    onLogout: () => void;
+    onNavigate: (view: string) => void;
+}> = ({ user, onLogout, onNavigate }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const menuRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const handleSettingsClick = () => {
+        onNavigate('Settings');
+        setIsOpen(false);
+    };
+
+    return (
+        <div className="relative" ref={menuRef}>
+            <button onClick={() => setIsOpen(!isOpen)} className="p-2 text-primary rounded-md bg-blue-100/80 hover:bg-blue-100 transition-colors">
+                <AdjustmentsHorizontalIcon className="w-5 h-5" />
+            </button>
+
+            <div className={`absolute right-0 mt-2 w-64 bg-base-100 rounded-xl shadow-card border border-border-color z-20 origin-top-right transition-all duration-200 ease-out transform ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none'}`}>
+                <div className="p-2">
+                    <div className="flex items-center p-2">
+                        <img src={user.avatarUrl} alt="avatar" className="w-10 h-10 rounded-full" />
+                        <div className="ml-3">
+                            <p className="text-sm font-semibold text-base-content">{user.name}</p>
+                            <p className="text-xs text-muted-content">{user.role}</p>
+                        </div>
+                    </div>
+                    <div className="my-1 h-px bg-border-color" />
+                    <a href="#" onClick={(e) => e.preventDefault()} className="flex items-center w-full text-left px-3 py-2 text-sm text-base-content rounded-md hover:bg-base-300/70 transition-colors">
+                        <UserCircleIcon className="w-5 h-5 mr-3 text-muted-content" />
+                        <span>My Profile</span>
+                    </a>
+                    {user.role === 'Admin' && (
+                        <button onClick={handleSettingsClick} className="flex items-center w-full text-left px-3 py-2 text-sm text-base-content rounded-md hover:bg-base-300/70 transition-colors">
+                            <CogIcon className="w-5 h-5 mr-3 text-muted-content" />
+                            <span>Team Settings</span>
+                        </button>
+                    )}
+                    <div className="my-1 h-px bg-border-color" />
+                    <button onClick={onLogout} className="flex items-center w-full text-left px-3 py-2 text-sm text-danger rounded-md hover:bg-red-50 transition-colors">
+                        <ArrowLeftOnRectangleIcon className="w-5 h-5 mr-3" />
+                        <span>Logout</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 const ImportCSV: React.FC<{onImport: Function, users: User[]}> = ({ onImport, users }) => {
     const [isParsing, setIsParsing] = useState(false);
@@ -105,7 +168,7 @@ const ImportCSV: React.FC<{onImport: Function, users: User[]}> = ({ onImport, us
     );
 };
 
-const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpdateLead, onAddActivity, activities, onAssignLead, onBulkUpdate, onImportLeads }) => {
+const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpdateLead, onAddActivity, activities, onAssignLead, onBulkUpdate, onImportLeads, onLogout, onNavigate }) => {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
   const [bulkStatus, setBulkStatus] = useState('');
@@ -264,14 +327,15 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
   }, [currentUser, users]);
 
   return (
-    <div className="space-y-6">
-        <div className="flex flex-wrap gap-4 justify-between items-center">
-            <h2 className="text-2xl md:text-3xl font-bold text-text-primary">Leads Management</h2>
+    <div className="p-4 space-y-4">
+        <header className="flex flex-wrap gap-4 justify-between items-center">
+            <h1 className="text-2xl font-bold text-base-content">Leads Management</h1>
             <div className="flex items-center space-x-2">
                 {currentUser.role === 'Admin' && <ImportCSV onImport={onImportLeads} users={users} />}
-                <button onClick={exportToCSV} className="px-4 py-2 text-sm font-medium text-gray-900 border border-border-color bg-surface rounded-md hover:bg-background">Export to CSV</button>
+                <button onClick={exportToCSV} className="px-4 py-2 text-sm font-medium text-gray-900 border border-border-color bg-surface rounded-md hover:bg-background">Export</button>
+                <UserControlPanel user={currentUser} onLogout={onLogout} onNavigate={onNavigate} />
             </div>
-        </div>
+        </header>
         
         {currentUser.role === 'Admin' && (
             <AssignLeadForm 

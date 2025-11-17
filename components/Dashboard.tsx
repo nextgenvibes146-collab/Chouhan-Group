@@ -1,14 +1,79 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { Lead, User, Activity, LeadStatus } from '../types';
-import { InformationCircleIcon, AdjustmentsHorizontalIcon } from './Icons';
+import { InformationCircleIcon, AdjustmentsHorizontalIcon, CogIcon, UserCircleIcon, ArrowLeftOnRectangleIcon } from './Icons';
 
 interface DashboardProps {
     leads: Lead[];
     users: User[];
     activities: Activity[];
     currentUser: User;
+    onLogout: () => void;
+    onNavigate: (view: string) => void;
 }
+
+const UserControlPanel: React.FC<{ 
+    user: User; 
+    onLogout: () => void;
+    onNavigate: (view: string) => void;
+}> = ({ user, onLogout, onNavigate }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const menuRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const handleSettingsClick = () => {
+        onNavigate('Settings');
+        setIsOpen(false);
+    };
+
+    return (
+        <div className="relative" ref={menuRef}>
+            <div className="flex items-center space-x-2">
+                <span className="font-semibold text-base-content hidden sm:block">{user.name}</span>
+                <button onClick={() => setIsOpen(!isOpen)} className="p-2 text-primary rounded-md bg-blue-100/80 hover:bg-blue-100 transition-colors">
+                    <AdjustmentsHorizontalIcon className="w-5 h-5" />
+                </button>
+            </div>
+
+            <div className={`absolute right-0 mt-2 w-64 bg-base-100 rounded-xl shadow-card border border-border-color z-20 origin-top-right transition-all duration-200 ease-out transform ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none'}`}>
+                <div className="p-2">
+                    <div className="flex items-center p-2">
+                        <img src={user.avatarUrl} alt="avatar" className="w-10 h-10 rounded-full" />
+                        <div className="ml-3">
+                            <p className="text-sm font-semibold text-base-content">{user.name}</p>
+                            <p className="text-xs text-muted-content">{user.role}</p>
+                        </div>
+                    </div>
+                    <div className="my-1 h-px bg-border-color" />
+                    <a href="#" onClick={(e) => e.preventDefault()} className="flex items-center w-full text-left px-3 py-2 text-sm text-base-content rounded-md hover:bg-base-300/70 transition-colors">
+                        <UserCircleIcon className="w-5 h-5 mr-3 text-muted-content" />
+                        <span>My Profile</span>
+                    </a>
+                    {user.role === 'Admin' && (
+                        <button onClick={handleSettingsClick} className="flex items-center w-full text-left px-3 py-2 text-sm text-base-content rounded-md hover:bg-base-300/70 transition-colors">
+                            <CogIcon className="w-5 h-5 mr-3 text-muted-content" />
+                            <span>Team Settings</span>
+                        </button>
+                    )}
+                    <div className="my-1 h-px bg-border-color" />
+                    <button onClick={onLogout} className="flex items-center w-full text-left px-3 py-2 text-sm text-danger rounded-md hover:bg-red-50 transition-colors">
+                        <ArrowLeftOnRectangleIcon className="w-5 h-5 mr-3" />
+                        <span>Logout</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 const KpiCard: React.FC<{ title: string, value: string | number, className?: string }> = ({ title, value, className = '' }) => (
     <div className={`bg-white p-4 rounded-lg shadow-subtle border border-border-color ${className}`}>
@@ -197,7 +262,7 @@ const SalesDashboardTab: React.FC = () => {
 };
 
 
-const Dashboard: React.FC<DashboardProps> = ({ leads, users, activities, currentUser }) => {
+const Dashboard: React.FC<DashboardProps> = ({ leads, users, activities, currentUser, onLogout, onNavigate }) => {
     const [activeTab, setActiveTab] = useState('Leads');
 
     return (
@@ -208,12 +273,7 @@ const Dashboard: React.FC<DashboardProps> = ({ leads, users, activities, current
                     <h1 className="text-2xl font-bold text-base-content">Dashboard</h1>
                     <InformationCircleIcon className="w-5 h-5 text-muted-content" />
                 </div>
-                <div className="flex items-center space-x-2">
-                    <span className="font-semibold text-base-content">{currentUser.name}</span>
-                    <button className="p-2 text-primary rounded-md bg-blue-100">
-                        <AdjustmentsHorizontalIcon className="w-5 h-5" />
-                    </button>
-                </div>
+                <UserControlPanel user={currentUser} onLogout={onLogout} onNavigate={onNavigate} />
             </header>
 
             {/* Main Tabs */}

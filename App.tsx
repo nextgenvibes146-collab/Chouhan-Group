@@ -264,6 +264,28 @@ const App: React.FC = () => {
       });
       setLeads(prev => [...createdLeads, ...prev]);
   };
+  
+    const handleCreateUser = (userData: { name: string; }) => {
+        const newUser: User = {
+            id: `user-${Date.now()}`,
+            name: userData.name,
+            role: 'Salesperson',
+            avatarUrl: `https://i.pravatar.cc/40?u=${Date.now()}`
+        };
+        setUsers(prev => [...prev, newUser]);
+    };
+
+    const handleDeleteUser = (userId: string) => {
+        const admin = users.find(u => u.role === 'Admin');
+        if (!admin) return;
+
+        // Reassign leads and tasks to admin
+        setLeads(prev => prev.map(l => l.assignedSalespersonId === userId ? { ...l, assignedSalespersonId: admin.id } : l));
+        setTasks(prev => prev.map(t => t.assignedToId === userId ? { ...t, assignedToId: admin.id } : t));
+
+        // Remove user
+        setUsers(prev => prev.filter(u => u.id !== userId));
+    };
 
   const handleLogin = (user: User) => {
     setCurrentUser(user);
@@ -296,7 +318,14 @@ const App: React.FC = () => {
     }
     switch (activeView) {
       case 'Dashboard':
-        return <Dashboard leads={visibleLeads} users={users} activities={visibleActivities} currentUser={currentUser!} />;
+        return <Dashboard 
+                  leads={visibleLeads} 
+                  users={users} 
+                  activities={visibleActivities} 
+                  currentUser={currentUser!}
+                  onLogout={handleLogout}
+                  onNavigate={setActiveView}
+                />;
       case 'Leads':
         return <LeadsPage 
                   leads={visibleLeads} 
@@ -308,6 +337,8 @@ const App: React.FC = () => {
                   onAssignLead={handleAssignLead}
                   onBulkUpdate={handleBulkUpdateLeads}
                   onImportLeads={handleImportLeads}
+                  onLogout={handleLogout}
+                  onNavigate={setActiveView}
                />;
       case 'Tasks':
         return <TasksPage 
@@ -317,9 +348,30 @@ const App: React.FC = () => {
                 onAddTask={handleAddTask}
                 onToggleTask={handleToggleTask}
                 onDeleteTask={handleDeleteTask}
+                onLogout={handleLogout}
+                onNavigate={setActiveView}
                 />;
+       case 'Settings':
+            if (currentUser?.role !== 'Admin') {
+              return <Dashboard leads={visibleLeads} users={users} activities={visibleActivities} currentUser={currentUser!} onLogout={handleLogout} onNavigate={setActiveView} />;
+            }
+            return <SettingsPage 
+                users={users}
+                onCreateUser={handleCreateUser}
+                onDeleteUser={handleDeleteUser}
+                currentUser={currentUser!}
+                onLogout={handleLogout}
+                onNavigate={setActiveView}
+            />;
       default:
-        return <Dashboard leads={visibleLeads} users={users} activities={visibleActivities} currentUser={currentUser!} />;
+        return <Dashboard 
+                 leads={visibleLeads} 
+                 users={users} 
+                 activities={visibleActivities} 
+                 currentUser={currentUser!}
+                 onLogout={handleLogout}
+                 onNavigate={setActiveView}
+               />;
     }
   };
   
