@@ -26,7 +26,7 @@ const FollowUpChart: React.FC<FollowUpChartProps> = ({ activities, users }) => {
 
   return (
     <div>
-      <h3 className="text-lg font-semibold text-text-primary mb-4">Salesperson Follow-up Performance</h3>
+      <h3 className="text-lg font-bold text-base-content mb-4">Follow-up Activity</h3>
       <div style={{ width: '100%', height: 300 }}>
         <ResponsiveContainer>
           <BarChart
@@ -35,18 +35,18 @@ const FollowUpChart: React.FC<FollowUpChartProps> = ({ activities, users }) => {
               top: 5, right: 30, left: 20, bottom: 5,
             }}
           >
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-            <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-            <YAxis />
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+            <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#64748b' }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fontSize: 12, fill: '#64748b' }} axisLine={false} tickLine={false} />
             <Tooltip
               contentStyle={{
                 backgroundColor: '#fff',
-                border: '1px solid #ccc',
-                borderRadius: '8px'
+                border: '1px solid #e2e8f0',
+                borderRadius: '0.75rem'
               }}
             />
-            <Legend />
-            <Bar dataKey="Follow-ups" fill="#f19f21" />
+            <Legend wrapperStyle={{fontSize: "14px"}} />
+            <Bar dataKey="Follow-ups" fill="#3b82f6" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>

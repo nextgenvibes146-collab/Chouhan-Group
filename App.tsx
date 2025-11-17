@@ -1,6 +1,7 @@
 
 
 
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
@@ -454,7 +455,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="flex h-screen bg-background text-text-primary font-sans">
+    <div className="flex h-screen bg-base-200 text-base-content font-sans">
       <Sidebar 
         activeView={activeView} 
         onNavigate={setActiveView} 
@@ -476,7 +477,7 @@ const App: React.FC = () => {
           onAddNotification={handleAddNotification}
           onMarkNotificationsAsRead={handleMarkNotificationsAsRead}
         />
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-background p-4 md:p-6 lg:p-8">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-base-200 p-4 md:p-6 lg:p-8">
           {renderContent()}
         </main>
       </div>

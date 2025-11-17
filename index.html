@@ -12,16 +12,21 @@
           extend: {
             colors: {
               'primary': '#f19f21',
-              'primary-hover': '#d98e1e',
+              'primary-focus': '#d98e1e',
+              'primary-content': '#ffffff',
               'secondary': '#475569',
-              'background': '#f8fafc',
-              'surface': '#ffffff',
-              'sidebar': '#0f172a',
-              'text-primary': '#1e293b',
-              'text-secondary': '#64748b',
+              'accent-blue': '#3b82f6',
+              'accent-green': '#16a34a',
+              'accent-purple': '#8b5cf6',
+              'accent-red': '#ef4444',
+              'accent-teal': '#14b8a6',
+              'base-100': '#ffffff', // Surface
+              'base-200': '#f8fafc', // Background
+              'base-300': '#f1f5f9', // Lighter background
+              'base-content': '#1e293b', // Text primary
+              'muted-content': '#64748b', // Text secondary
               'border-color': '#e2e8f0',
               'success': '#16a34a',
-              'success-hover': '#15803d',
               'warning': '#f59e0b',
               'danger': '#dc2626',
             },
@@ -29,8 +34,9 @@
               sans: ['Inter', 'sans-serif'],
             },
             boxShadow: {
-                'subtle': '0 1px 3px 0 rgb(0 0 0 / 0.07), 0 1px 2px -1px rgb(0 0 0 / 0.07)',
-                'card': '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+                'subtle': '0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05)',
+                'card': '0 4px 12px -2px rgb(0 0 0 / 0.08)',
+                'card-hover': '0 8px 24px -4px rgb(0 0 0 / 0.1)',
             }
           },
         },
@@ -38,41 +44,38 @@
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         html {
             color-scheme: light;
         }
         body {
-            background-color: #f8fafc; /* Use new background color */
+            background-color: #f8fafc; /* base-200 */
         }
         /* Base Component Styles */
         .card {
-            @apply bg-surface rounded-xl shadow-subtle border border-border-color;
+            @apply bg-base-100 rounded-xl shadow-card border border-border-color;
         }
         .input-style {
-            @apply mt-1 block w-full px-3 py-2 bg-surface border border-border-color rounded-md shadow-sm text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm transition-shadow;
-        }
-        .dark-input-style {
-            @apply mt-1 block w-full px-3 py-2 bg-surface border border-border-color rounded-md shadow-sm text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm transition-shadow;
+            @apply mt-1 block w-full px-3 py-2 bg-base-100 border border-border-color rounded-md shadow-sm text-base-content placeholder-muted-content focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm transition-shadow;
         }
         .label-style {
-            @apply block text-sm font-medium text-text-secondary;
+            @apply block text-sm font-medium text-muted-content;
         }
         .button-primary {
-             @apply w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors;
+             @apply w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-primary-content bg-primary hover:bg-primary-focus focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors;
         }
         .button-secondary {
-            @apply w-full flex justify-center py-2 px-4 border border-border-color rounded-md shadow-sm text-sm font-medium text-text-primary bg-surface hover:bg-background focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:bg-gray-200 disabled:cursor-not-allowed transition-colors;
+            @apply w-full flex justify-center py-2 px-4 border border-border-color rounded-md shadow-sm text-sm font-medium text-base-content bg-base-100 hover:bg-base-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:bg-gray-200 disabled:cursor-not-allowed transition-colors;
         }
         .button-success {
-             @apply w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-success hover:bg-success-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-success disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors;
+             @apply w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-success hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-success disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors;
         }
         .action-button {
             @apply p-2 rounded-full transition-colors duration-200;
         }
         .filter-select {
-            @apply text-sm bg-surface border border-border-color rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary py-1.5 px-3 text-text-primary;
+            @apply text-sm bg-base-100 border border-border-color rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary py-1.5 px-3 text-base-content;
         }
     </style>
   <script type="importmap">
@@ -86,7 +89,7 @@
 }
 </script>
 </head>
-  <body class="bg-background font-sans text-text-primary">
+  <body class="bg-base-200 font-sans text-base-content">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>

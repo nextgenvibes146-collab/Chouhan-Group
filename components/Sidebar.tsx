@@ -27,7 +27,7 @@ const NavLink: React.FC<NavLinkProps> = ({ icon, label, isActive, onClick }) => 
     className={`flex items-center w-full px-4 py-3 text-sm font-medium transition-colors duration-200 rounded-lg ${
       isActive
         ? 'bg-primary text-white'
-        : 'text-text-secondary hover:bg-gray-100 hover:text-text-primary'
+        : 'text-muted-content hover:bg-base-300 hover:text-base-content'
     }`}
   >
     {icon}
@@ -59,7 +59,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate, isOpen, setOp
                 onClick={() => setOpen(false)}
             />
             
-            <aside className={`fixed top-0 left-0 h-full bg-surface text-text-primary w-64 p-4 transform transition-transform duration-300 ease-in-out z-40 md:relative md:transform-none md:flex-shrink-0 ${
+            <aside className={`fixed top-0 left-0 h-full bg-base-100 text-base-content w-64 p-4 transform transition-transform duration-300 ease-in-out z-40 md:relative md:transform-none md:flex-shrink-0 ${
                 isOpen ? 'translate-x-0' : '-translate-x-full'
             }`}>
                 <div className="flex flex-col h-full">
@@ -83,7 +83,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate, isOpen, setOp
                     </nav>
 
                     <div className="mt-auto">
-                        <p className="text-xs text-center text-text-secondary">&copy; {new Date().getFullYear()} Chouhan Housing Private Limited</p>
+                        <p className="text-xs text-center text-muted-content">&copy; {new Date().getFullYear()} Chouhan Housing Private Limited</p>
                     </div>
                 </div>
             </aside>
