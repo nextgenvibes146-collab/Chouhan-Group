@@ -96,7 +96,14 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, users, onOpenModal, sele
                             </div>
                             <div className="mt-3 flex justify-between items-center text-sm">
                                <StatusBadge type="status" value={lead.status} />
-                               <p className="text-text-secondary truncate ml-2">{salesperson?.name || 'N/A'}</p>
+                               <div className="flex items-center gap-2">
+                                   {lead.missedVisitsCount > 0 && (
+                                       <span className="text-xs font-semibold text-danger px-2 py-1 bg-red-100 rounded-full">
+                                           {lead.missedVisitsCount} Missed
+                                       </span>
+                                   )}
+                                   <p className="text-text-secondary truncate">{salesperson?.name || 'N/A'}</p>
+                               </div>
                             </div>
                             <div className="mt-3">
                                 <p className="text-xs text-text-secondary italic truncate">"{lead.lastRemark}"</p>
@@ -129,6 +136,7 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, users, onOpenModal, sele
                 <th scope="col" className="px-4 py-2 text-left text-xs font-bold text-text-secondary uppercase tracking-wider">Lead Info</th>
                 <th scope="col" className="px-4 py-2 text-left text-xs font-bold text-text-secondary uppercase tracking-wider">Sales Person</th>
                 <th scope="col" className="px-4 py-2 text-left text-xs font-bold text-text-secondary uppercase tracking-wider">Visit</th>
+                <th scope="col" className="px-4 py-2 text-center text-xs font-bold text-text-secondary uppercase tracking-wider">Missed Visits</th>
                 <th scope="col" className="px-4 py-2 text-left text-xs font-bold text-text-secondary uppercase tracking-wider">Project</th>
                 <th scope="col" className="px-4 py-2 text-left text-xs font-bold text-text-secondary uppercase tracking-wider">Status</th>
                 <th scope="col" className="px-4 py-2 text-left text-xs font-bold text-text-secondary uppercase tracking-wider">Temperature</th>
@@ -169,6 +177,11 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, users, onOpenModal, sele
                     <td className="px-4 py-2 whitespace-nowrap text-text-secondary">
                         <StatusBadge type="visit" value={lead.visitStatus} />
                         <div className="mt-1">{lead.visitDate || ''}</div>
+                    </td>
+                    <td className="px-4 py-2 whitespace-nowrap text-center">
+                        <span className={`font-semibold ${lead.missedVisitsCount > 0 ? 'text-danger' : 'text-muted-content'}`}>
+                            {lead.missedVisitsCount || 0}
+                        </span>
                     </td>
                     <td className="px-4 py-2 whitespace-nowrap text-text-secondary">{lead.interestedProject || 'N/A'}</td>
                     <td className="px-4 py-2 whitespace-nowrap"><StatusBadge type="status" value={lead.status} /></td>

@@ -2,6 +2,8 @@
 
 
 
+
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
@@ -74,8 +76,28 @@ const App: React.FC = () => {
 
     const newLeads = leads.map(lead => {
       if (lead.id === updatedLead.id) {
+        const originalLead = lead; // This is the old state of the lead
+        let finalUpdatedLead = { ...updatedLead };
+
+        const visitDateStr = originalLead.visitDate || originalLead.nextFollowUpDate;
+        const wasVisitScheduled = originalLead.status === LeadStatus.VisitScheduled;
+        
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const isVisitDatePast = visitDateStr && new Date(visitDateStr) < today;
+        
+        const didVisitNotHappen = finalUpdatedLead.status !== LeadStatus.VisitDone && finalUpdatedLead.status !== LeadStatus.Booked;
+
+        // If a scheduled visit date is in the past, and the status is changed to something other than Visit Done/Booked, count it as a missed visit.
+        if (wasVisitScheduled && isVisitDatePast && didVisitNotHappen) {
+            // Only increment if the status is actually changing, to avoid incrementing on every save without status change.
+            if (originalLead.status !== finalUpdatedLead.status) {
+                finalUpdatedLead.missedVisitsCount = (originalLead.missedVisitsCount || 0) + 1;
+            }
+        }
+        
         const leadToUpdate = {
-          ...updatedLead,
+          ...finalUpdatedLead,
           isRead: true,
           lastActivityDate: new Date().toISOString(),
         };

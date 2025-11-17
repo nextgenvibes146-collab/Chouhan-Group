@@ -1,10 +1,3 @@
-
-
-
-
-
-
-
 import React, { useState, useMemo } from 'react';
 import { type Lead, type User, LeadStatus, ActivityType, type Activity } from '../types';
 import { PhoneIcon, MailIcon, MapPinIcon, ChatBubbleIcon } from './Icons';
@@ -23,7 +16,7 @@ interface LeadDetailModalProps {
 const TabButton: React.FC<{ label: string, isActive: boolean, onClick: () => void }> = ({ label, isActive, onClick }) => (
     <button
         onClick={onClick}
-        className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${isActive ? 'bg-primary text-white' : 'text-text-secondary hover:bg-gray-100'}`}
+        className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${isActive ? 'bg-primary text-white' : 'text-muted-content hover:bg-gray-100'}`}
     >
         {label}
     </button>
@@ -33,8 +26,8 @@ const DetailItem: React.FC<{label: string, value?: string | null}> = ({ label, v
     if (!value) return null;
     return (
         <div>
-            <p className="text-xs text-text-secondary">{label}</p>
-            <p className="font-medium text-text-primary">{value}</p>
+            <p className="text-xs text-muted-content">{label}</p>
+            <p className="font-medium text-base-content">{value}</p>
         </div>
     );
 };
@@ -133,20 +126,20 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({ lead, users, onClose,
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex justify-center items-center" onClick={onClose}>
-      <div className="bg-surface rounded-lg shadow-xl w-full max-w-4xl m-4 max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+      <div className="bg-base-100 rounded-lg shadow-xl w-full max-w-4xl m-4 max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
         {/* Header */}
         <div className="p-4 md:p-6 border-b border-border-color flex-shrink-0">
           <div className="flex justify-between items-start">
             <div>
                 <div className="flex items-center gap-3">
-                    <h2 className="text-xl md:text-2xl font-bold text-text-primary">{lead.customerName}</h2>
+                    <h2 className="text-xl md:text-2xl font-bold text-base-content">{lead.customerName}</h2>
                     {getTemperatureBadge(lead.temperature)}
                 </div>
-              <p className="text-sm text-text-secondary">Project: {lead.interestedProject || 'N/A'}</p>
+              <p className="text-sm text-muted-content">Project: {lead.interestedProject || 'N/A'}</p>
             </div>
-            <button onClick={onClose} className="text-2xl text-text-secondary hover:text-text-primary">&times;</button>
+            <button onClick={onClose} className="text-2xl text-muted-content hover:text-base-content">&times;</button>
           </div>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-sm text-text-secondary">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-sm text-muted-content">
             <span className="flex items-center"><PhoneIcon className="w-4 h-4 mr-1.5" /> {lead.mobile}</span>
             {lead.email && <span className="flex items-center"><MailIcon className="w-4 h-4 mr-1.5" /> {lead.email}</span>}
             {lead.city && <span className="flex items-center"><MapPinIcon className="w-4 h-4 mr-1.5" /> {lead.city}</span>}
@@ -168,11 +161,11 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({ lead, users, onClose,
         </div>
 
         {/* Body */}
-        <div className="p-4 md:p-6 overflow-y-auto bg-background">
+        <div className="p-4 md:p-6 overflow-y-auto bg-base-200">
             {activeTab === 'Details' && (
-                 <div className="space-y-6">
-                    <div className="space-y-4 bg-surface p-4 rounded-lg card">
-                        <h3 className="text-lg font-semibold text-text-primary">Update Lead</h3>
+                 <div className="flex flex-col gap-6">
+                    <div className="flex flex-col gap-4 p-4 card">
+                        <h3 className="text-lg font-semibold text-base-content">Update Lead</h3>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label className="label-style">Status</label>
@@ -196,8 +189,8 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({ lead, users, onClose,
                         </div>
                         <button onClick={handleUpdate} className="button-primary">Save Changes</button>
                     </div>
-                     <div className="bg-surface p-4 rounded-lg card">
-                        <h3 className="text-lg font-semibold text-text-primary mb-3">Lead Information</h3>
+                     <div className="p-4 card">
+                        <h3 className="text-lg font-semibold text-base-content mb-3">Lead Information</h3>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
                            <DetailItem label="Assigned To" value={salesperson?.name} />
                            <DetailItem label="Lead Date" value={new Date(lead.leadDate).toLocaleDateString()} />
@@ -209,8 +202,8 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({ lead, users, onClose,
                         </div>
                     </div>
                     {isAdmin && (
-                         <div className="space-y-4 bg-surface p-4 rounded-lg card">
-                            <h3 className="text-lg font-semibold text-text-primary">Transfer Lead</h3>
+                         <div className="flex flex-col gap-4 p-4 card">
+                            <h3 className="text-lg font-semibold text-base-content">Transfer Lead</h3>
                             <div className="flex items-center space-x-2">
                                 <select value={transferToId} onChange={e => setTransferToId(e.target.value)} className="input-style">
                                     <option value="">Select salesperson...</option>
@@ -228,9 +221,9 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({ lead, users, onClose,
             )}
 
             {activeTab === 'Activity' && (
-                <div className="space-y-6">
-                    <div className="space-y-4 bg-surface p-4 rounded-lg card">
-                        <h3 className="text-lg font-semibold text-text-primary">Log Follow-up</h3>
+                <div className="flex flex-col gap-6">
+                    <div className="flex flex-col gap-3 p-4 card">
+                        <h3 className="text-lg font-semibold text-base-content">Log Follow-up</h3>
                         <form onSubmit={handleAddActivity} className="space-y-3">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <select value={activityType} onChange={e => setActivityType(e.target.value as ActivityType)} className="input-style">
@@ -244,14 +237,14 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({ lead, users, onClose,
                             <button type="submit" className="button-success">Add Activity</button>
                         </form>
                     </div>
-                    <div className="bg-surface p-4 rounded-lg card">
+                    <div className="p-4 card">
                         <ActivityFeed activities={activities} users={users} title="Lead History" />
                     </div>
                 </div>
             )}
 
             {activeTab === 'Visit' && isVisitScheduled && (
-                <div className="space-y-4 bg-yellow-50 border border-yellow-200 p-4 rounded-lg card">
+                <div className="flex flex-col gap-4 bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
                     <h3 className="text-lg font-semibold text-yellow-800">Visit Management</h3>
                     
                     {isVisitMissed && (
@@ -260,11 +253,11 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({ lead, users, onClose,
                     </div>
                     )}
                     
-                    <p className="text-sm text-text-secondary">
-                    Scheduled Visit Date: <span className="font-semibold text-text-primary">{visitDateString ? new Date(visitDateString).toLocaleDateString() : 'Not Set'}</span>
+                    <p className="text-sm text-muted-content">
+                    Scheduled Visit Date: <span className="font-semibold text-base-content">{visitDateString ? new Date(visitDateString).toLocaleDateString() : 'Not Set'}</span>
                     </p>
-                    <p className="text-sm text-text-secondary">
-                    Total Missed Visits: <span className="font-semibold text-text-primary">{lead.missedVisitsCount || 0}</span>
+                    <p className="text-sm text-muted-content">
+                    Total Missed Visits: <span className="font-semibold text-base-content">{lead.missedVisitsCount || 0}</span>
                     </p>
 
                     <button onClick={handleMarkVisitDone} className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
