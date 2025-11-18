@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import type { Task, User } from '../types';
 import { TrashIcon, AdjustmentsHorizontalIcon, CogIcon, UserCircleIcon, ArrowLeftOnRectangleIcon } from './Icons';
@@ -91,24 +92,26 @@ const TaskItem: React.FC<{
 
     return (
         <div className="group flex items-center justify-between p-3 bg-base-300/50 rounded-lg hover:bg-base-300/70 transition-colors duration-200">
-            <div className="flex items-center flex-1 min-w-0">
-                <input 
-                    type="checkbox" 
-                    checked={task.isCompleted} 
-                    onChange={() => onToggle(task.id)}
-                    className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary flex-shrink-0"
-                    aria-label={`Mark task ${task.title} as ${task.isCompleted ? 'incomplete' : 'complete'}`}
+            <div className="flex items-center cursor-pointer flex-grow min-w-0" onClick={() => onToggle(task.id)}>
+                <input
+                    type="checkbox"
+                    checked={task.isCompleted}
+                    readOnly
+                    className="h-5 w-5 rounded border-gray-400 text-primary focus:ring-primary cursor-pointer flex-shrink-0"
                 />
                 <div className="ml-3 min-w-0">
-                    <p className={`text-sm font-medium truncate ${task.isCompleted ? 'line-through text-muted-content' : 'text-base-content'}`}>{task.title}</p>
-                    <p className="text-xs text-muted-content">
-                        Due: {new Date(task.dueDate).toLocaleDateString()} | Assignee: {user?.name || 'N/A'}
+                    <p className={`font-medium truncate ${task.isCompleted ? 'text-muted-content line-through' : 'text-base-content'}`}>
+                        {task.title}
                     </p>
+                    <div className="text-xs text-muted-content flex items-center space-x-2">
+                        <span>Due: {new Date(task.dueDate).toLocaleDateString()}</span>
+                        {user && <span>To: {user.name}</span>}
+                    </div>
                 </div>
             </div>
             <button
                 onClick={handleDeleteClick}
-                className="ml-2 p-1 text-muted-content hover:text-danger opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity flex-shrink-0"
+                className="ml-4 p-1 rounded-full text-muted-content hover:bg-red-100 hover:text-danger opacity-0 group-hover:opacity-100 transition-opacity"
                 aria-label={`Delete task ${task.title}`}
             >
                 <TrashIcon className="w-5 h-5" />
@@ -117,100 +120,115 @@ const TaskItem: React.FC<{
     );
 };
 
-const AddTaskForm: React.FC<{users: User[], currentUser: User, onAddTask: (task: Omit<Task, 'id'>) => void}> = ({ users, currentUser, onAddTask }) => {
+const TasksPage: React.FC<TasksPageProps> = ({ tasks, users, currentUser, onAddTask, onToggleTask, onDeleteTask, onLogout, onNavigate }) => {
     const [title, setTitle] = useState('');
     const [dueDate, setDueDate] = useState('');
     const [assignedToId, setAssignedToId] = useState(currentUser.id);
+    const [showCompleted, setShowCompleted] = useState(false);
+    const userMap = useMemo(() => new Map(users.map(u => [u.id, u])), [users]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!title || !dueDate) return;
+        if (!title.trim() || !dueDate) return;
+
         onAddTask({
             title,
-            dueDate,
+            dueDate: new Date(dueDate).toISOString(),
             assignedToId,
             isCompleted: false,
-            createdBy: currentUser.name
+            createdBy: currentUser.name,
         });
+
         setTitle('');
         setDueDate('');
     };
 
-    return (
-        <>
-            <h3 className="text-lg font-bold text-base-content mb-4">Create a New Task</h3>
-            <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                    <label htmlFor="taskTitle" className="label-style">Task Title</label>
-                    <input id="taskTitle" type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g., Follow up with high-priority leads" className="input-style" />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label htmlFor="dueDate" className="label-style">Due Date</label>
-                        <input id="dueDate" type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="input-style" />
-                    </div>
-                    <div>
-                        <label htmlFor="assignTo" className="label-style">Assign To</label>
-                        <select id="assignTo" value={assignedToId} onChange={e => setAssignedToId(e.target.value)} className="input-style" disabled={currentUser.role !== 'Admin'}>
-                            {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
-                        </select>
-                    </div>
-                </div>
-                <button type="submit" className="button-primary !w-auto px-6">Add Task</button>
-            </form>
-        </>
-    );
-};
-
-const TasksPage: React.FC<TasksPageProps> = ({ tasks, users, currentUser, onAddTask, onToggleTask, onDeleteTask, onLogout, onNavigate }) => {
-    const userMap = new Map(users.map(u => [u.id, u]));
-
-    const { todaysTasks, openTasks, completedTasks } = useMemo(() => {
-        const today = new Date().toDateString();
-        const todays: Task[] = [];
-        const open: Task[] = [];
-        const completed: Task[] = [];
-
-        [...tasks].sort((a,b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()).forEach(task => {
-            if (task.isCompleted) {
-                completed.push(task);
-            } else if (new Date(task.dueDate).toDateString() === today) {
-                todays.push(task);
-            } else {
-                open.push(task);
-            }
-        });
-        return { todaysTasks: todays, openTasks: open, completedTasks: completed.reverse().slice(0, 10) }; // show last 10 completed
+    const sortedTasks = useMemo(() => {
+        return [...tasks].sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
     }, [tasks]);
 
+    const { pendingTasks, completedTasks } = useMemo(() => {
+        const pending = sortedTasks.filter(t => !t.isCompleted);
+        const completed = sortedTasks.filter(t => t.isCompleted);
+        return { pendingTasks: pending, completedTasks: completed };
+    }, [sortedTasks]);
+
     return (
-        <div className="p-4 space-y-4">
+        <div className="space-y-6">
             <header className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold text-base-content">Task Management</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold text-base-content">My Tasks</h1>
                 <UserControlPanel user={currentUser} onLogout={onLogout} onNavigate={onNavigate} />
             </header>
-            
-            <div className="card p-6">
-                <AddTaskForm users={users} currentUser={currentUser} onAddTask={onAddTask} />
-            </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                 <div className="card p-6">
-                    <h3 className="text-lg font-bold text-base-content mb-4">Today's Tasks ({todaysTasks.length})</h3>
-                    <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
-                        {todaysTasks.length > 0 ? todaysTasks.map(t => <TaskItem key={t.id} task={t} user={userMap.get(t.assignedToId)} onToggle={onToggleTask} onDelete={onDeleteTask} />) : <p className="text-muted-content text-sm text-center py-4">No tasks due today.</p>}
+                <div className="lg:col-span-1">
+                    <div className="card p-6 h-fit sticky top-6">
+                        <h3 className="text-xl font-semibold text-text-primary mb-4">Add a New Task</h3>
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div>
+                                <label htmlFor="taskTitle" className="label-style">Task Title</label>
+                                <input id="taskTitle" type="text" value={title} onChange={e => setTitle(e.target.value)} className="input-style" placeholder="e.g., Follow up with Client X" />
+                            </div>
+                            <div>
+                                <label htmlFor="taskDueDate" className="label-style">Due Date</label>
+                                <input id="taskDueDate" type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="input-style" />
+                            </div>
+                            {currentUser.role === 'Admin' && (
+                                <div>
+                                    <label htmlFor="taskAssignee" className="label-style">Assign To</label>
+                                    <select id="taskAssignee" value={assignedToId} onChange={e => setAssignedToId(e.target.value)} className="input-style">
+                                        {users.map(u => (
+                                            <option key={u.id} value={u.id}>{u.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
+                            <button type="submit" className="button-primary !w-auto px-6">Add Task</button>
+                        </form>
                     </div>
                 </div>
-                 <div className="card p-6">
-                    <h3 className="text-lg font-bold text-base-content mb-4">Open Tasks ({openTasks.length})</h3>
-                     <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
-                        {openTasks.length > 0 ? openTasks.map(t => <TaskItem key={t.id} task={t} user={userMap.get(t.assignedToId)} onToggle={onToggleTask} onDelete={onDeleteTask} />) : <p className="text-muted-content text-sm text-center py-4">No other open tasks.</p>}
+
+                <div className="lg:col-span-2 card p-6">
+                    <div className="mb-4">
+                        <h3 className="text-xl font-semibold text-text-primary">Pending Tasks ({pendingTasks.length})</h3>
                     </div>
-                </div>
-                <div className="card p-6">
-                    <h3 className="text-lg font-bold text-base-content mb-4">Recently Completed</h3>
-                     <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
-                        {completedTasks.length > 0 ? completedTasks.map(t => <TaskItem key={t.id} task={t} user={userMap.get(t.assignedToId)} onToggle={onToggleTask} onDelete={onDeleteTask}/>) : <p className="text-muted-content text-sm text-center py-4">No tasks completed recently.</p>}
+                    <div className="space-y-3">
+                        {pendingTasks.length > 0 ? (
+                            pendingTasks.map(task => (
+                                <TaskItem
+                                    key={task.id}
+                                    task={task}
+                                    user={userMap.get(task.assignedToId)}
+                                    onToggle={onToggleTask}
+                                    onDelete={onDeleteTask}
+                                />
+                            ))
+                        ) : (
+                            <p className="text-center text-muted-content py-4">No pending tasks. Great job!</p>
+                        )}
+                    </div>
+
+                    <div className="mt-8">
+                        <button onClick={() => setShowCompleted(!showCompleted)} className="text-lg font-semibold text-text-primary w-full text-left py-2">
+                            {showCompleted ? '▼' : '►'} Completed Tasks ({completedTasks.length})
+                        </button>
+                        {showCompleted && (
+                            <div className="mt-4 space-y-3">
+                                {completedTasks.length > 0 ? (
+                                    completedTasks.map(task => (
+                                        <TaskItem
+                                            key={task.id}
+                                            task={task}
+                                            user={userMap.get(task.assignedToId)}
+                                            onToggle={onToggleTask}
+                                            onDelete={onDeleteTask}
+                                        />
+                                    ))
+                                ) : (
+                                    <p className="text-center text-muted-content py-4">No tasks have been completed yet.</p>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

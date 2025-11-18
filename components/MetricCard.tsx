@@ -30,7 +30,7 @@ const MetricCard: React.FC<MetricCardProps> = ({ title, value, icon, color }) =>
         </div>
       </div>
       <div>
-        <p className={`text-4xl font-extrabold text-base-content mt-2`}>{value}</p>
+        <p className={`text-3xl sm:text-4xl font-extrabold text-base-content mt-2`}>{value}</p>
       </div>
     </div>
   );

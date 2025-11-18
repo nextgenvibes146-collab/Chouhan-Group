@@ -1,3 +1,5 @@
+
+
 import React, { useMemo } from 'react';
 import { CalendarIcon, DocumentTextIcon, UsersIcon } from './Icons';
 import type { Lead, Task } from '../types';
@@ -54,7 +56,7 @@ const CalendarPage: React.FC<CalendarPageProps> = ({ leads, tasks }) => {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl md:text-3xl font-bold text-text-primary">My Agenda</h2>
+      <h2 className="text-2xl sm:text-3xl font-bold text-text-primary">My Agenda</h2>
       <div className="bg-white p-6 rounded-xl shadow-md">
         {sortedDates.length > 0 ? (
           <div className="space-y-6">

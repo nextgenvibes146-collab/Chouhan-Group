@@ -16,9 +16,9 @@ const SalesFunnelChart: React.FC<SalesFunnelChartProps> = ({ leads }) => {
     const pipelineOrder: LeadStatus[] = [
         LeadStatus.New,
         LeadStatus.Contacted,
-// Fix: Corrected enum member access from 'VisitScheduled' to 'SiteVisitScheduled'.
+        // Fix: Corrected enum member access from 'VisitScheduled' to 'SiteVisitScheduled'.
         LeadStatus.SiteVisitScheduled,
-// Fix: Corrected enum member access from 'VisitDone' to 'SiteVisitDone'.
+        // Fix: Corrected enum member access from 'VisitDone' to 'SiteVisitDone'.
         LeadStatus.SiteVisitDone,
         LeadStatus.Negotiation,
         LeadStatus.Booked

@@ -1,8 +1,5 @@
 
 
-
-
-
 import React, { useState } from 'react';
 import { PhoneIcon, ChatBubbleIcon, UsersIcon } from './Icons';
 import { Lead, User, LeadStatus, Activity, ActivityType } from '../types';
@@ -35,17 +32,17 @@ const TeamPerformanceTable: React.FC<TeamPerformanceTableProps> = ({ users, lead
                 <table className="min-w-full divide-y divide-border-color">
                     <thead className="bg-base-300">
                         <tr>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-muted-content uppercase tracking-wider">Salesperson</th>
-                            <th scope="col" className="px-6 py-3 text-center text-xs font-bold text-muted-content uppercase tracking-wider">Total Leads</th>
-                            <th scope="col" className="px-6 py-3 text-center text-xs font-bold text-muted-content uppercase tracking-wider">Visits</th>
-                            <th scope="col" className="px-6 py-3 text-center text-xs font-bold text-muted-content uppercase tracking-wider">Bookings</th>
-                            <th scope="col" className="px-6 py-3 text-center text-xs font-bold text-muted-content uppercase tracking-wider">Conv. Rate</th>
+                            <th scope="col" className="px-2 py-3 md:px-6 text-left text-xs font-bold text-muted-content uppercase tracking-wider">Salesperson</th>
+                            <th scope="col" className="px-2 py-3 md:px-6 text-center text-xs font-bold text-muted-content uppercase tracking-wider">Total Leads</th>
+                            <th scope="col" className="px-2 py-3 md:px-6 text-center text-xs font-bold text-muted-content uppercase tracking-wider">Visits</th>
+                            <th scope="col" className="px-2 py-3 md:px-6 text-center text-xs font-bold text-muted-content uppercase tracking-wider">Bookings</th>
+                            <th scope="col" className="px-2 py-3 md:px-6 text-center text-xs font-bold text-muted-content uppercase tracking-wider">Conv. Rate</th>
                         </tr>
                     </thead>
                     <tbody className="bg-base-100 divide-y divide-border-color">
                         {performanceData.map(user => (
                             <tr key={user.id}>
-                                <td className="px-6 py-4 whitespace-nowrap">
+                                <td className="px-2 py-4 md:px-6 whitespace-nowrap">
                                     <div className="flex items-center">
                                         <img className="h-9 w-9 rounded-full" src={user.avatarUrl} alt="" />
                                         <div className="ml-3">
@@ -53,10 +50,10 @@ const TeamPerformanceTable: React.FC<TeamPerformanceTableProps> = ({ users, lead
                                         </div>
                                     </div>
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-base-content font-medium">{user.totalLeads}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-base-content font-medium">{user.visits}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-accent-green font-bold">{user.bookings}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-accent-blue font-bold">{user.conversionRate}%</td>
+                                <td className="px-2 py-4 md:px-6 whitespace-nowrap text-center text-sm text-base-content font-medium">{user.totalLeads}</td>
+                                <td className="px-2 py-4 md:px-6 whitespace-nowrap text-center text-sm text-base-content font-medium">{user.visits}</td>
+                                <td className="px-2 py-4 md:px-6 whitespace-nowrap text-center text-sm text-accent-green font-bold">{user.bookings}</td>
+                                <td className="px-2 py-4 md:px-6 whitespace-nowrap text-center text-sm text-accent-blue font-bold">{user.conversionRate}%</td>
                             </tr>
                         ))}
                     </tbody>
@@ -74,20 +71,20 @@ const CancelledLeadsTable: React.FC<{ leads: Lead[], onOpenModal: (lead: Lead) =
                 <table className="min-w-full divide-y divide-border-color">
                     <thead className="bg-base-300">
                         <tr>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-muted-content uppercase tracking-wider">Customer</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-muted-content uppercase tracking-wider">Reason</th>
-                            <th scope="col" className="px-6 py-3 text-right text-xs font-bold text-muted-content uppercase tracking-wider">Actions</th>
+                            <th scope="col" className="px-2 py-3 md:px-6 text-left text-xs font-bold text-muted-content uppercase tracking-wider">Customer</th>
+                            <th scope="col" className="px-2 py-3 md:px-6 text-left text-xs font-bold text-muted-content uppercase tracking-wider">Reason</th>
+                            <th scope="col" className="px-2 py-3 md:px-6 text-right text-xs font-bold text-muted-content uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
                     <tbody className="bg-base-100 divide-y divide-border-color">
                         {leads.map(lead => (
                             <tr key={lead.id}>
-                                <td className="px-6 py-4 whitespace-nowrap">
+                                <td className="px-2 py-4 md:px-6 whitespace-nowrap">
                                     <div className="text-sm font-medium text-base-content">{lead.customerName}</div>
                                     <div className="text-sm text-muted-content">{new Date(lead.lastActivityDate).toLocaleDateString()}</div>
                                 </td>
-                                <td className="px-6 py-4 whitespace-normal text-sm text-muted-content max-w-sm">{lead.lastRemark}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <td className="px-2 py-4 md:px-6 whitespace-normal text-sm text-muted-content max-w-sm">{lead.lastRemark}</td>
+                                <td className="px-2 py-4 md:px-6 whitespace-nowrap text-right text-sm font-medium">
                                     <div className="flex items-center justify-end space-x-3">
                                         <button onClick={() => onOpenModal(lead)} className="text-primary hover:text-primary-focus font-semibold">
                                             View Details
@@ -120,7 +117,7 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ leads, users, currentUser, on
     if (currentUser.role !== 'Admin') {
         return (
             <div className="space-y-6">
-                <h1 className="text-3xl font-extrabold text-base-content">Reports</h1>
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-base-content">Reports</h1>
                 <div className="card text-center py-16">
                      <UsersIcon className="w-16 h-16 text-primary opacity-50 mx-auto mb-4" />
                     <p className="text-muted-content font-semibold">Access Denied</p>
@@ -134,7 +131,7 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ leads, users, currentUser, on
 
     return (
         <div className="space-y-6">
-            <h1 className="text-3xl font-extrabold text-base-content">Sales Reports</h1>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-base-content">Sales Reports</h1>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="card p-6">

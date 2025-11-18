@@ -35,9 +35,9 @@ const StatusBadge: React.FC<{ type: 'visit' | 'temp' | 'status', value?: string 
          switch (value) {
             case LeadStatus.New: bgColor = 'bg-blue-100'; textColor = 'text-blue-800'; break;
             case LeadStatus.Contacted: bgColor = 'bg-yellow-100'; textColor = 'text-yellow-800'; break;
-// Fix: Corrected enum member access from 'VisitScheduled' to 'SiteVisitScheduled'.
+            // Fix: Corrected enum member access from 'VisitScheduled' to 'SiteVisitScheduled'.
             case LeadStatus.SiteVisitScheduled: bgColor = 'bg-purple-100'; textColor = 'text-purple-800'; text = 'Visit'; break;
-// Fix: Corrected enum member access from 'VisitDone' to 'SiteVisitDone'.
+            // Fix: Corrected enum member access from 'VisitDone' to 'SiteVisitDone'.
             case LeadStatus.SiteVisitDone: bgColor = 'bg-indigo-100'; textColor = 'text-indigo-800'; text = 'Visit Done'; break;
             case LeadStatus.Negotiation: bgColor = 'bg-orange-100'; textColor = 'text-orange-800'; break;
             case LeadStatus.Booked: bgColor = 'bg-green-100'; textColor = 'text-green-800'; break;

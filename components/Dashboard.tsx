@@ -1,3 +1,5 @@
+
+
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { Lead, User, Activity, LeadStatus } from '../types';
@@ -78,7 +80,7 @@ const UserControlPanel: React.FC<{
 const KpiCard: React.FC<{ title: string, value: string | number, className?: string }> = ({ title, value, className = '' }) => (
     <div className={`bg-white p-4 rounded-lg shadow-subtle border border-border-color ${className}`}>
         <p className="text-sm text-muted-content">{title}</p>
-        <p className="text-2xl font-bold text-base-content mt-1">{value}</p>
+        <p className="text-xl sm:text-2xl font-bold text-base-content mt-1">{value}</p>
     </div>
 );
 
@@ -270,7 +272,7 @@ const Dashboard: React.FC<DashboardProps> = ({ leads, users, activities, current
             {/* Header */}
             <header className="flex justify-between items-center">
                 <div className="flex items-center space-x-2">
-                    <h1 className="text-2xl font-bold text-base-content">Dashboard</h1>
+                    <h1 className="text-xl sm:text-2xl font-bold text-base-content">Dashboard</h1>
                     <InformationCircleIcon className="w-5 h-5 text-muted-content" />
                 </div>
                 <UserControlPanel user={currentUser} onLogout={onLogout} onNavigate={onNavigate} />

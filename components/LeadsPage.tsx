@@ -1,3 +1,6 @@
+
+
+
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import LeadsTable from './LeadsTable';
 import LeadDetailModal from './LeadDetailModal';
@@ -100,7 +103,6 @@ const ImportCSV: React.FC<{onImport: Function, users: User[]}> = ({ onImport, us
                     const lines = text.split(/\r\n|\n/);
                     const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
                     
-                    // Simple validation of headers
                     const requiredHeaders = ['Customer Name', 'Mobile', 'Status', 'Sales Person', 'Lead Date'];
                     const hasHeaders = requiredHeaders.every(h => headers.includes(h));
                     if (!hasHeaders) {
@@ -111,17 +113,15 @@ const ImportCSV: React.FC<{onImport: Function, users: User[]}> = ({ onImport, us
                         const data = line.split(',');
                         if (data.length < headers.length) return null;
 
-                        const leadData = headers.reduce((obj, header, index) => {
-                            obj[header] = data[index]?.trim().replace(/"/g, '');
+                        {/* Fix: Changed the accumulator type to Record<string, string> and provided a fallback for undefined values to make parsing type-safe. */}
+                        const leadData = headers.reduce<Record<string, string>>((obj, header, index) => {
+                            obj[header] = data[index]?.trim().replace(/"/g, '') ?? '';
                             return obj;
-                        }, {} as {[key: string]: any});
+                        }, {});
 
-                        // Basic data validation
                         if (!leadData['Customer Name'] || !leadData['Mobile']) return null;
 
-                        // Fix: The 'leadDate' from CSV could be of an unknown type, causing a type error with the `new Date()` constructor.
-                        // By explicitly converting it to a string and validating it, we ensure type safety and handle potential invalid date formats gracefully.
-                        const parsedDate = new Date(String(leadData['Lead Date']));
+                        const parsedDate = new Date(leadData['Lead Date']);
                         const leadDateISO = (leadData['Lead Date'] && !isNaN(parsedDate.getTime()))
                             ? parsedDate.toISOString()
                             : new Date().toISOString();
@@ -136,7 +136,7 @@ const ImportCSV: React.FC<{onImport: Function, users: User[]}> = ({ onImport, us
                             interestedUnit: leadData['Property Type'] || '',
                             investmentTimeline: '',
                             lastRemark: leadData['Last Remark'] || 'Imported lead.',
-                            assignedSalespersonId: leadData['Sales Person'] || users[0].name, // a bit of a hack
+                            assignedSalespersonId: leadData['Sales Person'] || users[0].name,
                             status: (leadData['Status'] as LeadStatus) || LeadStatus.New,
                             leadDate: leadDateISO,
                             modeOfEnquiry: ModeOfEnquiry.Digital,
@@ -154,7 +154,7 @@ const ImportCSV: React.FC<{onImport: Function, users: User[]}> = ({ onImport, us
             }
         };
         reader.readAsText(file);
-        event.target.value = ''; // Reset file input
+        event.target.value = '';
     };
 
     return (
@@ -173,11 +173,11 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
   const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
   const [bulkStatus, setBulkStatus] = useState('');
   const [bulkAssignee, setBulkAssignee] = useState('');
-
+  
   const [filters, setFilters] = useState({
     status: '',
     salesperson: '',
-    dateRange: '', // e.g., 'today', 'this_week'
+    dateRange: '',
     showUnread: false,
     showOverdue: false,
     showVisits: false,
@@ -221,16 +221,13 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
     }
     if (filters.showOverdue) {
         const today = new Date();
-        today.setHours(0, 0, 0, 0); // Set to start of the current day
+        today.setHours(0, 0, 0, 0);
         filtered = filtered.filter(l => l.nextFollowUpDate && new Date(l.nextFollowUpDate) < today);
     }
     if(filters.showVisits) {
-// Fix: Corrected enum member access from 'VisitScheduled' to 'SiteVisitScheduled'.
         filtered = filtered.filter(l => l.status === LeadStatus.SiteVisitScheduled);
     }
 
-    // Fix: Corrected the sorting logic to prevent type errors.
-    // The previous implementation was attempting to access properties on a Date object incorrectly and calling a method on an array.
     return filtered.sort((a, b) => new Date(b.leadDate).getTime() - new Date(a.leadDate).getTime());
   }, [leads, filters]);
 
@@ -274,7 +271,6 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
         bulkAssignee || undefined
     );
 
-    // Reset selections and form
     setSelectedLeadIds(new Set());
     setBulkStatus('');
     setBulkAssignee('');
@@ -329,15 +325,15 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
   return (
     <div className="p-4 space-y-4">
         <header className="flex flex-wrap gap-4 justify-between items-center">
-            <h1 className="text-2xl font-bold text-base-content">Leads Management</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-base-content">Leads Management</h1>
             <div className="flex items-center space-x-2">
-                {currentUser.role === 'Admin' && <ImportCSV onImport={onImportLeads} users={users} />}
+                {isAdmin && <ImportCSV onImport={onImportLeads} users={users} />}
                 <button onClick={exportToCSV} className="px-4 py-2 text-sm font-medium text-gray-900 border border-border-color bg-surface rounded-md hover:bg-background">Export</button>
                 <UserControlPanel user={currentUser} onLogout={onLogout} onNavigate={onNavigate} />
             </div>
         </header>
         
-        {currentUser.role === 'Admin' && (
+        {isAdmin && (
             <AssignLeadForm 
                 salesAgents={users.filter(u => u.role === 'Salesperson')} 
                 onAssignLead={onAssignLead}
@@ -345,7 +341,6 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
         )}
 
         <div className="space-y-4">
-            {/* Filters */}
             <div className="card p-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                     <div>
