@@ -1,4 +1,6 @@
 
+
+
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import LeadsTable from './LeadsTable';
 import LeadDetailModal from './LeadDetailModal';
@@ -6,7 +8,17 @@ import AssignLeadForm from './AssignLeadForm';
 import type { Lead, User, ActivityType, Activity } from '../types';
 import { LeadStatus, ModeOfEnquiry } from '../types';
 import type { NewLeadData } from '../App';
-import { AdjustmentsHorizontalIcon, CogIcon, UserCircleIcon, ArrowLeftOnRectangleIcon } from './Icons';
+import { 
+    AdjustmentsHorizontalIcon, 
+    CogIcon, 
+    UserCircleIcon, 
+    ArrowLeftOnRectangleIcon,
+    FunnelIcon,
+    XMarkIcon,
+    SearchIcon,
+    PlusIcon,
+    MinusIcon
+} from './Icons';
 
 interface LeadsPageProps {
   leads: Lead[];
@@ -21,6 +33,28 @@ interface LeadsPageProps {
   onLogout: () => void;
   onNavigate: (view: string) => void;
 }
+
+const TABS = [
+    { id: 'all', label: 'All Leads' },
+    { id: 'new', label: 'New' },
+    { id: 'followup', label: 'Follow-up' },
+    { id: 'visit', label: 'Visits' },
+    { id: 'negotiation', label: 'Negotiation' },
+    { id: 'booked', label: 'Booked' },
+    { id: 'lost', label: 'Lost' },
+];
+
+const getStatusesForTab = (tabId: string): LeadStatus[] | null => {
+    switch (tabId) {
+        case 'new': return [LeadStatus.New];
+        case 'followup': return [LeadStatus.Contacted, LeadStatus.Qualified, LeadStatus.SiteVisitPending, LeadStatus.ProposalSent];
+        case 'visit': return [LeadStatus.SiteVisitScheduled, LeadStatus.SiteVisitDone];
+        case 'negotiation': return [LeadStatus.Negotiation, LeadStatus.ProposalFinalized];
+        case 'booked': return [LeadStatus.Booking, LeadStatus.Booked];
+        case 'lost': return [LeadStatus.Lost, LeadStatus.Cancelled, LeadStatus.Disqualified];
+        default: return null;
+    }
+};
 
 const UserControlPanel: React.FC<{ 
     user: User; 
@@ -118,7 +152,7 @@ const ImportCSV: React.FC<{onImport: Function, users: User[]}> = ({ onImport, us
 
                         if (!leadData['Customer Name'] || !leadData['Mobile']) return null;
 
-                        const leadDateStr = leadData['Lead Date'];
+                        const leadDateStr = leadData['Lead Date'] as string;
                         const parsedDate = new Date(leadDateStr);
                         const leadDateISO = (leadDateStr && !isNaN(parsedDate.getTime()))
                             ? parsedDate.toISOString()
@@ -158,7 +192,7 @@ const ImportCSV: React.FC<{onImport: Function, users: User[]}> = ({ onImport, us
     return (
         <div className="flex items-center space-x-2">
             <label htmlFor="csv-importer" className={`px-4 py-2 text-sm font-medium text-white bg-primary rounded-md shadow-sm hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors cursor-pointer ${isParsing ? 'opacity-50' : ''}`}>
-                {isParsing ? 'Importing...' : 'Import from CSV'}
+                {isParsing ? 'Importing...' : 'Import CSV'}
             </label>
             <input id="csv-importer" type="file" accept=".csv" onChange={handleFileChange} className="hidden" disabled={isParsing} />
             {error && <p className="text-xs text-red-500">{error}</p>}
@@ -166,14 +200,30 @@ const ImportCSV: React.FC<{onImport: Function, users: User[]}> = ({ onImport, us
     );
 };
 
+const FilterChip: React.FC<{ label: string; isActive: boolean; onClick: () => void }> = ({ label, isActive, onClick }) => (
+    <button
+        onClick={onClick}
+        className={`px-3 py-1 text-xs font-medium rounded-full transition-colors border ${
+            isActive 
+                ? 'bg-primary text-white border-primary' 
+                : 'bg-base-100 text-muted-content border-border-color hover:bg-base-200'
+        }`}
+    >
+        {label}
+    </button>
+);
+
 const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpdateLead, onAddActivity, activities, onAssignLead, onBulkUpdate, onImportLeads, onLogout, onNavigate }) => {
+  const [activeTab, setActiveTab] = useState('all');
+  const [showFilters, setShowFilters] = useState(false);
+  const [showAddLead, setShowAddLead] = useState(false);
+  const [localSearch, setLocalSearch] = useState('');
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
   const [bulkStatus, setBulkStatus] = useState('');
   const [bulkAssignee, setBulkAssignee] = useState('');
   
   const [filters, setFilters] = useState({
-    status: '',
     salesperson: '',
     dateRange: '',
     showUnread: false,
@@ -202,9 +252,23 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
   const filteredLeads = useMemo(() => {
     let filtered = [...leads];
     
-    if (filters.status) {
-        filtered = filtered.filter(l => l.status === filters.status);
+    // Tab Filter
+    const tabStatuses = getStatusesForTab(activeTab);
+    if (tabStatuses) {
+        filtered = filtered.filter(l => tabStatuses.includes(l.status));
     }
+
+    // Local Search
+    if (localSearch) {
+        const term = localSearch.toLowerCase();
+        filtered = filtered.filter(l => 
+            l.customerName.toLowerCase().includes(term) ||
+            l.mobile.includes(term) ||
+            (l.interestedProject && l.interestedProject.toLowerCase().includes(term))
+        );
+    }
+    
+    // Advanced Filters
     if (filters.salesperson) {
         filtered = filtered.filter(l => l.assignedSalespersonId === filters.salesperson);
     }
@@ -227,7 +291,7 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
     }
 
     return filtered.sort((a, b) => new Date(b.leadDate).getTime() - new Date(a.leadDate).getTime());
-  }, [leads, filters]);
+  }, [leads, activeTab, localSearch, filters]);
 
   const allVisibleLeadsSelected = useMemo(() => {
     if (filteredLeads.length === 0) return false;
@@ -248,9 +312,6 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
 
   const handleSelectAll = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
       if (e.target.checked) {
-          // Use a functional update but since filteredLeads is a dependency, we need to access the current IDs
-          // This might be tricky inside useCallback if we don't want to re-create it often.
-          // However, handleSelectAll depends on filteredLeads anyway.
            const visibleIds = filteredLeads.map(l => l.id);
            setSelectedLeadIds(prev => new Set([...Array.from(prev), ...visibleIds]));
       } else {
@@ -305,15 +366,6 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
     link.click();
     document.body.removeChild(link);
   };
-  
-  const FilterButton: React.FC<{label: string; filterKey: 'showUnread' | 'showOverdue' | 'showVisits'}> = ({label, filterKey}) => (
-      <button 
-        onClick={() => setFilters(f => ({...f, [filterKey]: !f[filterKey]}))}
-        className={`px-3 py-1.5 text-sm rounded-full transition-colors ${filters[filterKey] ? 'bg-primary text-white' : 'bg-gray-200 text-text-secondary hover:bg-gray-300'}`}
-      >
-        {label}
-      </button>
-  );
 
   const isAdmin = currentUser.role === 'Admin';
 
@@ -323,91 +375,172 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
     }
     return [];
   }, [currentUser, users]);
+  
+  const resetFilters = () => {
+      setFilters({
+        salesperson: '',
+        dateRange: '',
+        showUnread: false,
+        showOverdue: false,
+        showVisits: false,
+        enquiryType: '',
+        month: '',
+      });
+      setLocalSearch('');
+  };
 
   return (
     <div className="p-4 space-y-4">
-        <header className="flex flex-wrap gap-4 justify-between items-center">
-            <h1 className="text-xl sm:text-2xl font-bold text-base-content">Leads Management</h1>
-            <div className="flex items-center space-x-2">
+        {/* Page Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <h1 className="text-2xl font-bold text-base-content">Leads Management</h1>
+            <div className="flex items-center gap-2 self-end md:self-auto">
+                {isAdmin && (
+                    <button 
+                        onClick={() => setShowAddLead(!showAddLead)} 
+                        className={`flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors ${showAddLead ? 'bg-gray-200 text-base-content' : 'bg-primary text-white hover:bg-primary-focus'}`}
+                    >
+                        {showAddLead ? <MinusIcon className="w-4 h-4 mr-2" /> : <PlusIcon className="w-4 h-4 mr-2" />}
+                        {showAddLead ? 'Cancel' : 'Add Lead'}
+                    </button>
+                )}
                 {isAdmin && <ImportCSV onImport={onImportLeads} users={users} />}
-                <button onClick={exportToCSV} className="px-4 py-2 text-sm font-medium text-gray-900 border border-border-color bg-surface rounded-md hover:bg-background">Export</button>
+                <button onClick={exportToCSV} className="px-4 py-2 text-sm font-medium text-gray-700 border border-border-color bg-white rounded-md hover:bg-gray-50 transition-colors">Export</button>
                 <UserControlPanel user={currentUser} onLogout={onLogout} onNavigate={onNavigate} />
             </div>
-        </header>
+        </div>
         
-        {isAdmin && (
-            <AssignLeadForm 
-                salesAgents={users.filter(u => u.role === 'Salesperson')} 
-                onAssignLead={onAssignLead}
-            />
-        )}
+        {/* Collapsible Add Lead Form */}
+        <div className={`overflow-hidden transition-all duration-300 ease-in-out ${showAddLead ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'}`}>
+            {isAdmin && (
+                <div className="mb-6">
+                    <AssignLeadForm 
+                        salesAgents={users.filter(u => u.role === 'Salesperson')} 
+                        onAssignLead={(data) => {
+                            onAssignLead(data);
+                            setShowAddLead(false);
+                        }}
+                    />
+                </div>
+            )}
+        </div>
 
-        <div className="space-y-4">
-            <div className="card p-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                    <div>
-                        <label className="text-xs font-medium text-text-secondary">Status</label>
-                        <select value={filters.status} onChange={e => setFilters({...filters, status: e.target.value})} className="filter-select w-full mt-1">
-                            <option value="">All Statuses</option>
-                            {Object.values(LeadStatus).map(s => <option key={s} value={s}>{s}</option>)}
-                        </select>
-                    </div>
-                    {isAdmin && (
-                        <>
+        {/* Main Content Card */}
+        <div className="bg-white rounded-xl shadow-card border border-border-color overflow-hidden">
+            {/* Status Tabs */}
+            <div className="border-b border-border-color overflow-x-auto scrollbar-hide">
+                <div className="flex min-w-max px-2">
+                    {TABS.map(tab => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id)}
+                            className={`px-6 py-4 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap ${
+                                activeTab === tab.id 
+                                    ? 'border-primary text-primary' 
+                                    : 'border-transparent text-muted-content hover:text-base-content hover:border-gray-300'
+                            }`}
+                        >
+                            {tab.label}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Search and Filter Toolbar */}
+            <div className="p-4 border-b border-border-color flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between bg-gray-50/50">
+                <div className="relative w-full lg:w-96">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-3">
+                        <SearchIcon className="w-4 h-4 text-muted-content" />
+                    </span>
+                    <input 
+                        type="text" 
+                        placeholder="Search in list..." 
+                        value={localSearch}
+                        onChange={(e) => setLocalSearch(e.target.value)}
+                        className="w-full py-2 pl-9 pr-4 text-sm bg-white border border-border-color rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-shadow"
+                    />
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+                    <FilterChip label="Unread" isActive={filters.showUnread} onClick={() => setFilters(f => ({...f, showUnread: !f.showUnread}))} />
+                    <FilterChip label="Overdue" isActive={filters.showOverdue} onClick={() => setFilters(f => ({...f, showOverdue: !f.showOverdue}))} />
+                    <FilterChip label="Visits Today" isActive={filters.showVisits} onClick={() => setFilters(f => ({...f, showVisits: !f.showVisits}))} />
+                    
+                    <div className="h-6 w-px bg-border-color mx-1 hidden sm:block"></div>
+                    
+                    <button 
+                        onClick={() => setShowFilters(!showFilters)}
+                        className={`flex items-center px-3 py-2 text-sm font-medium rounded-lg border transition-colors ${
+                            showFilters 
+                                ? 'bg-blue-50 text-primary border-primary' 
+                                : 'bg-white text-base-content border-border-color hover:bg-gray-50'
+                        }`}
+                    >
+                        {showFilters ? <XMarkIcon className="w-4 h-4 mr-2" /> : <FunnelIcon className="w-4 h-4 mr-2" />}
+                        Filters
+                    </button>
+                </div>
+            </div>
+
+            {/* Advanced Filters Panel */}
+            {showFilters && (
+                <div className="p-4 bg-gray-50 border-b border-border-color animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {isAdmin && (
                             <div>
-                                <label className="text-xs font-medium text-text-secondary">Salesperson</label>
-                                <select value={filters.salesperson} onChange={e => setFilters({...filters, salesperson: e.target.value})} className="filter-select w-full mt-1">
+                                <label className="block text-xs font-semibold text-muted-content mb-1">Salesperson</label>
+                                <select value={filters.salesperson} onChange={e => setFilters({...filters, salesperson: e.target.value})} className="filter-select w-full">
                                     <option value="">All Salespersons</option>
                                     {manageableUsers.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
                                 </select>
                             </div>
-                            <div>
-                                <label className="text-xs font-medium text-text-secondary">Month</label>
-                                <select value={filters.month} onChange={e => setFilters({...filters, month: e.target.value})} className="filter-select w-full mt-1">
-                                    <option value="">All Months</option>
-                                    {uniqueMonths.map(m => <option key={m} value={m}>{m}</option>)}
-                                </select>
-                            </div>
-                            <div>
-                                <label className="text-xs font-medium text-text-secondary">Enquiry Type</label>
-                                <select value={filters.enquiryType} onChange={e => setFilters({...filters, enquiryType: e.target.value})} className="filter-select w-full mt-1">
-                                    <option value="">All Enquiry Types</option>
-                                    {Object.values(ModeOfEnquiry).map(s => <option key={s} value={s}>{s}</option>)}
-                                </select>
-                            </div>
-                        </>
-                    )}
+                        )}
+                        <div>
+                            <label className="block text-xs font-semibold text-muted-content mb-1">Month</label>
+                            <select value={filters.month} onChange={e => setFilters({...filters, month: e.target.value})} className="filter-select w-full">
+                                <option value="">All Months</option>
+                                {uniqueMonths.map(m => <option key={m} value={m}>{m}</option>)}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-xs font-semibold text-muted-content mb-1">Source</label>
+                            <select value={filters.enquiryType} onChange={e => setFilters({...filters, enquiryType: e.target.value})} className="filter-select w-full">
+                                <option value="">All Sources</option>
+                                {Object.values(ModeOfEnquiry).map(s => <option key={s} value={s}>{s}</option>)}
+                            </select>
+                        </div>
+                         <div className="flex items-end">
+                            <button onClick={resetFilters} className="text-sm text-danger hover:underline py-2">Clear all filters</button>
+                         </div>
+                    </div>
                 </div>
-                <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border-color flex-wrap">
-                    <span className="text-sm font-medium text-text-secondary mr-2">Quick Filters:</span>
-                    <FilterButton label="Unread" filterKey="showUnread" />
-                    <FilterButton label="Overdue" filterKey="showOverdue" />
-                    <FilterButton label="Visits" filterKey="showVisits" />
-                </div>
-            </div>
+            )}
 
+            {/* Bulk Actions Bar */}
             {selectedLeadIds.size > 0 && (
-                <div className="bg-blue-50 p-4 rounded-xl shadow-md flex flex-wrap items-center gap-4 border border-primary animate-in fade-in slide-in-from-top-2 duration-200">
-                    <p className="font-semibold text-text-primary">{selectedLeadIds.size} lead(s) selected.</p>
-                    <select value={bulkStatus} onChange={e => setBulkStatus(e.target.value)} className="filter-select">
+                <div className="bg-blue-50/80 backdrop-blur-sm p-3 border-b border-blue-100 flex flex-wrap items-center gap-3 sticky top-0 z-10">
+                    <p className="text-sm font-semibold text-primary">{selectedLeadIds.size} selected</p>
+                    <div className="h-4 w-px bg-blue-200 mx-1"></div>
+                    <select value={bulkStatus} onChange={e => setBulkStatus(e.target.value)} className="text-sm py-1.5 px-3 rounded-md border-blue-200 focus:ring-primary">
                         <option value="">Change Status...</option>
                         {Object.values(LeadStatus).map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
                     {isAdmin && (
-                        <select value={bulkAssignee} onChange={e => setBulkAssignee(e.target.value)} className="filter-select">
+                        <select value={bulkAssignee} onChange={e => setBulkAssignee(e.target.value)} className="text-sm py-1.5 px-3 rounded-md border-blue-200 focus:ring-primary">
                             <option value="">Assign To...</option>
                             {manageableUsers.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
                         </select>
                     )}
-                    <button onClick={handleApplyBulkAction} disabled={!bulkStatus && !bulkAssignee} className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                        Apply Changes
+                    <button onClick={handleApplyBulkAction} disabled={!bulkStatus && !bulkAssignee} className="px-3 py-1.5 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary-focus disabled:opacity-50">
+                        Apply
                     </button>
-                    <button onClick={() => setSelectedLeadIds(new Set())} className="text-sm text-text-secondary hover:text-text-primary ml-auto">
-                        Clear Selection
+                    <button onClick={() => setSelectedLeadIds(new Set())} className="ml-auto text-sm text-muted-content hover:text-base-content">
+                        Cancel
                     </button>
                 </div>
             )}
 
+            {/* Table Content */}
             <LeadsTable 
               leads={filteredLeads} 
               users={users} 
@@ -417,17 +550,21 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
               onSelectAll={handleSelectAll}
               allVisibleLeadsSelected={allVisibleLeadsSelected}
             />
+            
+            <div className="p-3 border-t border-border-color bg-gray-50 text-xs text-center text-muted-content">
+                Showing {filteredLeads.length} leads based on current filters.
+            </div>
         </div>
       
         {selectedLead && (
             <LeadDetailModal 
-            lead={selectedLead} 
-            onClose={handleCloseModal}
-            users={users}
-            onUpdateLead={onUpdateLead}
-            onAddActivity={onAddActivity}
-            currentUser={currentUser}
-            activities={activities.filter(a => a.leadId === selectedLead.id)}
+                lead={selectedLead} 
+                onClose={handleCloseModal}
+                users={users}
+                onUpdateLead={onUpdateLead}
+                onAddActivity={onAddActivity}
+                currentUser={currentUser}
+                activities={activities.filter(a => a.leadId === selectedLead.id)}
             />
         )}
     </div>
