@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import type { Lead } from '../types';
@@ -18,7 +19,7 @@ const LeadSourceChart: React.FC<LeadSourceChartProps> = ({ leads }) => {
     }, {} as Record<string, number>);
 
     return Object.entries(sourceCounts)
-      .map(([name, value]) => ({ name, value }))
+      .map(([name, value]) => ({ name, value: Number(value) }))
       .sort((a, b) => b.value - a.value);
   }, [leads]);
 

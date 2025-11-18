@@ -1,6 +1,4 @@
 
-
-
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import LeadsTable from './LeadsTable';
 import LeadDetailModal from './LeadDetailModal';
@@ -28,7 +26,7 @@ const UserControlPanel: React.FC<{
     user: User; 
     onLogout: () => void;
     onNavigate: (view: string) => void;
-}> = ({ user, onLogout, onNavigate }) => {
+}> = React.memo(({ user, onLogout, onNavigate }) => {
     const [isOpen, setIsOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
 
@@ -82,7 +80,7 @@ const UserControlPanel: React.FC<{
             </div>
         </div>
     );
-};
+});
 
 const ImportCSV: React.FC<{onImport: Function, users: User[]}> = ({ onImport, users }) => {
     const [isParsing, setIsParsing] = useState(false);
@@ -113,16 +111,16 @@ const ImportCSV: React.FC<{onImport: Function, users: User[]}> = ({ onImport, us
                         const data = line.split(',');
                         if (data.length < headers.length) return null;
 
-                        {/* Fix: Changed the accumulator type to Record<string, string> and provided a fallback for undefined values to make parsing type-safe. */}
-                        const leadData = headers.reduce<Record<string, string>>((obj, header, index) => {
+                        const leadData = headers.reduce((obj, header, index) => {
                             obj[header] = data[index]?.trim().replace(/"/g, '') ?? '';
                             return obj;
-                        }, {});
+                        }, {} as Record<string, string>);
 
                         if (!leadData['Customer Name'] || !leadData['Mobile']) return null;
 
-                        const parsedDate = new Date(leadData['Lead Date']);
-                        const leadDateISO = (leadData['Lead Date'] && !isNaN(parsedDate.getTime()))
+                        const leadDateStr = leadData['Lead Date'];
+                        const parsedDate = new Date(leadDateStr);
+                        const leadDateISO = (leadDateStr && !isNaN(parsedDate.getTime()))
                             ? parsedDate.toISOString()
                             : new Date().toISOString();
 
@@ -185,16 +183,16 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
     month: '',
   });
 
-  const handleOpenModal = (lead: Lead) => {
+  const handleOpenModal = useCallback((lead: Lead) => {
     setSelectedLead(lead);
     if (!lead.isRead) {
         onUpdateLead({ ...lead, isRead: true });
     }
-  };
+  }, [onUpdateLead]);
 
-  const handleCloseModal = () => {
+  const handleCloseModal = useCallback(() => {
     setSelectedLead(null);
-  };
+  }, []);
   
   const uniqueMonths = useMemo(() => {
     const months = new Set(leads.map(l => l.month).filter(Boolean));
@@ -236,7 +234,7 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
     return filteredLeads.every(lead => selectedLeadIds.has(lead.id));
   }, [filteredLeads, selectedLeadIds]);
 
-  const handleSelectLead = (leadId: string) => {
+  const handleSelectLead = useCallback((leadId: string) => {
     setSelectedLeadIds(prev => {
         const newSet = new Set(prev);
         if (newSet.has(leadId)) {
@@ -246,20 +244,24 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
         }
         return newSet;
     });
-  };
+  }, []);
 
-  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const visibleIds = filteredLeads.map(l => l.id);
+  const handleSelectAll = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
       if (e.target.checked) {
-          setSelectedLeadIds(prev => new Set([...Array.from(prev), ...visibleIds]));
+          // Use a functional update but since filteredLeads is a dependency, we need to access the current IDs
+          // This might be tricky inside useCallback if we don't want to re-create it often.
+          // However, handleSelectAll depends on filteredLeads anyway.
+           const visibleIds = filteredLeads.map(l => l.id);
+           setSelectedLeadIds(prev => new Set([...Array.from(prev), ...visibleIds]));
       } else {
-          setSelectedLeadIds(prev => {
+           const visibleIds = filteredLeads.map(l => l.id);
+           setSelectedLeadIds(prev => {
               const newSet = new Set(prev);
               visibleIds.forEach(id => newSet.delete(id));
               return newSet;
           });
       }
-  };
+  }, [filteredLeads]);
 
   const handleApplyBulkAction = () => {
     const leadIds = Array.from(selectedLeadIds);
@@ -385,7 +387,7 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
             </div>
 
             {selectedLeadIds.size > 0 && (
-                <div className="bg-blue-50 p-4 rounded-xl shadow-md flex flex-wrap items-center gap-4 border border-primary">
+                <div className="bg-blue-50 p-4 rounded-xl shadow-md flex flex-wrap items-center gap-4 border border-primary animate-in fade-in slide-in-from-top-2 duration-200">
                     <p className="font-semibold text-text-primary">{selectedLeadIds.size} lead(s) selected.</p>
                     <select value={bulkStatus} onChange={e => setBulkStatus(e.target.value)} className="filter-select">
                         <option value="">Change Status...</option>
@@ -397,7 +399,7 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
                             {manageableUsers.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
                         </select>
                     )}
-                    <button onClick={handleApplyBulkAction} disabled={!bulkStatus && !bulkAssignee} className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed">
+                    <button onClick={handleApplyBulkAction} disabled={!bulkStatus && !bulkAssignee} className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                         Apply Changes
                     </button>
                     <button onClick={() => setSelectedLeadIds(new Set())} className="text-sm text-text-secondary hover:text-text-primary ml-auto">

@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { memo } from 'react';
 import type { Lead, User } from '../types';
 import { LeadStatus } from '../types';
 
@@ -12,7 +13,7 @@ interface LeadsTableProps {
   allVisibleLeadsSelected: boolean;
 }
 
-const StatusBadge: React.FC<{ type: 'visit' | 'temp' | 'status', value?: string }> = ({ type, value }) => {
+const StatusBadge: React.FC<{ type: 'visit' | 'temp' | 'status', value?: string }> = memo(({ type, value }) => {
     if (!value) return null;
 
     let bgColor = 'bg-gray-100';
@@ -35,9 +36,7 @@ const StatusBadge: React.FC<{ type: 'visit' | 'temp' | 'status', value?: string 
          switch (value) {
             case LeadStatus.New: bgColor = 'bg-blue-100'; textColor = 'text-blue-800'; break;
             case LeadStatus.Contacted: bgColor = 'bg-yellow-100'; textColor = 'text-yellow-800'; break;
-            // Fix: Corrected enum member access from 'VisitScheduled' to 'SiteVisitScheduled'.
             case LeadStatus.SiteVisitScheduled: bgColor = 'bg-purple-100'; textColor = 'text-purple-800'; text = 'Visit'; break;
-            // Fix: Corrected enum member access from 'VisitDone' to 'SiteVisitDone'.
             case LeadStatus.SiteVisitDone: bgColor = 'bg-indigo-100'; textColor = 'text-indigo-800'; text = 'Visit Done'; break;
             case LeadStatus.Negotiation: bgColor = 'bg-orange-100'; textColor = 'text-orange-800'; break;
             case LeadStatus.Booked: bgColor = 'bg-green-100'; textColor = 'text-green-800'; break;
@@ -46,11 +45,105 @@ const StatusBadge: React.FC<{ type: 'visit' | 'temp' | 'status', value?: string 
     }
     
     return <span className={`px-2.5 py-1 text-xs font-semibold rounded-full inline-block ${bgColor} ${textColor}`}>{text}</span>;
+});
+
+interface LeadRowProps {
+    lead: Lead;
+    salespersonName: string;
+    isSelected: boolean;
+    index: number;
+    onSelect: (id: string) => void;
+    onOpenModal: (lead: Lead) => void;
 }
 
+const MobileLeadCard: React.FC<LeadRowProps> = memo(({ lead, salespersonName, isSelected, onSelect, onOpenModal }) => (
+    <div className={`p-3 rounded-lg border transition-colors ${isSelected ? 'bg-blue-50 border-primary' : 'bg-surface border-border-color'}`}>
+        <div className="flex justify-between items-start">
+            <div className="flex-1 min-w-0">
+                <div className="flex items-center">
+                    {!lead.isRead && <span className="h-2 w-2 bg-primary rounded-full mr-2 flex-shrink-0" title="Unread"></span>}
+                    <p className="font-bold text-text-primary truncate" title={lead.customerName}>{lead.customerName}</p>
+                </div>
+                <p className="text-sm text-text-secondary">{lead.mobile}</p>
+            </div>
+            <input 
+                type="checkbox"
+                className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary ml-2 flex-shrink-0"
+                checked={isSelected}
+                onChange={() => onSelect(lead.id)}
+                aria-label={`Select lead for ${lead.customerName}`}
+            />
+        </div>
+        <div className="mt-3 flex justify-between items-center text-sm">
+            <StatusBadge type="status" value={lead.status} />
+            <div className="flex items-center gap-2">
+                {lead.missedVisitsCount > 0 && (
+                    <span className="text-xs font-semibold text-danger px-2 py-1 bg-red-100 rounded-full">
+                        {lead.missedVisitsCount} Missed
+                    </span>
+                )}
+                <p className="text-text-secondary truncate">{salespersonName}</p>
+            </div>
+        </div>
+        <div className="mt-3">
+            <p className="text-xs text-text-secondary italic truncate">"{lead.lastRemark}"</p>
+        </div>
+        <button onClick={() => onOpenModal(lead)} className="mt-3 w-full text-center py-2 text-sm font-semibold text-primary bg-gray-50 hover:bg-gray-100 rounded-md transition-colors">
+            View Details
+        </button>
+    </div>
+));
+
+const DesktopLeadRow: React.FC<LeadRowProps> = memo(({ lead, salespersonName, isSelected, index, onSelect, onOpenModal }) => (
+    <tr className={`transition-colors duration-200 ${isSelected ? 'bg-blue-50' : 'hover:bg-gray-50'}`}>
+        <td className="px-4 py-2">
+            <input 
+                type="checkbox"
+                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                checked={isSelected}
+                onChange={() => onSelect(lead.id)}
+                aria-label={`Select lead for ${lead.customerName}`}
+            />
+        </td>
+        <td className="px-4 py-2 whitespace-nowrap text-text-secondary">{index + 1}</td>
+        <td className="px-4 py-2 whitespace-nowrap">
+            <div className="flex items-center">
+                {!lead.isRead && <span className="h-2 w-2 bg-primary rounded-full mr-2 flex-shrink-0" title="Unread"></span>}
+                <div>
+                    <div className="font-medium text-text-primary">{lead.customerName}</div>
+                    <div className="text-text-secondary">{lead.mobile}</div>
+                </div>
+            </div>
+        </td>
+        <td className="px-4 py-2 whitespace-nowrap text-text-secondary">
+            <div>{new Date(lead.leadDate).toLocaleDateString()}</div>
+            <div>{lead.month}</div>
+            <div>{lead.modeOfEnquiry}</div>
+        </td>
+        <td className="px-4 py-2 whitespace-nowrap text-text-secondary">{salespersonName}</td>
+        <td className="px-4 py-2 whitespace-nowrap text-text-secondary">
+            <StatusBadge type="visit" value={lead.visitStatus} />
+            <div className="mt-1">{lead.visitDate || ''}</div>
+        </td>
+        <td className="px-4 py-2 whitespace-nowrap text-center">
+            <span className={`font-semibold ${lead.missedVisitsCount > 0 ? 'text-danger' : 'text-muted-content'}`}>
+                {lead.missedVisitsCount || 0}
+            </span>
+        </td>
+        <td className="px-4 py-2 whitespace-nowrap text-text-secondary">{lead.interestedProject || 'N/A'}</td>
+        <td className="px-4 py-2 whitespace-nowrap"><StatusBadge type="status" value={lead.status} /></td>
+        <td className="px-4 py-2 whitespace-nowrap"><StatusBadge type="temp" value={lead.temperature} /></td>
+        <td className="px-4 py-2 text-text-secondary whitespace-normal max-w-xs truncate" title={lead.lastRemark}>{lead.lastRemark}</td>
+        <td className="px-4 py-2 whitespace-nowrap text-sm font-medium">
+            <button onClick={() => onOpenModal(lead)} className="text-primary hover:text-primary-hover font-semibold">
+                Details
+            </button>
+        </td>
+    </tr>
+));
 
 const LeadsTable: React.FC<LeadsTableProps> = ({ leads, users, onOpenModal, selectedLeadIds, onSelectLead, onSelectAll, allVisibleLeadsSelected }) => {
-  const userMap = new Map<string, User>(users.map(user => [user.id, user]));
+  const userMap = new Map<string, string>(users.map(user => [user.id, user.name]));
 
   if (leads.length === 0) {
     return <div className="card text-center text-text-secondary py-8 px-4">No leads match the current filters.</div>;
@@ -65,7 +158,7 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, users, onOpenModal, sele
                     <input 
                         type="checkbox"
                         id="select-all-mobile"
-                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
                         onChange={onSelectAll}
                         checked={allVisibleLeadsSelected}
                         aria-label="Select all visible leads"
@@ -76,46 +169,17 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, users, onOpenModal, sele
                 </div>
             </div>
             <div className="space-y-3 px-4 pb-4">
-                {leads.map(lead => {
-                    const salesperson = userMap.get(lead.assignedSalespersonId);
-                    return (
-                        <div key={lead.id} className={`p-3 rounded-lg border transition-colors ${selectedLeadIds.has(lead.id) ? 'bg-blue-50 border-primary' : 'bg-surface border-border-color'}`}>
-                            <div className="flex justify-between items-start">
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-center">
-                                        {!lead.isRead && <span className="h-2 w-2 bg-primary rounded-full mr-2 flex-shrink-0" title="Unread"></span>}
-                                        <p className="font-bold text-text-primary truncate" title={lead.customerName}>{lead.customerName}</p>
-                                    </div>
-                                    <p className="text-sm text-text-secondary">{lead.mobile}</p>
-                                </div>
-                                <input 
-                                    type="checkbox"
-                                    className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary ml-2 flex-shrink-0"
-                                    checked={selectedLeadIds.has(lead.id)}
-                                    onChange={() => onSelectLead(lead.id)}
-                                    aria-label={`Select lead for ${lead.customerName}`}
-                                />
-                            </div>
-                            <div className="mt-3 flex justify-between items-center text-sm">
-                               <StatusBadge type="status" value={lead.status} />
-                               <div className="flex items-center gap-2">
-                                   {lead.missedVisitsCount > 0 && (
-                                       <span className="text-xs font-semibold text-danger px-2 py-1 bg-red-100 rounded-full">
-                                           {lead.missedVisitsCount} Missed
-                                       </span>
-                                   )}
-                                   <p className="text-text-secondary truncate">{salesperson?.name || 'N/A'}</p>
-                               </div>
-                            </div>
-                            <div className="mt-3">
-                                <p className="text-xs text-text-secondary italic truncate">"{lead.lastRemark}"</p>
-                            </div>
-                            <button onClick={() => onOpenModal(lead)} className="mt-3 w-full text-center py-2 text-sm font-semibold text-primary bg-gray-50 hover:bg-gray-100 rounded-md transition-colors">
-                                View Details
-                            </button>
-                        </div>
-                    );
-                })}
+                {leads.map((lead, index) => (
+                    <MobileLeadCard 
+                        key={lead.id}
+                        lead={lead}
+                        index={index}
+                        salespersonName={userMap.get(lead.assignedSalespersonId) || 'N/A'}
+                        isSelected={selectedLeadIds.has(lead.id)}
+                        onSelect={onSelectLead}
+                        onOpenModal={onOpenModal}
+                    />
+                ))}
             </div>
         </div>
 
@@ -127,7 +191,7 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, users, onOpenModal, sele
                 <th scope="col" className="px-4 py-2">
                     <input 
                         type="checkbox"
-                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
                         onChange={onSelectAll}
                         checked={allVisibleLeadsSelected}
                         aria-label="Select all visible leads"
@@ -147,56 +211,17 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, users, onOpenModal, sele
                 </tr>
             </thead>
             <tbody className="bg-surface divide-y divide-border-color">
-                {leads.map((lead, index) => {
-                const salesperson = userMap.get(lead.assignedSalespersonId);
-                return (
-                    <tr key={lead.id} className={`transition-colors duration-200 ${selectedLeadIds.has(lead.id) ? 'bg-blue-50' : 'hover:bg-gray-50'}`}>
-                    <td className="px-4 py-2">
-                        <input 
-                            type="checkbox"
-                            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                            checked={selectedLeadIds.has(lead.id)}
-                            onChange={() => onSelectLead(lead.id)}
-                            aria-label={`Select lead for ${lead.customerName}`}
-                        />
-                    </td>
-                    <td className="px-4 py-2 whitespace-nowrap text-text-secondary">{index + 1}</td>
-                    <td className="px-4 py-2 whitespace-nowrap">
-                        <div className="flex items-center">
-                            {!lead.isRead && <span className="h-2 w-2 bg-primary rounded-full mr-2 flex-shrink-0" title="Unread"></span>}
-                            <div>
-                                <div className="font-medium text-text-primary">{lead.customerName}</div>
-                                <div className="text-text-secondary">{lead.mobile}</div>
-                            </div>
-                        </div>
-                    </td>
-                    <td className="px-4 py-2 whitespace-nowrap text-text-secondary">
-                        <div>{new Date(lead.leadDate).toLocaleDateString()}</div>
-                        <div>{lead.month}</div>
-                        <div>{lead.modeOfEnquiry}</div>
-                    </td>
-                    <td className="px-4 py-2 whitespace-nowrap text-text-secondary">{salesperson?.name || 'N/A'}</td>
-                    <td className="px-4 py-2 whitespace-nowrap text-text-secondary">
-                        <StatusBadge type="visit" value={lead.visitStatus} />
-                        <div className="mt-1">{lead.visitDate || ''}</div>
-                    </td>
-                    <td className="px-4 py-2 whitespace-nowrap text-center">
-                        <span className={`font-semibold ${lead.missedVisitsCount > 0 ? 'text-danger' : 'text-muted-content'}`}>
-                            {lead.missedVisitsCount || 0}
-                        </span>
-                    </td>
-                    <td className="px-4 py-2 whitespace-nowrap text-text-secondary">{lead.interestedProject || 'N/A'}</td>
-                    <td className="px-4 py-2 whitespace-nowrap"><StatusBadge type="status" value={lead.status} /></td>
-                    <td className="px-4 py-2 whitespace-nowrap"><StatusBadge type="temp" value={lead.temperature} /></td>
-                    <td className="px-4 py-2 text-text-secondary whitespace-normal max-w-xs truncate" title={lead.lastRemark}>{lead.lastRemark}</td>
-                    <td className="px-4 py-2 whitespace-nowrap text-sm font-medium">
-                        <button onClick={() => onOpenModal(lead)} className="text-primary hover:text-primary-hover font-semibold">
-                            Details
-                        </button>
-                    </td>
-                    </tr>
-                );
-                })}
+                {leads.map((lead, index) => (
+                    <DesktopLeadRow
+                        key={lead.id}
+                        lead={lead}
+                        index={index}
+                        salespersonName={userMap.get(lead.assignedSalespersonId) || 'N/A'}
+                        isSelected={selectedLeadIds.has(lead.id)}
+                        onSelect={onSelectLead}
+                        onOpenModal={onOpenModal}
+                    />
+                ))}
             </tbody>
             </table>
         </div>
