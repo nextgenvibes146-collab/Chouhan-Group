@@ -247,7 +247,7 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
   
   const uniqueMonths = useMemo(() => {
     const months = new Set(leads.map(l => l.month).filter(Boolean));
-    return Array.from(months).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+    return Array.from(months).sort((a, b) => new Date(b as string).getTime() - new Date(a as string).getTime());
   }, [leads]);
 
   const filteredLeads = useMemo(() => {
