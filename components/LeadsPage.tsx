@@ -1,6 +1,4 @@
 
-
-
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import LeadsTable from './LeadsTable';
 import LeadDetailModal from './LeadDetailModal';
@@ -145,18 +143,21 @@ const ImportCSV: React.FC<{onImport: Function, users: User[]}> = ({ onImport, us
                         const data = line.split(',');
                         if (data.length < headers.length) return null;
 
-                        const leadData = headers.reduce((obj, header, index) => {
-                            obj[header] = data[index]?.trim().replace(/"/g, '') ?? '';
-                            return obj;
-                        }, {} as Record<string, string>);
+                        const leadData: Record<string, string> = {};
+                        headers.forEach((header, index) => {
+                            leadData[header] = data[index]?.trim().replace(/"/g, '') ?? '';
+                        });
 
                         if (!leadData['Customer Name'] || !leadData['Mobile']) return null;
 
-                        const leadDateStr = leadData['Lead Date'] as string;
-                        const parsedDate = new Date(leadDateStr);
-                        const leadDateISO = (leadDateStr && !isNaN(parsedDate.getTime()))
-                            ? parsedDate.toISOString()
-                            : new Date().toISOString();
+                        const leadDateStr = leadData['Lead Date'];
+                        let leadDateISO = new Date().toISOString();
+                        if (leadDateStr) {
+                             const parsedDate = new Date(leadDateStr);
+                             if (!isNaN(parsedDate.getTime())) {
+                                 leadDateISO = parsedDate.toISOString();
+                             }
+                        }
 
                         return {
                             customerName: leadData['Customer Name'],

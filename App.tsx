@@ -1,4 +1,6 @@
 
+
+
 import React, { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
 import BottomNavBar from './components/BottomNavBar';
 import Sidebar from './components/Sidebar';
@@ -15,6 +17,7 @@ const AttendancePage = React.lazy(() => import('./components/AttendancePage'));
 const ReportsPage = React.lazy(() => import('./components/ReportsPage'));
 const TasksPage = React.lazy(() => import('./components/TasksPage'));
 const SettingsPage = React.lazy(() => import('./components/SettingsPage'));
+const InventoryPage = React.lazy(() => import('./components/InventoryPage'));
 
 export interface NewLeadData {
     customerName: string;
@@ -356,6 +359,9 @@ const App: React.FC = () => {
                     onImportLeads={handleImportLeads}
                     {...commonProps} 
                 />;
+                break;
+            case 'Inventory':
+                Content = <InventoryPage />;
                 break;
             case 'Calendar':
                 Content = <CalendarPage leads={visibleLeads} tasks={visibleTasks} />;

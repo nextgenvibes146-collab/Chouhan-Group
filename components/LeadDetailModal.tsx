@@ -1,6 +1,7 @@
+
 import React, { useState, useMemo } from 'react';
 import { type Lead, type User, LeadStatus, ActivityType, type Activity } from '../types';
-import { PhoneIcon, MailIcon, MapPinIcon, ChatBubbleIcon } from './Icons';
+import { PhoneIcon, MailIcon, MapPinIcon, ChatBubbleIcon, ChatBubbleLeftRightIcon } from './Icons';
 import ActivityFeed from './ActivityFeed';
 
 interface LeadDetailModalProps {
@@ -29,6 +30,24 @@ const DetailItem: React.FC<{label: string, value?: string | null}> = ({ label, v
             <p className="text-xs text-muted-content">{label}</p>
             <p className="font-medium text-base-content">{value}</p>
         </div>
+    );
+};
+
+const WhatsAppButton: React.FC<{ label: string, text: string, number: string }> = ({ label, text, number }) => {
+    const handleClick = () => {
+        const cleanNumber = number.replace(/\D/g, '');
+        const encodedText = encodeURIComponent(text);
+        window.open(`https://wa.me/${cleanNumber}?text=${encodedText}`, '_blank');
+    };
+
+    return (
+        <button 
+            onClick={handleClick}
+            className="flex items-center justify-center px-3 py-2 bg-green-50 text-green-700 border border-green-200 rounded-md hover:bg-green-100 transition-colors text-sm font-medium"
+        >
+            <ChatBubbleLeftRightIcon className="w-4 h-4 mr-2" />
+            {label}
+        </button>
     );
 };
 
@@ -168,59 +187,94 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({ lead, users, onClose,
         <div className="p-4 md:p-6 overflow-y-auto bg-base-200">
             {activeTab === 'Details' && (
                  <div className="flex flex-col gap-6">
-                    <div className="flex flex-col gap-4 p-4 card">
-                        <h3 className="text-lg font-semibold text-base-content">Update Lead</h3>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label className="label-style">Status</label>
-                                <select value={newStatus} onChange={(e) => setNewStatus(e.target.value as LeadStatus)} className="input-style">
-                                    {Object.values(LeadStatus).map(s => <option key={s} value={s}>{s}</option>)}
-                                </select>
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div className="lg:col-span-2 space-y-6">
+                            <div className="flex flex-col gap-4 p-4 card">
+                                <h3 className="text-lg font-semibold text-base-content">Update Lead</h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="label-style">Status</label>
+                                        <select value={newStatus} onChange={(e) => setNewStatus(e.target.value as LeadStatus)} className="input-style">
+                                            {Object.values(LeadStatus).map(s => <option key={s} value={s}>{s}</option>)}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="label-style">Temperature</label>
+                                        <select value={temperature || ''} onChange={(e) => setTemperature(e.target.value as Lead['temperature'])} className="input-style">
+                                            <option value="">Not Set</option>
+                                            <option value="Hot">Hot</option>
+                                            <option value="Warm">Warm</option>
+                                            <option value="Cold">Cold</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="label-style">Next Follow-up / Visit Date</label>
+                                    <input type="date" value={nextFollowUp} onChange={e => setNextFollowUp(e.target.value)} className="input-style" />
+                                </div>
+                                <button onClick={handleUpdate} className="button-primary">Save Changes</button>
                             </div>
-                            <div>
-                                <label className="label-style">Temperature</label>
-                                <select value={temperature || ''} onChange={(e) => setTemperature(e.target.value as Lead['temperature'])} className="input-style">
-                                    <option value="">Not Set</option>
-                                    <option value="Hot">Hot</option>
-                                    <option value="Warm">Warm</option>
-                                    <option value="Cold">Cold</option>
-                                </select>
+                            
+                            <div className="p-4 card">
+                                <h3 className="text-lg font-semibold text-base-content mb-3">Lead Information</h3>
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                                <DetailItem label="Assigned To" value={salesperson?.name} />
+                                <DetailItem label="Lead Date" value={new Date(lead.leadDate).toLocaleDateString()} />
+                                <DetailItem label="Last Activity" value={new Date(lead.lastActivityDate).toLocaleString()} />
+                                <DetailItem label="Enquiry Mode" value={lead.modeOfEnquiry} />
+                                <DetailItem label="Platform" value={lead.platform} />
+                                <DetailItem label="Occupation" value={lead.occupation} />
+                                <DetailItem label="Interested Unit" value={lead.interestedUnit} />
+                                </div>
                             </div>
                         </div>
-                        <div>
-                            <label className="label-style">Next Follow-up / Visit Date</label>
-                            <input type="date" value={nextFollowUp} onChange={e => setNextFollowUp(e.target.value)} className="input-style" />
+
+                         {/* Quick Actions Sidebar */}
+                        <div className="lg:col-span-1 space-y-6">
+                            <div className="card p-4">
+                                <h3 className="text-sm font-semibold text-muted-content uppercase mb-3">Quick Actions</h3>
+                                <div className="flex flex-col gap-2">
+                                    <WhatsAppButton 
+                                        label="Send Brochure" 
+                                        number={lead.mobile} 
+                                        text={`Hello ${lead.customerName}, here is the brochure for ${lead.interestedProject || 'our projects'} you requested.`} 
+                                    />
+                                    <WhatsAppButton 
+                                        label="Confirm Visit" 
+                                        number={lead.mobile} 
+                                        text={`Hello ${lead.customerName}, confirming your site visit scheduled for tomorrow. Please let us know if you need directions.`} 
+                                    />
+                                    <WhatsAppButton 
+                                        label="Welcome Message" 
+                                        number={lead.mobile} 
+                                        text={`Hi ${lead.customerName}, thank you for your interest in Chouhan Housing. My name is ${currentUser.name}, and I'll be assisting you.`} 
+                                    />
+                                     <WhatsAppButton 
+                                        label="Send Location" 
+                                        number={lead.mobile} 
+                                        text={`Here is the location for ${lead.interestedProject}: https://maps.google.com/?q=Chouhan+Housing`} 
+                                    />
+                                </div>
+                            </div>
+
+                            {isAdmin && (
+                                <div className="flex flex-col gap-4 p-4 card">
+                                    <h3 className="text-sm font-semibold text-muted-content uppercase">Transfer Lead</h3>
+                                    <div className="flex flex-col space-y-2">
+                                        <select value={transferToId} onChange={e => setTransferToId(e.target.value)} className="input-style">
+                                            <option value="">Select salesperson...</option>
+                                            {assignableUsers.map(u => (
+                                                <option key={u.id} value={u.id}>{u.name}</option>
+                                            ))}
+                                        </select>
+                                        <button onClick={handleTransfer} disabled={!transferToId} className="w-full px-4 py-2 text-sm font-medium text-white bg-orange-500 rounded-md shadow-sm hover:bg-orange-600 disabled:bg-gray-400 transition-colors">
+                                            Transfer Ownership
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
-                        <button onClick={handleUpdate} className="button-primary">Save Changes</button>
                     </div>
-                     <div className="p-4 card">
-                        <h3 className="text-lg font-semibold text-base-content mb-3">Lead Information</h3>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-                           <DetailItem label="Assigned To" value={salesperson?.name} />
-                           <DetailItem label="Lead Date" value={new Date(lead.leadDate).toLocaleDateString()} />
-                           <DetailItem label="Last Activity" value={new Date(lead.lastActivityDate).toLocaleString()} />
-                           <DetailItem label="Enquiry Mode" value={lead.modeOfEnquiry} />
-                           <DetailItem label="Platform" value={lead.platform} />
-                           <DetailItem label="Occupation" value={lead.occupation} />
-                           <DetailItem label="Interested Unit" value={lead.interestedUnit} />
-                        </div>
-                    </div>
-                    {isAdmin && (
-                         <div className="flex flex-col gap-4 p-4 card">
-                            <h3 className="text-lg font-semibold text-base-content">Transfer Lead</h3>
-                            <div className="flex items-center space-x-2">
-                                <select value={transferToId} onChange={e => setTransferToId(e.target.value)} className="input-style">
-                                    <option value="">Select salesperson...</option>
-                                    {assignableUsers.map(u => (
-                                        <option key={u.id} value={u.id}>{u.name}</option>
-                                    ))}
-                                </select>
-                                 <button onClick={handleTransfer} disabled={!transferToId} className="px-4 py-2 text-sm font-medium text-white bg-orange-500 rounded-md shadow-sm hover:bg-orange-600 disabled:bg-gray-400">
-                                    Transfer
-                                </button>
-                            </div>
-                         </div>
-                    )}
                  </div>
             )}
 
