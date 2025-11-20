@@ -1,6 +1,3 @@
-
-
-
 import React, { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
 import BottomNavBar from './components/BottomNavBar';
 import Sidebar from './components/Sidebar';
@@ -414,7 +411,7 @@ const App: React.FC = () => {
     }
 
     return (
-        <div className="flex h-screen bg-base-200">
+        <div className="flex h-full w-full bg-base-200 overflow-hidden">
             <Sidebar 
                 activeView={activeView} 
                 onNavigate={setActiveView} 
@@ -422,7 +419,7 @@ const App: React.FC = () => {
                 setOpen={setSidebarOpen}
                 currentUser={currentUser} 
             />
-            <div className="flex-1 flex flex-col">
+            <div className="flex-1 flex flex-col h-full overflow-hidden">
                 <Header 
                     searchTerm={searchTerm}
                     onSearchChange={setSearchTerm}
