@@ -153,7 +153,7 @@ const ImportCSV: React.FC<{onImport: Function, users: User[]}> = ({ onImport, us
                         const leadDateStr = leadData['Lead Date'];
                         let leadDateISO = new Date().toISOString();
                         if (leadDateStr) {
-                             const parsedDate = new Date(leadDateStr);
+                             const parsedDate = new Date(leadDateStr as string);
                              if (!isNaN(parsedDate.getTime())) {
                                  leadDateISO = parsedDate.toISOString();
                              }
@@ -396,15 +396,15 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <h1 className="text-2xl font-bold text-base-content">Leads Management</h1>
             <div className="flex items-center gap-2 self-end md:self-auto">
-                {isAdmin && (
-                    <button 
-                        onClick={() => setShowAddLead(!showAddLead)} 
-                        className={`flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors ${showAddLead ? 'bg-gray-200 text-base-content' : 'bg-primary text-white hover:bg-primary-focus'}`}
-                    >
-                        {showAddLead ? <MinusIcon className="w-4 h-4 mr-2" /> : <PlusIcon className="w-4 h-4 mr-2" />}
-                        {showAddLead ? 'Cancel' : 'Add Lead'}
-                    </button>
-                )}
+                {/* Enabled for all users */}
+                <button 
+                    onClick={() => setShowAddLead(!showAddLead)} 
+                    className={`flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors ${showAddLead ? 'bg-gray-200 text-base-content' : 'bg-primary text-white hover:bg-primary-focus'}`}
+                >
+                    {showAddLead ? <MinusIcon className="w-4 h-4 mr-2" /> : <PlusIcon className="w-4 h-4 mr-2" />}
+                    {showAddLead ? 'Cancel' : 'Add Lead'}
+                </button>
+                
                 {isAdmin && <ImportCSV onImport={onImportLeads} users={users} />}
                 <button onClick={exportToCSV} className="px-4 py-2 text-sm font-medium text-gray-700 border border-border-color bg-white rounded-md hover:bg-gray-50 transition-colors">Export</button>
                 <UserControlPanel user={currentUser} onLogout={onLogout} onNavigate={onNavigate} />
@@ -413,17 +413,16 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
         
         {/* Collapsible Add Lead Form */}
         <div className={`overflow-hidden transition-all duration-300 ease-in-out ${showAddLead ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'}`}>
-            {isAdmin && (
-                <div className="mb-6">
-                    <AssignLeadForm 
-                        salesAgents={users.filter(u => u.role === 'Salesperson')} 
-                        onAssignLead={(data) => {
-                            onAssignLead(data);
-                            setShowAddLead(false);
-                        }}
-                    />
-                </div>
-            )}
+            <div className="mb-6">
+                <AssignLeadForm 
+                    users={users}
+                    currentUser={currentUser}
+                    onAssignLead={(data) => {
+                        onAssignLead(data);
+                        setShowAddLead(false);
+                    }}
+                />
+            </div>
         </div>
 
         {/* Main Content Card */}
