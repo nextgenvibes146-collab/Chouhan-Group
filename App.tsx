@@ -4,9 +4,9 @@ import BottomNavBar from './components/BottomNavBar';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import LoginPage from './components/LoginPage';
-import { fetchSheetData } from './services/googleSheetService';
+import { db } from './services/database'; // Use new DB service
 import { Lead, User, Activity, SalesTarget, Task, LeadStatus, ActivityType, ModeOfEnquiry } from './types';
-import { mockProjects, Project } from './data/inventoryData';
+import { Project } from './data/inventoryData';
 
 // Lazy load components for better initial load performance
 const Dashboard = React.lazy(() => import('./components/Dashboard'));
@@ -46,7 +46,7 @@ const App: React.FC = () => {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [salesTargets, setSalesTargets] = useState<SalesTarget[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [inventory, setInventory] = useState<Project[]>(mockProjects); // Inventory State
+  const [inventory, setInventory] = useState<Project[]>([]); 
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isSidebarOpen, setSidebarOpen] = useState(false);
@@ -56,12 +56,14 @@ const App: React.FC = () => {
   const loadData = useCallback(async () => {
     setIsLoading(true);
     setSearchTerm('');
-    const data = await fetchSheetData();
+    // Fetch from local database
+    const data = await db.getAllData();
     setLeads(data.leads);
     setUsers(data.users);
     setActivities(data.activities);
     setSalesTargets(data.salesTargets);
     setTasks(data.tasks);
+    setInventory(data.inventory);
     setIsLoading(false);
   }, []);
 
@@ -69,87 +71,40 @@ const App: React.FC = () => {
     loadData();
   }, [loadData]);
   
-  const handleUpdateLead = useCallback((updatedLead: Lead) => {
+  const handleUpdateLead = useCallback(async (updatedLead: Lead) => {
     if (!currentUser) return;
 
-    setLeads(prevLeads => {
-        const admin = users.find(u => u.role === 'Admin');
-        const adminId = admin?.id || 'admin-0';
-        
-        let activityToAdd: Activity | null = null;
-        let assignmentActivity: Activity | null = null;
+    // Optimistic UI Update
+    setLeads(prevLeads => prevLeads.map(l => l.id === updatedLead.id ? { ...updatedLead, lastActivityDate: new Date().toISOString(), isRead: true } : l));
+    
+    await db.updateLead(updatedLead);
 
-        const newLeads = prevLeads.map(lead => {
-            if (lead.id === updatedLead.id) {
-                const originalLead = { ...lead };
-                
-                if (originalLead.assignedSalespersonId !== updatedLead.assignedSalespersonId) {
-                    const newAssignee = users.find(u => u.id === updatedLead.assignedSalespersonId);
-                    assignmentActivity = {
-                        id: `act-assign-${Date.now()}`,
-                        leadId: updatedLead.id,
-                        salespersonId: currentUser.id,
-                        type: ActivityType.Note,
-                        date: new Date().toISOString(),
-                        remarks: `Lead assigned to ${newAssignee?.name || 'N/A'}.`,
-                        customerName: updatedLead.customerName,
-                    };
-                }
+    // Handle logic for assigning or changing status that might trigger activities
+    const originalLead = leads.find(l => l.id === updatedLead.id);
+    if (!originalLead) return;
 
-                let finalUpdatedLead = { ...updatedLead };
+    if (originalLead.assignedSalespersonId !== updatedLead.assignedSalespersonId) {
+        const newAssignee = users.find(u => u.id === updatedLead.assignedSalespersonId);
+        const activity: Activity = {
+            id: `act-assign-${Date.now()}`,
+            leadId: updatedLead.id,
+            salespersonId: currentUser.id,
+            type: ActivityType.Note,
+            date: new Date().toISOString(),
+            remarks: `Lead assigned to ${newAssignee?.name || 'N/A'}.`,
+            customerName: updatedLead.customerName,
+        };
+        await db.addActivity(activity);
+        setActivities(prev => [activity, ...prev]);
+    }
+    
+    // Re-fetch in background to ensure consistency
+    const refreshedLeads = await db.getLeads();
+    setLeads(refreshedLeads);
 
-                const visitDateStr = originalLead.visitDate || originalLead.nextFollowUpDate;
-                const wasVisitScheduled = originalLead.status === LeadStatus.SiteVisitScheduled;
-                
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                const isVisitDatePast = visitDateStr && new Date(visitDateStr) < today;
-                
-                const didVisitNotHappen = finalUpdatedLead.status !== LeadStatus.SiteVisitDone && finalUpdatedLead.status !== LeadStatus.Booking;
+  }, [currentUser, users, leads]);
 
-                if (wasVisitScheduled && isVisitDatePast && didVisitNotHappen) {
-                    if (originalLead.status !== finalUpdatedLead.status) {
-                        finalUpdatedLead.missedVisitsCount = (originalLead.missedVisitsCount || 0) + 1;
-                    }
-                }
-                
-                const leadToUpdate = {
-                ...finalUpdatedLead,
-                isRead: true,
-                lastActivityDate: new Date().toISOString(),
-                };
-
-                if (updatedLead.status === LeadStatus.Lost && lead.assignedSalespersonId !== adminId) {
-                    leadToUpdate.assignedSalespersonId = adminId;
-                    activityToAdd = {
-                        id: `act-${Date.now()}`,
-                        leadId: leadToUpdate.id,
-                        salespersonId: currentUser.id,
-                        type: ActivityType.Note,
-                        date: new Date().toISOString(),
-                        remarks: `Lead status set to Lost and automatically reassigned to ${admin?.name || 'Admin'}.`,
-                        customerName: leadToUpdate.customerName,
-                    };
-                }
-                return leadToUpdate;
-            }
-            return lead;
-        });
-
-        if (activityToAdd || assignmentActivity) {
-             setActivities(prev => {
-                 const newActs = [...prev];
-                 if(assignmentActivity) newActs.unshift(assignmentActivity);
-                 if(activityToAdd) newActs.unshift(activityToAdd);
-                 return newActs;
-             });
-        }
-
-        return newLeads;
-    });
-  }, [currentUser, users]);
-
-    const handleAddActivity = useCallback((lead: Lead, activityType: ActivityType, remarks: string, duration?: number) => {
+    const handleAddActivity = useCallback(async (lead: Lead, activityType: ActivityType, remarks: string, duration?: number) => {
         if (!currentUser) return;
         const newActivity: Activity = {
             id: `act-${Date.now()}`,
@@ -161,8 +116,10 @@ const App: React.FC = () => {
             duration,
             customerName: lead.customerName,
         };
-        setActivities(prev => [newActivity, ...prev]);
         
+        await db.addActivity(newActivity);
+
+        setActivities(prev => [newActivity, ...prev]);
         setLeads(prevLeads => prevLeads.map(l => l.id === lead.id ? { 
             ...l, 
             lastActivityDate: newActivity.date,
@@ -170,7 +127,7 @@ const App: React.FC = () => {
         } : l));
     }, [currentUser]);
 
-    const handleAssignLead = useCallback((newLeadData: NewLeadData) => {
+    const handleAssignLead = useCallback(async (newLeadData: NewLeadData) => {
         const newLead: Lead = {
             id: `lead-${Date.now()}`,
             ...newLeadData,
@@ -186,6 +143,8 @@ const App: React.FC = () => {
             budget: newLeadData.budget,
             purpose: newLeadData.purpose,
         };
+
+        await db.addLead(newLead);
         setLeads(prev => [newLead, ...prev]);
 
         const newActivity: Activity = {
@@ -197,109 +156,106 @@ const App: React.FC = () => {
             remarks: `Lead created and assigned to ${users.find(u => u.id === newLead.assignedSalespersonId)?.name}.`,
             customerName: newLead.customerName
         };
+        await db.addActivity(newActivity);
         setActivities(prev => [newActivity, ...prev]);
     }, [users]);
 
-    const handleBulkUpdate = useCallback((leadIds: string[], newStatus?: LeadStatus, newAssignedSalespersonId?: string) => {
+    const handleBulkUpdate = useCallback(async (leadIds: string[], newStatus?: LeadStatus, newAssignedSalespersonId?: string) => {
         if (!currentUser) return;
         
-        setLeads(prevLeads => {
-            const newActivities: Activity[] = [];
-            const updatedLeads = prevLeads.map(l => {
-                if (!leadIds.includes(l.id)) return l;
+        const updates: Partial<Lead> = {};
+        if (newStatus) updates.status = newStatus;
+        if (newAssignedSalespersonId) updates.assignedSalespersonId = newAssignedSalespersonId;
+        updates.lastActivityDate = new Date().toISOString();
 
-                const updatedFields: Partial<Lead> = { lastActivityDate: new Date().toISOString() };
-                
-                if (newStatus) {
-                    updatedFields.status = newStatus;
-                    newActivities.push({
-                        id: `act-bulk-status-${l.id}-${Date.now()}`,
-                        leadId: l.id,
-                        salespersonId: currentUser.id,
-                        type: ActivityType.Note,
-                        date: new Date().toISOString(),
-                        remarks: `Bulk updated status to ${newStatus}.`,
-                        customerName: l.customerName
-                    });
-                }
-                if (newAssignedSalespersonId) {
-                    updatedFields.assignedSalespersonId = newAssignedSalespersonId;
-                    const assigneeName = users.find(u => u.id === newAssignedSalespersonId)?.name || 'N/A';
-                    newActivities.push({
-                        id: `act-bulk-assign-${l.id}-${Date.now()}`,
-                        leadId: l.id,
-                        salespersonId: currentUser.id,
-                        type: ActivityType.Note,
-                        date: new Date().toISOString(),
-                        remarks: `Bulk assigned to ${assigneeName}.`,
-                        customerName: l.customerName
-                    });
-                }
-                return { ...l, ...updatedFields };
-            });
-            
-            setActivities(prev => [...newActivities, ...prev]);
-            return updatedLeads;
-        });
-    }, [currentUser, users]);
+        await db.bulkUpdateLeads(leadIds, updates);
+        
+        // Refresh local state
+        const updatedLeads = await db.getLeads();
+        setLeads(updatedLeads);
+    }, [currentUser]);
 
-    const handleImportLeads = useCallback((newLeadsData: Omit<Lead, 'id' | 'isRead' | 'missedVisitsCount' | 'lastActivityDate' | 'month'>[]) => {
-      const salespersonNameToId = new Map(users.map(u => [u.name, u.id]));
-      const importedLeads = newLeadsData.map((data, index) => {
-          const salespersonId = salespersonNameToId.get(data.assignedSalespersonId) || 'admin-0';
-          return {
+    const handleImportLeads = useCallback(async (newLeadsData: Omit<Lead, 'id' | 'isRead' | 'missedVisitsCount' | 'lastActivityDate' | 'month'>[]) => {
+      const salespersonNameToId = new Map<string, string>(users.map(u => [u.name, u.id] as [string, string]));
+      
+      for (const data of newLeadsData) {
+           const salespersonId = salespersonNameToId.get(data.assignedSalespersonId) || 'admin-0';
+           const lead: Lead = {
               ...data,
-              id: `imported-${Date.now()}-${index}`,
+              id: `imported-${Date.now()}-${Math.random()}`,
               isRead: false,
               missedVisitsCount: 0,
               lastActivityDate: data.leadDate,
               month: new Date(data.leadDate).toLocaleString('default', { month: 'long', year: 'numeric' }),
               assignedSalespersonId: salespersonId,
           };
-      });
-      setLeads(prev => [...importedLeads, ...prev]);
+          await db.addLead(lead);
+      }
+      const allLeads = await db.getLeads();
+      setLeads(allLeads);
     }, [users]);
 
-    const handleAddTask = useCallback((taskData: Omit<Task, 'id'>) => {
+    const handleAddTask = useCallback(async (taskData: Omit<Task, 'id'>) => {
         const newTask: Task = {
             id: `task-${Date.now()}`,
             ...taskData,
         };
+        await db.addTask(newTask);
         setTasks(prev => [newTask, ...prev]);
     }, []);
 
-    const handleToggleTask = useCallback((taskId: string) => {
+    const handleToggleTask = useCallback(async (taskId: string) => {
+        await db.toggleTask(taskId);
         setTasks(prev => prev.map(t => t.id === taskId ? { ...t, isCompleted: !t.isCompleted } : t));
     }, []);
 
-    const handleDeleteTask = useCallback((taskId: string) => {
+    const handleDeleteTask = useCallback(async (taskId: string) => {
+        await db.deleteTask(taskId);
         setTasks(prev => prev.filter(t => t.id !== taskId));
     }, []);
 
-    const handleCreateUser = useCallback((userData: { name: string }) => {
+    const handleCreateUser = useCallback(async (userData: { name: string }) => {
         const newUser: User = {
             id: `user-${Date.now()}`,
             name: userData.name,
             role: 'Salesperson',
             avatarUrl: `https://i.pravatar.cc/40?u=${userData.name}`
         };
+        await db.addUser(newUser);
         setUsers(prev => [...prev, newUser]);
     }, []);
 
-    const handleDeleteUser = useCallback((userId: string) => {
+    const handleDeleteUser = useCallback(async (userId: string) => {
         const admin = users.find(u => u.role === 'Admin');
         if (!admin) return;
-
-        setLeads(prev => prev.map(l => l.assignedSalespersonId === userId ? { ...l, assignedSalespersonId: admin.id } : l));
-        setTasks(prev => prev.map(t => t.assignedToId === userId ? { ...t, assignedToId: admin.id } : t));
-        setUsers(prev => prev.filter(u => u.id !== userId));
+        
+        await db.deleteUser(userId, admin.id);
+        
+        // Refresh all data to reflect reassignment
+        const data = await db.getAllData();
+        setUsers(data.users);
+        setLeads(data.leads);
+        setTasks(data.tasks);
     }, [users]);
 
-    const handleBookUnit = useCallback((unitId: string) => {
-        setInventory(prev => prev.map(project => ({
-            ...project,
-            units: project.units.map(unit => unit.id === unitId ? { ...unit, status: 'Booked' } : unit)
-        })));
+    const handleBookUnit = useCallback(async (unitId: string) => {
+        await db.bookUnit(unitId);
+        const updatedInventory = await db.getInventory();
+        setInventory(updatedInventory);
+    }, []);
+    
+    const handleResetDatabase = useCallback(async () => {
+        if (window.confirm("Are you sure? This will delete all new data and restore the demo dataset.")) {
+            setIsLoading(true);
+            const data = await db.resetDatabase();
+            setLeads(data.leads);
+            setUsers(data.users);
+            setActivities(data.activities);
+            setSalesTargets(data.salesTargets);
+            setTasks(data.tasks);
+            setInventory(data.inventory);
+            setIsLoading(false);
+        }
     }, []);
 
     const handleLogin = useCallback((user: User) => {
@@ -392,6 +348,7 @@ const App: React.FC = () => {
                  Content = <SettingsPage 
                     onCreateUser={handleCreateUser}
                     onDeleteUser={handleDeleteUser}
+                    onResetDatabase={handleResetDatabase}
                     {...commonProps} 
                 />;
                 break;

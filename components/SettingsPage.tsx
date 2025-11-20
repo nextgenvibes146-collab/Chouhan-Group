@@ -1,5 +1,4 @@
 
-
 import React, { useState, useRef, useEffect } from 'react';
 import type { User } from '../types';
 import { 
@@ -21,6 +20,7 @@ interface SettingsPageProps {
   users: User[];
   onCreateUser: (userData: { name: string; }) => void;
   onDeleteUser: (userId: string) => void;
+  onResetDatabase: () => void;
   currentUser: User;
   onLogout: () => void;
   onNavigate: (view: string) => void;
@@ -300,7 +300,7 @@ const SalesTargetSettings: React.FC = () => {
     );
 };
 
-const SystemSettings: React.FC = () => {
+const SystemSettings: React.FC<{ onReset: () => void }> = ({ onReset }) => {
     return (
         <div className="space-y-6">
             <div className="border-b border-border-color pb-4">
@@ -319,10 +319,11 @@ const SystemSettings: React.FC = () => {
                 </div>
 
                 <div className="card p-6">
-                    <h4 className="text-md font-semibold text-base-content mb-2">Security & Access</h4>
+                    <h4 className="text-md font-semibold text-base-content mb-2">Reset Database</h4>
+                    <p className="text-sm text-muted-content mb-4">Wipe all current data and restore the initial demo dataset.</p>
                     <div className="flex items-center justify-between py-2 border-b border-border-color">
-                        <span className="text-sm text-base-content">Force Logout All Users</span>
-                        <button className="text-xs text-red-600 hover:underline">Execute</button>
+                        <span className="text-sm text-base-content">Restore Default Data</span>
+                        <button onClick={onReset} className="text-xs text-red-600 hover:underline font-bold">Reset Now</button>
                     </div>
                     <div className="flex items-center justify-between py-2">
                         <span className="text-sm text-base-content">Reset System Cache</span>
@@ -339,7 +340,7 @@ const SystemSettings: React.FC = () => {
     );
 };
 
-const SettingsPage: React.FC<SettingsPageProps> = ({ users, onCreateUser, onDeleteUser, currentUser, onLogout, onNavigate }) => {
+const SettingsPage: React.FC<SettingsPageProps> = ({ users, onCreateUser, onDeleteUser, onResetDatabase, currentUser, onLogout, onNavigate }) => {
   const [activeTab, setActiveTab] = useState<'team' | 'master' | 'targets' | 'system'>('team');
 
   const tabs = [
@@ -389,7 +390,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ users, onCreateUser, onDele
                     <SalesTargetSettings />
                 )}
                 {activeTab === 'system' && (
-                    <SystemSettings />
+                    <SystemSettings onReset={onResetDatabase} />
                 )}
             </div>
         </div>
