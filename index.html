@@ -52,12 +52,14 @@
             height: 100%;
             width: 100%;
             overflow: hidden; /* Prevent global scroll */
-            overscroll-behavior-y: none; /* Prevent pull-to-refresh causing layout issues */
+            overscroll-behavior: none; /* Prevent bounce/pull-to-refresh */
+            position: fixed; /* Strictly lock body on iOS */
             -webkit-overflow-scrolling: touch;
         }
         #root {
             height: 100%;
             width: 100%;
+            overflow: hidden;
         }
         
         body {
@@ -65,28 +67,41 @@
         }
         /* Base Component Styles */
         .card {
-            @apply bg-base-100 rounded-xl shadow-card border border-border-color;
+            @apply bg-white rounded-xl shadow-sm border border-gray-200;
         }
+        /* Improved Input Style - Forced Clean Look */
         .input-style {
-            @apply mt-1 block w-full px-3 py-2 bg-base-100 border border-border-color rounded-md shadow-sm text-base-content placeholder-muted-content focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm transition-shadow;
+            @apply block w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-base text-gray-900 placeholder-gray-400 shadow-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200 disabled:bg-gray-50 disabled:text-gray-500 appearance-none;
         }
+        
+        /* Specific Fix for Chrome Autofill turning background blue/dark */
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover, 
+        input:-webkit-autofill:focus, 
+        input:-webkit-autofill:active {
+            -webkit-box-shadow: 0 0 0 30px white inset !important;
+            -webkit-text-fill-color: #111827 !important;
+            transition: background-color 5000s ease-in-out 0s;
+        }
+
         .label-style {
-            @apply block text-sm font-medium text-muted-content;
+            @apply block text-sm font-semibold text-gray-700 mb-1.5 tracking-wide;
         }
+        /* Buttons with matching rounding and padding */
         .button-primary {
-             @apply w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-primary-content bg-primary hover:bg-primary-focus focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors;
+             @apply w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-semibold text-white bg-primary hover:bg-primary-focus focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-200 transform active:scale-[0.99];
         }
         .button-secondary {
-            @apply w-full flex justify-center py-2 px-4 border border-border-color rounded-md shadow-sm text-sm font-medium text-base-content bg-base-100 hover:bg-base-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:bg-gray-200 disabled:cursor-not-allowed transition-colors;
+            @apply w-full flex justify-center items-center py-3 px-4 border border-gray-300 rounded-xl shadow-sm text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:bg-gray-100 disabled:cursor-not-allowed transition-all duration-200;
         }
         .button-success {
-             @apply w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-success hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-success disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors;
+             @apply w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-semibold text-white bg-success hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-success disabled:bg-gray-400 disabled:cursor-not-allowed transition-all duration-200 transform active:scale-[0.99];
         }
         .action-button {
             @apply p-2 rounded-full transition-colors duration-200;
         }
         .filter-select {
-            @apply text-sm bg-base-100 border border-border-color rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary py-1.5 px-3 text-base-content;
+            @apply text-sm bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary py-2 px-3 text-gray-700;
         }
         /* Hide scrollbar for Chrome, Safari and Opera */
         .scrollbar-hide::-webkit-scrollbar {

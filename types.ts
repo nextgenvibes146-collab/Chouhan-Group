@@ -1,3 +1,4 @@
+
 export enum LeadStatus {
   New = 'New Lead',
   Qualified = 'Qualified',
@@ -68,9 +69,13 @@ export interface Lead {
   lastRemark: string;
   bookingStatus?: string;
   isRead: boolean;
-  investmentTimeline?: string;
   missedVisitsCount: number;
   labels?: string[];
+  // New Real Estate Fields
+  budget?: string;
+  fundingSource?: 'Self' | 'Bank Loan' | 'Part Loan';
+  purpose?: 'Investment' | 'Self Use';
+  configuration?: string; // e.g., 2BHK, 3BHK
 }
 
 export interface Activity {

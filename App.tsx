@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
 import BottomNavBar from './components/BottomNavBar';
 import Sidebar from './components/Sidebar';
@@ -5,6 +6,7 @@ import Header from './components/Header';
 import LoginPage from './components/LoginPage';
 import { fetchSheetData } from './services/googleSheetService';
 import { Lead, User, Activity, SalesTarget, Task, LeadStatus, ActivityType, ModeOfEnquiry } from './types';
+import { mockProjects, Project } from './data/inventoryData';
 
 // Lazy load components for better initial load performance
 const Dashboard = React.lazy(() => import('./components/Dashboard'));
@@ -27,6 +29,8 @@ export interface NewLeadData {
     investmentTimeline: string;
     remarks: string;
     assignedSalespersonId: string;
+    budget?: string;
+    purpose?: 'Investment' | 'Self Use';
 }
 
 const LoadingSpinner: React.FC = () => (
@@ -42,6 +46,7 @@ const App: React.FC = () => {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [salesTargets, setSalesTargets] = useState<SalesTarget[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [inventory, setInventory] = useState<Project[]>(mockProjects); // Inventory State
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isSidebarOpen, setSidebarOpen] = useState(false);
@@ -67,16 +72,9 @@ const App: React.FC = () => {
   const handleUpdateLead = useCallback((updatedLead: Lead) => {
     if (!currentUser) return;
 
-    // We need the latest users state, so we use the functional update or dependency
-    // Since users rarely change, using it in dependency is fine, but let's be safe inside
     setLeads(prevLeads => {
         const admin = users.find(u => u.role === 'Admin');
         const adminId = admin?.id || 'admin-0';
-        
-        // We need to queue side effects (activities) to be set after map
-        // However, doing state updates inside a state update callback for another atom is tricky.
-        // We will calculate the new leads and the new activities, then set them.
-        // To avoid complex closure issues, we'll just do the mapping logic here.
         
         let activityToAdd: Activity | null = null;
         let assignmentActivity: Activity | null = null;
@@ -138,7 +136,6 @@ const App: React.FC = () => {
             return lead;
         });
 
-        // Side effect: Update activities
         if (activityToAdd || assignmentActivity) {
              setActivities(prev => {
                  const newActs = [...prev];
@@ -186,6 +183,8 @@ const App: React.FC = () => {
             lastRemark: newLeadData.remarks || 'New lead created.',
             isRead: false,
             missedVisitsCount: 0,
+            budget: newLeadData.budget,
+            purpose: newLeadData.purpose,
         };
         setLeads(prev => [newLead, ...prev]);
 
@@ -204,7 +203,6 @@ const App: React.FC = () => {
     const handleBulkUpdate = useCallback((leadIds: string[], newStatus?: LeadStatus, newAssignedSalespersonId?: string) => {
         if (!currentUser) return;
         
-        // We need to access current leads to generate activities
         setLeads(prevLeads => {
             const newActivities: Activity[] = [];
             const updatedLeads = prevLeads.map(l => {
@@ -297,6 +295,13 @@ const App: React.FC = () => {
         setUsers(prev => prev.filter(u => u.id !== userId));
     }, [users]);
 
+    const handleBookUnit = useCallback((unitId: string) => {
+        setInventory(prev => prev.map(project => ({
+            ...project,
+            units: project.units.map(unit => unit.id === unitId ? { ...unit, status: 'Booked' } : unit)
+        })));
+    }, []);
+
     const handleLogin = useCallback((user: User) => {
         setCurrentUser(user);
         const isAdmin = user.role === 'Admin';
@@ -331,7 +336,6 @@ const App: React.FC = () => {
     }, [searchTerm, visibleLeads]);
 
     const renderView = () => {
-        // Memoize common props to prevent re-renders of lazy loaded components
         const commonProps = { 
             users, 
             currentUser: currentUser!, 
@@ -358,7 +362,7 @@ const App: React.FC = () => {
                 />;
                 break;
             case 'Inventory':
-                Content = <InventoryPage />;
+                Content = <InventoryPage projects={inventory} onBookUnit={handleBookUnit} />;
                 break;
             case 'Calendar':
                 Content = <CalendarPage leads={visibleLeads} tasks={visibleTasks} />;
@@ -431,7 +435,7 @@ const App: React.FC = () => {
                     onToggleSidebar={() => setSidebarOpen(!isSidebarOpen)}
                 />
                 <main className="flex-1 overflow-y-auto">
-                    <div className="container mx-auto p-4 md:p-6 pb-20 md:pb-6">
+                    <div className="container mx-auto p-4 md:p-6 pb-24 md:pb-6">
                         {renderView()}
                     </div>
                 </main>
