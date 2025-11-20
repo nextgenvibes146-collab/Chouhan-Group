@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import type { Task, User } from '../types';
-import { TrashIcon, AdjustmentsHorizontalIcon, CogIcon, UserCircleIcon, ArrowLeftOnRectangleIcon } from './Icons';
+import { TrashIcon, AdjustmentsHorizontalIcon, CogIcon, UserCircleIcon, ArrowLeftOnRectangleIcon, CalendarIcon, CheckCircleIcon } from './Icons';
 
 interface TasksPageProps {
     tasks: Task[];
@@ -90,31 +90,80 @@ const TaskItem: React.FC<{
         }
     };
 
+    // Determine status
+    const now = new Date();
+    const dueDate = new Date(task.dueDate);
+    // Reset time part for accurate date comparison if needed, but basic comparison works for now
+    const isOverdue = !task.isCompleted && dueDate < now;
+    const isToday = !task.isCompleted && dueDate.toDateString() === now.toDateString();
+
     return (
-        <div className="group flex items-center justify-between p-3 bg-base-300/50 rounded-lg hover:bg-base-300/70 transition-colors duration-200">
-            <div className="flex items-center cursor-pointer flex-grow min-w-0" onClick={() => onToggle(task.id)}>
-                <input
-                    type="checkbox"
-                    checked={task.isCompleted}
-                    readOnly
-                    className="h-5 w-5 rounded border-gray-400 text-primary focus:ring-primary cursor-pointer flex-shrink-0"
-                />
-                <div className="ml-3 min-w-0">
-                    <p className={`font-medium truncate ${task.isCompleted ? 'text-muted-content line-through' : 'text-base-content'}`}>
-                        {task.title}
-                    </p>
-                    <div className="text-xs text-muted-content flex items-center space-x-2">
-                        <span>Due: {new Date(task.dueDate).toLocaleDateString()}</span>
-                        {user && <span>To: {user.name}</span>}
+        <div className={`group flex items-start justify-between p-4 rounded-lg border transition-all duration-200 ${
+            task.isCompleted 
+                ? 'bg-gray-50 border-transparent opacity-75' 
+                : isOverdue 
+                    ? 'bg-red-50 border-red-200 shadow-sm' 
+                    : 'bg-white border-border-color hover:border-primary hover:shadow-md'
+        }`}>
+            <div className="flex items-start cursor-pointer flex-grow min-w-0 gap-3" onClick={() => onToggle(task.id)}>
+                <div className="mt-0.5 relative">
+                    <input
+                        type="checkbox"
+                        checked={task.isCompleted}
+                        readOnly
+                        className={`peer h-5 w-5 rounded border-2 text-primary focus:ring-primary cursor-pointer transition-colors ${
+                            isOverdue ? 'border-red-300' : 'border-gray-300'
+                        }`}
+                    />
+                </div>
+                
+                <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <p className={`font-medium truncate transition-all ${
+                            task.isCompleted ? 'text-muted-content line-through decoration-gray-400' : 'text-base-content'
+                        }`}>
+                            {task.title}
+                        </p>
+                        {isOverdue && (
+                            <span className="flex-shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-red-100 text-red-700 border border-red-200">
+                                Overdue
+                            </span>
+                        )}
+                        {isToday && (
+                            <span className="flex-shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-orange-100 text-orange-700 border border-orange-200">
+                                Today
+                            </span>
+                        )}
+                    </div>
+                    
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5 text-xs text-muted-content">
+                        <span className={`flex items-center font-medium ${
+                            isOverdue ? 'text-red-600' : isToday ? 'text-orange-600' : ''
+                        }`}>
+                            <CalendarIcon className="w-3.5 h-3.5 mr-1.5" />
+                            {isToday ? 'Due Today' : dueDate.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+                        </span>
+                        
+                        {user && (
+                            <span className="flex items-center bg-base-200 px-2 py-0.5 rounded text-text-secondary">
+                                <UserCircleIcon className="w-3.5 h-3.5 mr-1.5" />
+                                {user.name}
+                            </span>
+                        )}
+                        
+                        <span className="text-xs text-gray-400 border-l border-gray-300 pl-3">
+                            Added by {task.createdBy}
+                        </span>
                     </div>
                 </div>
             </div>
+            
             <button
                 onClick={handleDeleteClick}
-                className="ml-4 p-1 rounded-full text-muted-content hover:bg-red-100 hover:text-danger opacity-0 group-hover:opacity-100 transition-opacity"
-                aria-label={`Delete task ${task.title}`}
+                className="ml-2 p-2 rounded-full text-muted-content hover:bg-red-100 hover:text-danger opacity-0 group-hover:opacity-100 transition-all duration-200"
+                title="Delete Task"
             >
-                <TrashIcon className="w-5 h-5" />
+                <TrashIcon className="w-4 h-4" />
             </button>
         </div>
     );
@@ -154,24 +203,41 @@ const TasksPage: React.FC<TasksPageProps> = ({ tasks, users, currentUser, onAddT
     }, [sortedTasks]);
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 pb-12">
             <header className="flex justify-between items-center">
-                <h1 className="text-2xl sm:text-3xl font-bold text-base-content">My Tasks</h1>
+                <div>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-base-content">My Tasks</h1>
+                    <p className="text-sm text-muted-content mt-1">Manage your to-do list and assignments</p>
+                </div>
                 <UserControlPanel user={currentUser} onLogout={onLogout} onNavigate={onNavigate} />
             </header>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Add Task Column */}
                 <div className="lg:col-span-1">
-                    <div className="card p-6 h-fit sticky top-6">
-                        <h3 className="text-xl font-semibold text-text-primary mb-4">Add a New Task</h3>
+                    <div className="card p-6 h-fit sticky top-6 border-t-4 border-primary">
+                        <h3 className="text-xl font-bold text-text-primary mb-4">Add New Task</h3>
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
-                                <label htmlFor="taskTitle" className="label-style">Task Title</label>
-                                <input id="taskTitle" type="text" value={title} onChange={e => setTitle(e.target.value)} className="input-style" placeholder="e.g., Follow up with Client X" />
+                                <label htmlFor="taskTitle" className="label-style">Task Description</label>
+                                <input 
+                                    id="taskTitle" 
+                                    type="text" 
+                                    value={title} 
+                                    onChange={e => setTitle(e.target.value)} 
+                                    className="input-style" 
+                                    placeholder="What needs to be done?" 
+                                />
                             </div>
                             <div>
                                 <label htmlFor="taskDueDate" className="label-style">Due Date</label>
-                                <input id="taskDueDate" type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="input-style" />
+                                <input 
+                                    id="taskDueDate" 
+                                    type="date" 
+                                    value={dueDate} 
+                                    onChange={e => setDueDate(e.target.value)} 
+                                    className="input-style" 
+                                />
                             </div>
                             {currentUser.role === 'Admin' && (
                                 <div>
@@ -183,50 +249,88 @@ const TasksPage: React.FC<TasksPageProps> = ({ tasks, users, currentUser, onAddT
                                     </select>
                                 </div>
                             )}
-                            <button type="submit" className="button-primary !w-auto px-6">Add Task</button>
+                            <button type="submit" className="button-primary w-full justify-center">
+                                Create Task
+                            </button>
                         </form>
                     </div>
                 </div>
 
-                <div className="lg:col-span-2 card p-6">
-                    <div className="mb-4">
-                        <h3 className="text-xl font-semibold text-text-primary">Pending Tasks ({pendingTasks.length})</h3>
-                    </div>
-                    <div className="space-y-3">
-                        {pendingTasks.length > 0 ? (
-                            pendingTasks.map(task => (
-                                <TaskItem
-                                    key={task.id}
-                                    task={task}
-                                    user={userMap.get(task.assignedToId)}
-                                    onToggle={onToggleTask}
-                                    onDelete={onDeleteTask}
-                                />
-                            ))
-                        ) : (
-                            <p className="text-center text-muted-content py-4">No pending tasks. Great job!</p>
-                        )}
+                {/* Task List Column */}
+                <div className="lg:col-span-2 space-y-8">
+                    {/* Pending Tasks Section */}
+                    <div className="card p-6 min-h-[300px]">
+                        <div className="flex justify-between items-end border-b border-border-color pb-3 mb-4">
+                            <h3 className="text-lg font-bold text-base-content flex items-center gap-2">
+                                Pending Tasks
+                                <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    {pendingTasks.length}
+                                </span>
+                            </h3>
+                        </div>
+                        
+                        <div className="space-y-3">
+                            {pendingTasks.length > 0 ? (
+                                pendingTasks.map(task => (
+                                    <TaskItem
+                                        key={task.id}
+                                        task={task}
+                                        user={userMap.get(task.assignedToId)}
+                                        onToggle={onToggleTask}
+                                        onDelete={onDeleteTask}
+                                    />
+                                ))
+                            ) : (
+                                <div className="text-center py-12 px-4 border-2 border-dashed border-gray-200 rounded-lg bg-gray-50">
+                                    <p className="text-muted-content font-medium">No pending tasks!</p>
+                                    <p className="text-sm text-gray-400 mt-1">You're all caught up. Enjoy your day!</p>
+                                </div>
+                            )}
+                        </div>
                     </div>
 
-                    <div className="mt-8">
-                        <button onClick={() => setShowCompleted(!showCompleted)} className="text-lg font-semibold text-text-primary w-full text-left py-2">
-                            {showCompleted ? '▼' : '►'} Completed Tasks ({completedTasks.length})
-                        </button>
+                    {/* Completed Tasks Section */}
+                    <div className="card bg-gray-50/80 border-gray-200 overflow-hidden">
+                        <div 
+                            className="p-4 flex justify-between items-center cursor-pointer hover:bg-gray-100 transition-colors select-none"
+                            onClick={() => setShowCompleted(!showCompleted)}
+                        >
+                            <h3 className="text-md font-semibold text-muted-content flex items-center gap-2">
+                                <span className="bg-green-100 text-green-600 p-1 rounded-full">
+                                    <CheckCircleIcon className="w-4 h-4" />
+                                </span>
+                                Completed Tasks
+                            </h3>
+                            <div className="flex items-center gap-3">
+                                <span className="text-xs font-medium bg-gray-200 text-gray-600 px-2 py-1 rounded-full">
+                                    {completedTasks.length}
+                                </span>
+                                <svg 
+                                    className={`w-5 h-5 text-gray-400 transform transition-transform duration-200 ${showCompleted ? 'rotate-180' : ''}`} 
+                                    fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                >
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </div>
+                        </div>
+
                         {showCompleted && (
-                            <div className="mt-4 space-y-3">
-                                {completedTasks.length > 0 ? (
-                                    completedTasks.map(task => (
-                                        <TaskItem
-                                            key={task.id}
-                                            task={task}
-                                            user={userMap.get(task.assignedToId)}
-                                            onToggle={onToggleTask}
-                                            onDelete={onDeleteTask}
-                                        />
-                                    ))
-                                ) : (
-                                    <p className="text-center text-muted-content py-4">No tasks have been completed yet.</p>
-                                )}
+                            <div className="p-4 pt-0 border-t border-gray-200 animate-in fade-in slide-in-from-top-1 duration-200">
+                                <div className="space-y-3 mt-4">
+                                    {completedTasks.length > 0 ? (
+                                        completedTasks.map(task => (
+                                            <TaskItem
+                                                key={task.id}
+                                                task={task}
+                                                user={userMap.get(task.assignedToId)}
+                                                onToggle={onToggleTask}
+                                                onDelete={onDeleteTask}
+                                            />
+                                        ))
+                                    ) : (
+                                        <p className="text-center text-sm text-muted-content py-4 italic">No completed tasks yet.</p>
+                                    )}
+                                </div>
                             </div>
                         )}
                     </div>
