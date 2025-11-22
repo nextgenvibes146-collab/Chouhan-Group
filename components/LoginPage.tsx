@@ -40,7 +40,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ users, onLogin }) => {
     <div className="flex items-center justify-center h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <div className="w-full max-w-sm p-8 space-y-8 bg-white rounded-2xl shadow-2xl border border-white/50 backdrop-blur-xl">
         <div className="text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-gradient-to-br from-primary to-blue-600 text-white font-bold text-2xl shadow-lg mb-4">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 text-white font-bold text-2xl shadow-lg mb-4">
                 CH
             </div>
             <h1 className="text-2xl font-bold text-slate-900">Welcome Back</h1>
@@ -59,7 +59,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ users, onLogin }) => {
                           setSelectedUserId(e.target.value);
                           setError('');
                       }}
-                      className="input-style appearance-none bg-white text-slate-900 border-slate-300 focus:border-primary"
+                      className="input-style appearance-none bg-white text-slate-900 border-slate-300 focus:border-blue-600"
                       style={{ backgroundImage: 'none' }} 
                   >
                       <option value="" disabled>-- Select your profile --</option>
@@ -87,7 +87,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ users, onLogin }) => {
                         setError('');
                     }}
                     onKeyPress={handleKeyPress}
-                    className="input-style bg-white text-slate-900 border-slate-300 focus:border-primary"
+                    className="input-style bg-white text-slate-900 border-slate-300 focus:border-blue-600"
                     placeholder="Enter password"
                 />
                 <p className="text-xs text-slate-400 mt-2 font-medium">Hint: Use 'password123'</p>
@@ -97,7 +97,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ users, onLogin }) => {
         <div>
             <button
                 onClick={handleLogin}
-                className="button-primary w-full py-3.5 text-base shadow-xl shadow-primary/20 hover:shadow-primary/40"
+                className="w-full flex justify-center items-center py-3.5 px-6 border border-transparent rounded-xl shadow-lg shadow-blue-600/30 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 transform active:scale-[0.98]"
             >
                 Login to Dashboard
             </button>
