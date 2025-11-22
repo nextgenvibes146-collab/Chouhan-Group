@@ -105,24 +105,24 @@ const App: React.FC = () => {
       
       const checkReminders = async () => {
           const now = new Date();
-          const pendingTasks = tasks.filter(t => !t.isCompleted && !t.hasReminded && t.reminderDate);
+          // Filter tasks that have a reminder date, haven't fired yet, and the reminder date is passed
+          const dueTasks = tasks.filter(t => !t.isCompleted && !t.hasReminded && t.reminderDate && new Date(t.reminderDate) <= now);
           
-          for (const task of pendingTasks) {
-              if (task.reminderDate && new Date(task.reminderDate) <= now) {
-                  // Trigger notification
-                  if (task.assignedToId === currentUser.id || currentUser.role === 'Admin') {
-                       setNotification(`Task Due: ${task.title}`);
-                       const updatedTasks = await db.markTaskReminded(task.id);
-                       setTasks(updatedTasks);
-                       
-                       // Auto-dismiss toast after 5 seconds
-                       setTimeout(() => setNotification(null), 5000);
-                  }
+          if (dueTasks.length > 0) {
+              const task = dueTasks[0];
+              // Notify only if task is assigned to current user or user is admin
+              if (task.assignedToId === currentUser.id || currentUser.role === 'Admin') {
+                   setNotification(`Task Due: ${task.title}`);
+                   const updatedTasks = await db.markTaskReminded(task.id);
+                   setTasks(updatedTasks);
+                   
+                   // Auto-dismiss toast after 5 seconds
+                   setTimeout(() => setNotification(null), 5000);
               }
           }
       };
 
-      const intervalId = setInterval(checkReminders, 15000); // Check every 15 seconds
+      const intervalId = setInterval(checkReminders, 10000); // Check every 10 seconds
       return () => clearInterval(intervalId);
   }, [tasks, currentUser]);
 

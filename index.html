@@ -80,9 +80,9 @@
             @apply bg-white rounded-2xl shadow-card border border-slate-100 transition-all duration-300;
         }
         
-        /* Inputs */
+        /* Inputs - Improved Visibility */
         .input-style {
-            @apply block w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-sm font-medium text-gray-900 placeholder-gray-400 shadow-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all duration-200 disabled:bg-gray-50 disabled:text-gray-400 appearance-none;
+            @apply block w-full px-4 py-3 bg-gray-50 border border-gray-400 rounded-xl text-sm font-semibold text-gray-900 placeholder-gray-500 shadow-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200 disabled:bg-gray-100 disabled:text-gray-400 appearance-none;
         }
         
         /* Autofill Override */
@@ -90,7 +90,7 @@
         input:-webkit-autofill:hover, 
         input:-webkit-autofill:focus, 
         input:-webkit-autofill:active {
-            -webkit-box-shadow: 0 0 0 30px #ffffff inset !important;
+            -webkit-box-shadow: 0 0 0 30px #f9fafb inset !important;
             -webkit-text-fill-color: #000000 !important;
             transition: background-color 5000s ease-in-out 0s;
         }

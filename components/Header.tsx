@@ -35,6 +35,16 @@ const UserMenu: React.FC<{ user: User, onLogout: () => void, onNavigate: (view: 
         onNavigate('Settings');
         setIsOpen(false);
     };
+    
+    const handleProfileClick = () => {
+        // For now, map Profile to Settings for admin or show simple alert/placeholder
+        if (user.role === 'Admin') {
+             onNavigate('Settings');
+        } else {
+             alert("Profile editing is restricted for salespersons. Please contact admin.");
+        }
+        setIsOpen(false);
+    };
 
     return (
         <div className="relative" ref={menuRef}>
@@ -62,10 +72,10 @@ const UserMenu: React.FC<{ user: User, onLogout: () => void, onNavigate: (view: 
                                 <p className="text-xs text-slate-500 truncate">{user.role}</p>
                             </div>
                         </div>
-                         <a href="#" onClick={(e) => { e.preventDefault(); setIsOpen(false); }} className="flex items-center w-full text-left px-3 py-2.5 text-sm font-medium text-slate-700 rounded-lg hover:bg-slate-50 transition-colors">
+                         <button onClick={handleProfileClick} className="flex items-center w-full text-left px-3 py-2.5 text-sm font-medium text-slate-700 rounded-lg hover:bg-slate-50 transition-colors">
                             <UserCircleIcon className="w-5 h-5 mr-3 text-slate-400" />
                             <span>My Profile</span>
-                        </a>
+                        </button>
                         {user.role === 'Admin' && (
                             <button onClick={handleSettingsClick} className="flex items-center w-full text-left px-3 py-2.5 text-sm font-medium text-slate-700 rounded-lg hover:bg-slate-50 transition-colors">
                                 <CogIcon className="w-5 h-5 mr-3 text-slate-400" />

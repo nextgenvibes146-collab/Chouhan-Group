@@ -244,7 +244,7 @@ class DatabaseService {
             task.hasReminded = true;
             this.save();
         }
-        return this.data.tasks;
+        return [...this.data.tasks];
     }
 
     async addUser(user: User) {
