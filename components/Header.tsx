@@ -89,14 +89,14 @@ const Header: React.FC<HeaderProps> = ({ searchTerm, onSearchChange, searchResul
          </button>
         <div className="relative w-full md:w-96 max-w-lg">
           <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
-            <SearchIcon className="w-5 h-5 text-gray-400" />
+            <SearchIcon className="w-5 h-5 text-gray-500" />
           </span>
           <input
             type="text"
             placeholder="Search by name, phone, project..."
             value={localSearchTerm}
             onChange={(e) => setLocalSearchTerm(e.target.value)}
-            className="w-full py-2.5 pl-11 pr-4 text-gray-900 bg-white border border-gray-300 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all duration-200 placeholder-gray-400 shadow-sm"
+            className="w-full py-2.5 pl-11 pr-4 text-black bg-white border border-gray-400 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all duration-200 placeholder-gray-500 shadow-sm"
           />
           {searchTerm && <SearchResults results={searchResults} users={users} />}
         </div>

@@ -450,14 +450,14 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
             <div className="p-4 border-b border-border-color flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between bg-gray-50/50">
                 <div className="relative w-full lg:w-96">
                     <span className="absolute inset-y-0 left-0 flex items-center pl-3">
-                        <SearchIcon className="w-4 h-4 text-muted-content" />
+                        <SearchIcon className="w-4 h-4 text-gray-500" />
                     </span>
                     <input 
                         type="text" 
                         placeholder="Search in list..." 
                         value={localSearch}
                         onChange={(e) => setLocalSearch(e.target.value)}
-                        className="w-full py-2 pl-9 pr-4 text-sm bg-white border border-border-color rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-shadow"
+                        className="w-full py-2 pl-9 pr-4 text-sm bg-white border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all placeholder-gray-500 text-black"
                     />
                 </div>
 

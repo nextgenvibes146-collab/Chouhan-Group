@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -69,18 +70,18 @@
         .card {
             @apply bg-white rounded-xl shadow-sm border border-gray-200;
         }
-        /* Improved Input Style - Forced Clean Look */
+        /* Improved Input Style - High Visibility - White Background */
         .input-style {
-            @apply block w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-base text-gray-900 placeholder-gray-400 shadow-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200 disabled:bg-gray-50 disabled:text-gray-500 appearance-none;
+            @apply block w-full px-4 py-3 bg-white border border-gray-400 rounded-xl text-base text-black placeholder-gray-500 shadow-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200 disabled:bg-gray-100 disabled:text-gray-500 appearance-none;
         }
         
-        /* Specific Fix for Chrome Autofill turning background blue/dark */
+        /* Specific Fix for Chrome Autofill - Match the white background */
         input:-webkit-autofill,
         input:-webkit-autofill:hover, 
         input:-webkit-autofill:focus, 
         input:-webkit-autofill:active {
-            -webkit-box-shadow: 0 0 0 30px white inset !important;
-            -webkit-text-fill-color: #111827 !important;
+            -webkit-box-shadow: 0 0 0 30px #ffffff inset !important;
+            -webkit-text-fill-color: #000000 !important;
             transition: background-color 5000s ease-in-out 0s;
         }
 
@@ -101,7 +102,7 @@
             @apply p-2 rounded-full transition-colors duration-200;
         }
         .filter-select {
-            @apply text-sm bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary py-2 px-3 text-gray-700;
+            @apply text-sm bg-white border border-gray-400 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary py-2 px-3 text-black;
         }
         /* Hide scrollbar for Chrome, Safari and Opera */
         .scrollbar-hide::-webkit-scrollbar {
