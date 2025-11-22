@@ -12,32 +12,38 @@
         theme: {
           extend: {
             colors: {
-              'primary': '#3b82f6', // Blue 500
-              'primary-focus': '#2563eb', // Blue 600
+              'primary': '#2563eb', // Royal Blue 600
+              'primary-focus': '#1d4ed8', // Royal Blue 700
+              'primary-light': '#eff6ff', // Blue 50
               'primary-content': '#ffffff',
-              'secondary': '#475569',
+              'secondary': '#475569', // Slate 600
               'accent-blue': '#3b82f6',
-              'accent-green': '#16a34a',
+              'accent-green': '#10b981', // Emerald 500
               'accent-purple': '#8b5cf6',
               'accent-red': '#ef4444',
               'accent-teal': '#14b8a6',
               'base-100': '#ffffff', // Surface
-              'base-200': '#f8fafc', // Background
-              'base-300': '#f1f5f9', // Lighter background
-              'base-content': '#1e293b', // Text primary
-              'muted-content': '#64748b', // Text secondary
+              'base-200': '#f0f4f8', // Cool Gray Background (Premium feel)
+              'base-300': '#e2e8f0', // Border/Divider
+              'base-content': '#0f172a', // Slate 900 (High contrast text)
+              'muted-content': '#64748b', // Slate 500
               'border-color': '#e2e8f0',
-              'success': '#16a34a',
+              'success': '#10b981',
               'warning': '#f59e0b',
-              'danger': '#dc2626',
+              'danger': '#ef4444',
             },
             fontFamily: {
-              sans: ['Inter', 'sans-serif'],
+              sans: ['Inter', 'system-ui', 'sans-serif'],
             },
             boxShadow: {
-                'subtle': '0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05)',
-                'card': '0 4px 12px -2px rgb(0 0 0 / 0.08)',
-                'card-hover': '0 8px 24px -4px rgb(0 0 0 / 0.1)',
+                'subtle': '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                'card': '0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02)',
+                'card-hover': '0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025)',
+                'glow': '0 0 15px rgba(37, 99, 235, 0.15)',
+            },
+            borderRadius: {
+                'xl': '1rem',
+                '2xl': '1.25rem',
             }
           },
         },
@@ -45,17 +51,18 @@
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         html, body {
             margin: 0;
             padding: 0;
             height: 100%;
             width: 100%;
-            overflow: hidden; /* Prevent global scroll */
-            overscroll-behavior: none; /* Prevent bounce/pull-to-refresh */
-            position: fixed; /* Strictly lock body on iOS */
+            overflow: hidden;
+            overscroll-behavior: none;
+            position: fixed;
             -webkit-overflow-scrolling: touch;
+            font-family: 'Inter', sans-serif;
         }
         #root {
             height: 100%;
@@ -64,18 +71,21 @@
         }
         
         body {
-            background-color: #f8fafc; /* base-200 */
+            background-color: #f0f4f8;
+            color: #0f172a;
         }
+
         /* Base Component Styles */
         .card {
-            @apply bg-white rounded-xl shadow-sm border border-gray-200;
-        }
-        /* Improved Input Style - High Visibility - White Background */
-        .input-style {
-            @apply block w-full px-4 py-3 bg-white border border-gray-400 rounded-xl text-base text-black placeholder-gray-500 shadow-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200 disabled:bg-gray-100 disabled:text-gray-500 appearance-none;
+            @apply bg-white rounded-2xl shadow-card border border-slate-100 transition-all duration-300;
         }
         
-        /* Specific Fix for Chrome Autofill - Match the white background */
+        /* Inputs */
+        .input-style {
+            @apply block w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-sm font-medium text-gray-900 placeholder-gray-400 shadow-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all duration-200 disabled:bg-gray-50 disabled:text-gray-400 appearance-none;
+        }
+        
+        /* Autofill Override */
         input:-webkit-autofill,
         input:-webkit-autofill:hover, 
         input:-webkit-autofill:focus, 
@@ -86,33 +96,43 @@
         }
 
         .label-style {
-            @apply block text-sm font-semibold text-gray-700 mb-1.5 tracking-wide;
+            @apply block text-xs font-bold text-slate-600 mb-1.5 tracking-wide uppercase;
         }
-        /* Buttons with matching rounding and padding */
+
+        /* Buttons */
         .button-primary {
-             @apply w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-semibold text-white bg-primary hover:bg-primary-focus focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-200 transform active:scale-[0.99];
+             @apply w-full flex justify-center items-center py-3 px-6 border border-transparent rounded-xl shadow-lg shadow-primary/20 text-sm font-semibold text-white bg-primary hover:bg-primary-focus hover:shadow-xl hover:shadow-primary/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:bg-gray-300 disabled:shadow-none disabled:cursor-not-allowed transition-all duration-200 transform active:scale-[0.98];
         }
         .button-secondary {
-            @apply w-full flex justify-center items-center py-3 px-4 border border-gray-300 rounded-xl shadow-sm text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:bg-gray-100 disabled:cursor-not-allowed transition-all duration-200;
+            @apply w-full flex justify-center items-center py-3 px-6 border border-gray-200 rounded-xl shadow-sm text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 disabled:bg-gray-50 disabled:cursor-not-allowed transition-all duration-200;
         }
         .button-success {
-             @apply w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-semibold text-white bg-success hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-success disabled:bg-gray-400 disabled:cursor-not-allowed transition-all duration-200 transform active:scale-[0.99];
+             @apply w-full flex justify-center items-center py-3 px-6 border border-transparent rounded-xl shadow-lg shadow-success/20 text-sm font-semibold text-white bg-success hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-success disabled:bg-gray-400 disabled:cursor-not-allowed transition-all duration-200 transform active:scale-[0.98];
         }
-        .action-button {
-            @apply p-2 rounded-full transition-colors duration-200;
-        }
+        
         .filter-select {
-            @apply text-sm bg-white border border-gray-400 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary py-2 px-3 text-black;
+            @apply text-sm font-medium bg-white border border-gray-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary py-2 px-3 text-gray-900 cursor-pointer hover:border-gray-300 transition-colors;
         }
-        /* Hide scrollbar for Chrome, Safari and Opera */
-        .scrollbar-hide::-webkit-scrollbar {
-            display: none;
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
         }
-        /* Hide scrollbar for IE, Edge and Firefox */
-        .scrollbar-hide {
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
+        ::-webkit-scrollbar-track {
+            background: transparent;
         }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
+        /* Utilities */
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
   <script type="importmap">
 {
@@ -125,7 +145,7 @@
 }
 </script>
 </head>
-  <body class="bg-base-200 font-sans text-base-content">
+  <body class="bg-base-200 font-sans text-base-content antialiased selection:bg-primary/20 selection:text-primary-focus">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>

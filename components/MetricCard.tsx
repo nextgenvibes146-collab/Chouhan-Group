@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 interface MetricCardProps {
@@ -8,29 +9,47 @@ interface MetricCardProps {
 }
 
 const colorMap = {
-    blue: { bg: 'bg-accent-blue/10', text: 'text-accent-blue', border: 'border-accent-blue' },
-    green: { bg: 'bg-accent-green/10', text: 'text-accent-green', border: 'border-accent-green' },
-    red: { bg: 'bg-accent-red/10', text: 'text-accent-red', border: 'border-accent-red' },
-    purple: { bg: 'bg-accent-purple/10', text: 'text-accent-purple', border: 'border-accent-purple' },
-    teal: { bg: 'bg-accent-teal/10', text: 'text-accent-teal', border: 'border-accent-teal' },
-    orange: { bg: 'bg-primary/10', text: 'text-primary', border: 'border-primary' },
+    blue: { bg: 'bg-blue-50', iconBg: 'bg-blue-100', text: 'text-blue-600', ring: 'ring-blue-500/10' },
+    green: { bg: 'bg-emerald-50', iconBg: 'bg-emerald-100', text: 'text-emerald-600', ring: 'ring-emerald-500/10' },
+    red: { bg: 'bg-rose-50', iconBg: 'bg-rose-100', text: 'text-rose-600', ring: 'ring-rose-500/10' },
+    purple: { bg: 'bg-violet-50', iconBg: 'bg-violet-100', text: 'text-violet-600', ring: 'ring-violet-500/10' },
+    teal: { bg: 'bg-teal-50', iconBg: 'bg-teal-100', text: 'text-teal-600', ring: 'ring-teal-500/10' },
+    orange: { bg: 'bg-amber-50', iconBg: 'bg-amber-100', text: 'text-amber-600', ring: 'ring-amber-500/10' },
 };
 
-
 const MetricCard: React.FC<MetricCardProps> = ({ title, value, icon, color }) => {
-  const { bg, text, border } = colorMap[color];
+  const styles = colorMap[color];
+
+  // Mock trend calculation for visuals
+  const isPositive = Math.random() > 0.4;
+  const trendValue = (Math.random() * 10).toFixed(1);
 
   return (
-    <div className={`card p-5 flex flex-col justify-between transition-all duration-300 hover:shadow-card-hover hover:-translate-y-1 border-t-4 ${border}`}>
-      <div className="flex justify-between items-center">
-        <p className="text-sm font-medium text-muted-content">{title}</p>
-        <div className={`flex-shrink-0 rounded-lg p-2 ${bg}`}>
-          {/* Fix: Corrected the type assertion for the 'icon' prop to resolve the TypeScript error. */}
-          {React.cloneElement(icon as React.ReactElement<{ className?: string }>, { className: `w-6 h-6 ${text}` })}
+    <div className="card p-5 relative overflow-hidden group hover:border-slate-300 hover:shadow-card-hover">
+      <div className="flex items-start justify-between">
+        <div>
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">{title}</p>
+            <h3 className="text-3xl font-bold text-slate-800 tracking-tight">{value}</h3>
+        </div>
+        <div className={`p-3 rounded-2xl ${styles.iconBg} ${styles.text} transition-transform group-hover:scale-110 duration-300`}>
+            {React.cloneElement(icon as React.ReactElement<{ className?: string }>, { className: `w-6 h-6` })}
         </div>
       </div>
-      <div>
-        <p className={`text-3xl sm:text-4xl font-extrabold text-base-content mt-2`}>{value}</p>
+      
+      <div className="mt-4 flex items-center text-xs font-medium">
+        <span className={`flex items-center ${isPositive ? 'text-emerald-600' : 'text-rose-600'} bg-white px-2 py-1 rounded-full border border-slate-100 shadow-sm`}>
+            {isPositive ? (
+                <svg className="w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                </svg>
+            ) : (
+                <svg className="w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
+                </svg>
+            )}
+            {trendValue}%
+        </span>
+        <span className="ml-2 text-slate-400">vs last month</span>
       </div>
     </div>
   );
