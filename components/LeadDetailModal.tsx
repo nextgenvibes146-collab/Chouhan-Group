@@ -113,6 +113,7 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({ lead, users, onClose,
         updatedLead.visitDate = updatedLead.nextFollowUpDate;
     }
     onUpdateLead(updatedLead);
+    onClose();
   };
   
   const handleAddActivity = (e: React.FormEvent) => {
@@ -266,3 +267,4 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({ lead, users, onClose,
 };
 
 export default LeadDetailModal;
+    
