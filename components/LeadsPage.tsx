@@ -362,8 +362,8 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
         </div>
         
         {/* Collapsible Add Lead Form */}
-        <div className={`overflow-hidden transition-all duration-300 ease-in-out ${showAddLead ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'}`}>
-            <div className="mb-6">
+        <div className={`overflow-hidden transition-all duration-500 ease-in-out ${showAddLead ? 'max-h-[3000px] opacity-100 mb-6' : 'max-h-0 opacity-0'}`}>
+            <div className="pt-1">
                 <AssignLeadForm 
                     users={users}
                     currentUser={currentUser}
@@ -371,6 +371,7 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
                         onAssignLead(data);
                         setShowAddLead(false);
                     }}
+                    onCancel={() => setShowAddLead(false)}
                 />
             </div>
         </div>

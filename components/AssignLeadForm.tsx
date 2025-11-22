@@ -9,6 +9,7 @@ interface AssignLeadFormProps {
   users: User[];
   currentUser: User;
   onAssignLead: (newLeadData: NewLeadData) => void;
+  onCancel?: () => void;
 }
 
 const initialFormState: NewLeadData = {
@@ -26,7 +27,7 @@ const initialFormState: NewLeadData = {
     purpose: undefined,
 };
 
-const AssignLeadForm: React.FC<AssignLeadFormProps> = ({ users, currentUser, onAssignLead }) => {
+const AssignLeadForm: React.FC<AssignLeadFormProps> = ({ users, currentUser, onAssignLead, onCancel }) => {
   const isAdmin = currentUser.role === 'Admin';
   const salesAgents = users.filter(u => u.role === 'Salesperson');
   const adminUser = users.find(u => u.role === 'Admin');
@@ -206,7 +207,12 @@ const AssignLeadForm: React.FC<AssignLeadFormProps> = ({ users, currentUser, onA
         {error && <p className="text-red-600 font-medium text-sm bg-red-50 p-3 rounded-lg">{error}</p>}
         {success && <p className="text-green-600 font-medium text-sm bg-green-50 p-3 rounded-lg">{success}</p>}
         
-        <div className="pt-4 flex justify-end">
+        <div className="pt-4 flex justify-end gap-3">
+          {onCancel && (
+            <button type="button" onClick={onCancel} className="button-secondary w-full md:w-auto md:px-8">
+                Cancel
+            </button>
+          )}
           <button type="submit" className="button-primary w-full md:w-auto md:px-8">
             {isAdmin ? 'Create & Assign Lead' : 'Submit Lead'}
           </button>
