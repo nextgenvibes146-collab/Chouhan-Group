@@ -30,9 +30,10 @@ const TaskItem: React.FC<{
     // Determine status
     const now = new Date();
     const dueDate = new Date(task.dueDate);
-    // Reset time part for accurate date comparison if needed, but basic comparison works for now
     const isOverdue = !task.isCompleted && dueDate < now;
     const isToday = !task.isCompleted && dueDate.toDateString() === now.toDateString();
+    
+    const reminderDate = task.reminderDate ? new Date(task.reminderDate) : null;
 
     return (
         <div className={`group flex items-start justify-between p-4 rounded-lg border transition-all duration-200 ${
@@ -78,8 +79,17 @@ const TaskItem: React.FC<{
                             isOverdue ? 'text-red-600' : isToday ? 'text-orange-600' : ''
                         }`}>
                             <CalendarIcon className="w-3.5 h-3.5 mr-1.5" />
-                            {isToday ? 'Due Today' : dueDate.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+                            {isToday 
+                                ? `Due Today at ${dueDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` 
+                                : dueDate.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+                            }
                         </span>
+
+                        {reminderDate && !task.isCompleted && (
+                             <span className="flex items-center text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
+                                🔔 {reminderDate.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'})}
+                             </span>
+                        )}
                         
                         {user && (
                             <span className="flex items-center bg-base-200 px-2 py-0.5 rounded text-text-secondary">
@@ -109,6 +119,7 @@ const TaskItem: React.FC<{
 const TasksPage: React.FC<TasksPageProps> = ({ tasks, users, currentUser, onAddTask, onToggleTask, onDeleteTask, onLogout, onNavigate }) => {
     const [title, setTitle] = useState('');
     const [dueDate, setDueDate] = useState('');
+    const [reminderOffset, setReminderOffset] = useState<string>('');
     const [assignedToId, setAssignedToId] = useState(currentUser.id);
     const [showCompleted, setShowCompleted] = useState(false);
     const userMap = useMemo(() => new Map(users.map(u => [u.id, u])), [users]);
@@ -117,16 +128,27 @@ const TasksPage: React.FC<TasksPageProps> = ({ tasks, users, currentUser, onAddT
         e.preventDefault();
         if (!title.trim() || !dueDate) return;
 
+        let reminderDate: string | undefined;
+        if (reminderOffset && reminderOffset !== 'none') {
+            const due = new Date(dueDate);
+            const minutes = parseInt(reminderOffset, 10);
+            const reminder = new Date(due.getTime() - (minutes * 60000));
+            reminderDate = reminder.toISOString();
+        }
+
         onAddTask({
             title,
             dueDate: new Date(dueDate).toISOString(),
             assignedToId,
             isCompleted: false,
             createdBy: currentUser.name,
+            reminderDate: reminderDate,
+            hasReminded: false
         });
 
         setTitle('');
         setDueDate('');
+        setReminderOffset('');
     };
 
     const sortedTasks = useMemo(() => {
@@ -144,7 +166,7 @@ const TasksPage: React.FC<TasksPageProps> = ({ tasks, users, currentUser, onAddT
             <header className="flex justify-between items-center">
                 <div>
                     <h1 className="text-2xl sm:text-3xl font-bold text-base-content">My Tasks</h1>
-                    <p className="text-sm text-muted-content mt-1">Manage your to-do list and assignments</p>
+                    <p className="text-sm text-muted-content mt-1">Manage your to-do list, assignments, and reminders.</p>
                 </div>
             </header>
 
@@ -166,14 +188,30 @@ const TasksPage: React.FC<TasksPageProps> = ({ tasks, users, currentUser, onAddT
                                 />
                             </div>
                             <div>
-                                <label htmlFor="taskDueDate" className="label-style">Due Date</label>
+                                <label htmlFor="taskDueDate" className="label-style">Due Date & Time</label>
                                 <input 
                                     id="taskDueDate" 
-                                    type="date" 
+                                    type="datetime-local" 
                                     value={dueDate} 
                                     onChange={e => setDueDate(e.target.value)} 
                                     className="input-style" 
                                 />
+                            </div>
+                             <div>
+                                <label htmlFor="taskReminder" className="label-style">Set Reminder</label>
+                                <select 
+                                    id="taskReminder" 
+                                    value={reminderOffset} 
+                                    onChange={e => setReminderOffset(e.target.value)} 
+                                    className="input-style"
+                                >
+                                    <option value="">No Reminder</option>
+                                    <option value="0">At due time</option>
+                                    <option value="15">15 minutes before</option>
+                                    <option value="30">30 minutes before</option>
+                                    <option value="60">1 hour before</option>
+                                    <option value="1440">1 day before</option>
+                                </select>
                             </div>
                             {currentUser.role === 'Admin' && (
                                 <div>

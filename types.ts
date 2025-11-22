@@ -109,6 +109,8 @@ export interface Task {
     dueDate: string;
     isCompleted: boolean;
     createdBy: string;
+    reminderDate?: string; // ISO Date string for when the notification should fire
+    hasReminded?: boolean; // Flag to check if notification has already been sent
 }
 
 export interface Notification {

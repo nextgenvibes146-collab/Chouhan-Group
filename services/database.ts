@@ -113,7 +113,7 @@ const seedData = (): DatabaseSchema => {
     });
 
     const tasks: Task[] = [
-        { id: 'task-1', title: 'Follow up with Mithlesh Tiwari', assignedToId: 'user-1', dueDate: new Date().toISOString(), isCompleted: false, createdBy: 'Admin' },
+        { id: 'task-1', title: 'Follow up with Mithlesh Tiwari', assignedToId: 'user-1', dueDate: new Date().toISOString(), isCompleted: false, createdBy: 'Admin', hasReminded: true },
         { id: 'task-2', title: 'Prepare report for October leads', assignedToId: 'admin-0', dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), isCompleted: false, createdBy: 'Admin' },
     ];
 
@@ -236,6 +236,15 @@ class DatabaseService {
     async deleteTask(taskId: string) {
         this.data.tasks = this.data.tasks.filter(t => t.id !== taskId);
         this.save();
+    }
+
+    async markTaskReminded(taskId: string) {
+        const task = this.data.tasks.find(t => t.id === taskId);
+        if (task) {
+            task.hasReminded = true;
+            this.save();
+        }
+        return this.data.tasks;
     }
 
     async addUser(user: User) {
