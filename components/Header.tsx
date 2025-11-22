@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { SearchIcon } from './Icons';
+import { SearchIcon, UserCircleIcon, CogIcon, ArrowLeftOnRectangleIcon } from './Icons';
 import SearchResults from './SearchResults';
 import type { Lead, User } from '../types';
 
@@ -13,9 +13,11 @@ interface HeaderProps {
   onLogout: () => void;
   onRefresh: () => void;
   onToggleSidebar: () => void;
+  onResultClick: (lead: Lead) => void;
+  onNavigate: (view: string) => void;
 }
 
-const UserMenu: React.FC<{ user: User, onLogout: () => void }> = ({ user, onLogout }) => {
+const UserMenu: React.FC<{ user: User, onLogout: () => void, onNavigate: (view: string) => void }> = ({ user, onLogout, onNavigate }) => {
     const [isOpen, setIsOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
 
@@ -28,6 +30,11 @@ const UserMenu: React.FC<{ user: User, onLogout: () => void }> = ({ user, onLogo
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
+
+    const handleSettingsClick = () => {
+        onNavigate('Settings');
+        setIsOpen(false);
+    };
 
     return (
         <div className="relative" ref={menuRef}>
@@ -46,11 +53,30 @@ const UserMenu: React.FC<{ user: User, onLogout: () => void }> = ({ user, onLogo
                 </svg>
             </button>
             {isOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 z-20 animate-in fade-in zoom-in duration-200">
+                <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-200 z-50 animate-in fade-in zoom-in duration-200 origin-top-right">
                     <div className="p-2">
-                        <a href="#" onClick={(e) => { e.preventDefault(); onLogout(); }} className="block w-full text-left px-4 py-2 text-sm text-base-content rounded-lg hover:bg-gray-50 transition-colors">
-                            Logout
+                         <div className="flex items-center p-3 mb-2 bg-base-200 rounded-xl">
+                            <img src={user.avatarUrl} alt="avatar" className="w-10 h-10 rounded-full border border-white shadow-sm" />
+                            <div className="ml-3 overflow-hidden">
+                                <p className="text-sm font-bold text-slate-800 truncate">{user.name}</p>
+                                <p className="text-xs text-slate-500 truncate">{user.role}</p>
+                            </div>
+                        </div>
+                         <a href="#" onClick={(e) => { e.preventDefault(); setIsOpen(false); }} className="flex items-center w-full text-left px-3 py-2.5 text-sm font-medium text-slate-700 rounded-lg hover:bg-slate-50 transition-colors">
+                            <UserCircleIcon className="w-5 h-5 mr-3 text-slate-400" />
+                            <span>My Profile</span>
                         </a>
+                        {user.role === 'Admin' && (
+                            <button onClick={handleSettingsClick} className="flex items-center w-full text-left px-3 py-2.5 text-sm font-medium text-slate-700 rounded-lg hover:bg-slate-50 transition-colors">
+                                <CogIcon className="w-5 h-5 mr-3 text-slate-400" />
+                                <span>Team Settings</span>
+                            </button>
+                        )}
+                        <div className="my-2 h-px bg-slate-100" />
+                        <button onClick={(e) => { e.preventDefault(); onLogout(); }} className="flex items-center w-full text-left px-3 py-2.5 text-sm font-medium text-rose-600 rounded-lg hover:bg-rose-50 transition-colors">
+                             <ArrowLeftOnRectangleIcon className="w-5 h-5 mr-3" />
+                            <span>Logout</span>
+                        </button>
                     </div>
                 </div>
             )}
@@ -58,7 +84,7 @@ const UserMenu: React.FC<{ user: User, onLogout: () => void }> = ({ user, onLogo
     );
 };
 
-const Header: React.FC<HeaderProps> = ({ searchTerm, onSearchChange, searchResults, users, currentUser, onLogout, onRefresh, onToggleSidebar }) => {
+const Header: React.FC<HeaderProps> = ({ searchTerm, onSearchChange, searchResults, users, currentUser, onLogout, onRefresh, onToggleSidebar, onResultClick, onNavigate }) => {
   const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm);
 
   // Debounce the search input
@@ -98,7 +124,7 @@ const Header: React.FC<HeaderProps> = ({ searchTerm, onSearchChange, searchResul
             onChange={(e) => setLocalSearchTerm(e.target.value)}
             className="w-full py-2.5 pl-11 pr-4 text-black bg-white border border-gray-400 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all duration-200 placeholder-gray-500 shadow-sm"
           />
-          {searchTerm && <SearchResults results={searchResults} users={users} />}
+          {searchTerm && <SearchResults results={searchResults} users={users} onResultClick={onResultClick} />}
         </div>
       </div>
       <div className="flex items-center space-x-2 md:space-x-4 ml-4">
@@ -108,7 +134,7 @@ const Header: React.FC<HeaderProps> = ({ searchTerm, onSearchChange, searchResul
         >
           Refresh
         </button>
-        <UserMenu user={currentUser} onLogout={onLogout} />
+        <UserMenu user={currentUser} onLogout={onLogout} onNavigate={onNavigate} />
       </div>
     </header>
   );

@@ -50,6 +50,7 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isSidebarOpen, setSidebarOpen] = useState(false);
+  const [targetLeadId, setTargetLeadId] = useState<string | null>(null);
   
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
@@ -269,6 +270,12 @@ const App: React.FC = () => {
         setActiveView('Dashboard');
     }, []);
     
+    const handleSearchResultClick = useCallback((lead: Lead) => {
+        setTargetLeadId(lead.id);
+        setActiveView('Leads');
+        setSearchTerm('');
+    }, []);
+
     const visibleLeads = useMemo(() => {
         if (!currentUser) return [];
         if (currentUser.role === 'Admin') return leads;
@@ -314,6 +321,8 @@ const App: React.FC = () => {
                     onAssignLead={handleAssignLead}
                     onBulkUpdate={handleBulkUpdate}
                     onImportLeads={handleImportLeads}
+                    targetLeadId={targetLeadId}
+                    onClearTargetLead={() => setTargetLeadId(null)}
                     {...commonProps} 
                 />;
                 break;
@@ -390,6 +399,8 @@ const App: React.FC = () => {
                     onLogout={handleLogout}
                     onRefresh={loadData}
                     onToggleSidebar={() => setSidebarOpen(!isSidebarOpen)}
+                    onResultClick={handleSearchResultClick}
+                    onNavigate={setActiveView}
                 />
                 <main className="flex-1 overflow-y-auto">
                     <div className="container mx-auto p-4 md:p-6 pb-24 md:pb-6">

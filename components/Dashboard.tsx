@@ -1,8 +1,8 @@
 
-import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import React, { useState, useMemo } from 'react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Lead, User, Activity, LeadStatus } from '../types';
-import { InformationCircleIcon, AdjustmentsHorizontalIcon, CogIcon, UserCircleIcon, ArrowLeftOnRectangleIcon } from './Icons';
+import { InformationCircleIcon } from './Icons';
 
 interface DashboardProps {
     leads: Lead[];
@@ -12,71 +12,6 @@ interface DashboardProps {
     onLogout: () => void;
     onNavigate: (view: string) => void;
 }
-
-const UserControlPanel: React.FC<{ 
-    user: User; 
-    onLogout: () => void;
-    onNavigate: (view: string) => void;
-}> = ({ user, onLogout, onNavigate }) => {
-    const [isOpen, setIsOpen] = useState(false);
-    const menuRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-                setIsOpen(false);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
-
-    const handleSettingsClick = () => {
-        onNavigate('Settings');
-        setIsOpen(false);
-    };
-
-    return (
-        <div className="relative" ref={menuRef}>
-            <div className="flex items-center gap-3">
-                <div className="text-right hidden sm:block">
-                    <p className="text-sm font-bold text-slate-800 leading-none">{user.name}</p>
-                    <p className="text-xs text-slate-500 mt-0.5 font-medium">{user.role}</p>
-                </div>
-                <button onClick={() => setIsOpen(!isOpen)} className="p-2 text-slate-600 rounded-xl hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 transition-all">
-                    <AdjustmentsHorizontalIcon className="w-6 h-6" />
-                </button>
-            </div>
-
-            <div className={`absolute right-0 mt-3 w-64 bg-white rounded-2xl shadow-xl border border-slate-100 z-50 origin-top-right transition-all duration-200 ease-out transform ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none'}`}>
-                <div className="p-2">
-                    <div className="flex items-center p-3 mb-2 bg-base-200 rounded-xl">
-                        <img src={user.avatarUrl} alt="avatar" className="w-10 h-10 rounded-full border border-white shadow-sm" />
-                        <div className="ml-3 overflow-hidden">
-                            <p className="text-sm font-bold text-slate-800 truncate">{user.name}</p>
-                            <p className="text-xs text-slate-500 truncate">{user.email || 'user@example.com'}</p>
-                        </div>
-                    </div>
-                    <a href="#" onClick={(e) => e.preventDefault()} className="flex items-center w-full text-left px-3 py-2.5 text-sm font-medium text-slate-700 rounded-lg hover:bg-slate-50 transition-colors">
-                        <UserCircleIcon className="w-5 h-5 mr-3 text-slate-400" />
-                        <span>My Profile</span>
-                    </a>
-                    {user.role === 'Admin' && (
-                        <button onClick={handleSettingsClick} className="flex items-center w-full text-left px-3 py-2.5 text-sm font-medium text-slate-700 rounded-lg hover:bg-slate-50 transition-colors">
-                            <CogIcon className="w-5 h-5 mr-3 text-slate-400" />
-                            <span>Team Settings</span>
-                        </button>
-                    )}
-                    <div className="my-2 h-px bg-slate-100" />
-                    <button onClick={onLogout} className="flex items-center w-full text-left px-3 py-2.5 text-sm font-medium text-rose-600 rounded-lg hover:bg-rose-50 transition-colors">
-                        <ArrowLeftOnRectangleIcon className="w-5 h-5 mr-3" />
-                        <span>Logout</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-};
 
 const KpiCard: React.FC<{ title: string, value: string | number, className?: string }> = ({ title, value, className = '' }) => (
     <div className={`bg-white p-6 rounded-2xl shadow-card border border-slate-100 hover:shadow-card-hover transition-shadow ${className}`}>
@@ -297,7 +232,6 @@ const Dashboard: React.FC<DashboardProps> = ({ leads, users, activities, current
                     <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Overview</h1>
                     <p className="text-slate-500 mt-1 font-medium">Welcome back, here's what's happening today.</p>
                 </div>
-                <UserControlPanel user={currentUser} onLogout={onLogout} onNavigate={onNavigate} />
             </header>
 
             {/* Main Tabs */}
