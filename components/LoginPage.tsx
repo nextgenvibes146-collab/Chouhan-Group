@@ -38,14 +38,17 @@ const LoginPage: React.FC<LoginPageProps> = ({ users, onLogin }) => {
 
   return (
     <div className="flex items-center justify-center h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      <div className="w-full max-w-sm p-8 space-y-8 bg-white rounded-2xl shadow-card border border-gray-100">
+      <div className="w-full max-w-sm p-8 space-y-8 bg-white rounded-2xl shadow-2xl border border-white/50 backdrop-blur-xl">
         <div className="text-center">
-            <h1 className="text-2xl font-bold text-slate-900">Chouhan Housing Private Limited</h1>
-            <p className="mt-2 text-sm text-slate-500">CRM Portal Login</p>
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-gradient-to-br from-primary to-blue-600 text-white font-bold text-2xl shadow-lg mb-4">
+                CH
+            </div>
+            <h1 className="text-2xl font-bold text-slate-900">Welcome Back</h1>
+            <p className="mt-2 text-sm text-slate-500">Chouhan Housing CRM Portal</p>
         </div>
         <div className="space-y-6">
             <div>
-                <label htmlFor="user-select" className="label-style">
+                <label htmlFor="user-select" className="block text-xs font-bold text-slate-700 mb-1.5 tracking-wide uppercase">
                     Select User
                 </label>
                 <div className="relative">
@@ -56,7 +59,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ users, onLogin }) => {
                           setSelectedUserId(e.target.value);
                           setError('');
                       }}
-                      className="input-style appearance-none"
+                      className="input-style appearance-none bg-white text-slate-900 border-slate-300 focus:border-primary"
+                      style={{ backgroundImage: 'none' }} 
                   >
                       <option value="" disabled>-- Select your profile --</option>
                       {users.map((user) => (
@@ -65,13 +69,13 @@ const LoginPage: React.FC<LoginPageProps> = ({ users, onLogin }) => {
                           </option>
                       ))}
                   </select>
-                   <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-700">
+                   <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-600">
                     <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
                   </div>
                 </div>
             </div>
              <div>
-                <label htmlFor="password-input" className="label-style">
+                <label htmlFor="password-input" className="block text-xs font-bold text-slate-700 mb-1.5 tracking-wide uppercase">
                     Password
                 </label>
                 <input
@@ -83,19 +87,19 @@ const LoginPage: React.FC<LoginPageProps> = ({ users, onLogin }) => {
                         setError('');
                     }}
                     onKeyPress={handleKeyPress}
-                    className="input-style"
+                    className="input-style bg-white text-slate-900 border-slate-300 focus:border-primary"
                     placeholder="Enter password"
                 />
-                <p className="text-xs text-gray-500 mt-2 font-medium">Hint: Use 'password123'</p>
+                <p className="text-xs text-slate-400 mt-2 font-medium">Hint: Use 'password123'</p>
             </div>
-            {error && <div className="p-3 bg-red-50 text-red-600 text-xs rounded-lg font-semibold text-center border border-red-100">{error}</div>}
+            {error && <div className="p-3 bg-red-50 text-red-600 text-xs rounded-lg font-semibold text-center border border-red-100 animate-pulse">{error}</div>}
         </div>
         <div>
             <button
                 onClick={handleLogin}
-                className="button-primary"
+                className="button-primary w-full py-3.5 text-base shadow-xl shadow-primary/20 hover:shadow-primary/40"
             >
-                Login
+                Login to Dashboard
             </button>
         </div>
       </div>
