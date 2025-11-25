@@ -149,9 +149,23 @@ const ListManager: React.FC<{ title: string; subtitle: string; items: string[]; 
 };
 
 const MasterDataSettings: React.FC = () => {
-    // Simulated local state for demo purposes. In a real app, this would bubble up to App.tsx or context.
-    const [projects, setProjects] = useState(['Sunrise City', 'Green Valley', 'Chouhan Town', 'Singapour City']);
-    const [sources, setSources] = useState(['Website', 'Walk-in', 'Reference', 'Digital Ad', 'Hoarding', 'Newspaper']);
+    // Initialized with the updated project list
+    const [projects, setProjects] = useState([
+        'Chouhan Park View', 
+        'Chouhan Business Park P1', 
+        'Chouhan Business Park P2',
+        'Chouhan Business Center',
+        'Chouhan Town',
+        'Chouhan Green Valley P1',
+        'Chouhan Green Valley P2',
+        'Chouhan Green Valley P3',
+        'Sunrise City',
+        'Singapore City P1',
+        'Singapore City P2',
+        'Singapore City P3',
+        'Singapore City P4'
+    ]);
+    const [sources, setSources] = useState(['Website', 'Walk-in', 'Reference', 'Digital Ad', 'Hoarding', 'Newspaper', 'Telephone']);
 
     return (
         <div className="space-y-6">

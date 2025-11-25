@@ -134,6 +134,8 @@ const AssignLeadForm: React.FC<AssignLeadFormProps> = ({ users, currentUser, onA
                         <option value="Plot">Plot</option>
                         <option value="Flat">Flat</option>
                         <option value="Villa">Villa</option>
+                        <option value="Bungalow">Bungalow</option>
+                        <option value="Row House">Row House</option>
                         <option value="Commercial">Commercial</option>
                     </select>
                 </div>
