@@ -1,7 +1,9 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { type Lead, type User, LeadStatus, ActivityType, type Activity, type Task } from '../types';
-import { PhoneIcon, MailIcon, MapPinIcon, ChatBubbleIcon, ChatBubbleLeftRightIcon, CurrencyRupeeIcon, DocumentTextIcon } from './Icons';
+import { PhoneIcon, MailIcon, MapPinIcon, ChatBubbleIcon, ChatBubbleLeftRightIcon, CurrencyRupeeIcon, DocumentTextIcon, XMarkIcon } from './Icons';
 import ActivityFeed from './ActivityFeed';
+import { communicationService } from '../services/communicationService';
 
 interface LeadDetailModalProps {
   lead: Lead;
@@ -13,6 +15,8 @@ interface LeadDetailModalProps {
   activities: Activity[];
   onAddTask: (task: Omit<Task, 'id'>) => void;
 }
+
+// --- Sub-Components ---
 
 const TabButton: React.FC<{ label: string, isActive: boolean, onClick: () => void }> = ({ label, isActive, onClick }) => (
     <button
@@ -88,6 +92,96 @@ const CostEstimator: React.FC = () => {
     );
 }
 
+// --- Modals for Communication ---
+
+const EmailModal: React.FC<{ lead: Lead; onClose: () => void; onSend: (subject: string, body: string) => Promise<void> }> = ({ lead, onClose, onSend }) => {
+    const [subject, setSubject] = useState(`Information regarding ${lead.interestedProject || 'your enquiry'}`);
+    const [body, setBody] = useState(`Dear ${lead.customerName},\n\nThank you for your interest in our project. As discussed, please find the attached brochure and price list.\n\nBest regards,\nChouhan Housing`);
+    const [sending, setSending] = useState(false);
+
+    const handleSend = async () => {
+        setSending(true);
+        await onSend(subject, body);
+        setSending(false);
+        onClose();
+    };
+
+    return (
+        <div className="absolute inset-0 bg-white z-50 flex flex-col animate-in slide-in-from-right duration-300">
+            <div className="flex justify-between items-center p-4 border-b">
+                <h3 className="text-lg font-bold">Compose Email</h3>
+                <button onClick={onClose}><XMarkIcon className="w-6 h-6 text-gray-400" /></button>
+            </div>
+            <div className="p-6 flex-1 space-y-4">
+                <div>
+                    <label className="label-style">To</label>
+                    <input type="text" value={lead.email || 'No email provided'} disabled className="input-style bg-gray-100" />
+                </div>
+                <div>
+                    <label className="label-style">Subject</label>
+                    <input type="text" value={subject} onChange={e => setSubject(e.target.value)} className="input-style" />
+                </div>
+                <div className="flex-1">
+                    <label className="label-style">Message</label>
+                    <textarea value={body} onChange={e => setBody(e.target.value)} rows={10} className="input-style h-64" />
+                </div>
+            </div>
+            <div className="p-4 border-t bg-gray-50 flex justify-end gap-3">
+                <button onClick={onClose} className="button-secondary !w-auto">Cancel</button>
+                <button onClick={handleSend} disabled={sending || !lead.email} className="button-primary !w-auto min-w-[100px]">
+                    {sending ? 'Sending...' : 'Send Email'}
+                </button>
+            </div>
+        </div>
+    );
+};
+
+const SMSModal: React.FC<{ lead: Lead; onClose: () => void; onSend: (message: string) => Promise<void> }> = ({ lead, onClose, onSend }) => {
+    const [message, setMessage] = useState(`Hello ${lead.customerName}, this is regarding your enquiry for ${lead.interestedProject || 'property'}. When is a good time to talk?`);
+    const [sending, setSending] = useState(false);
+
+    const handleSend = async () => {
+        setSending(true);
+        await onSend(message);
+        setSending(false);
+        onClose();
+    };
+
+    return (
+        <div className="absolute inset-0 bg-white z-50 flex flex-col animate-in slide-in-from-right duration-300">
+             <div className="flex justify-between items-center p-4 border-b">
+                <h3 className="text-lg font-bold">Send SMS</h3>
+                <button onClick={onClose}><XMarkIcon className="w-6 h-6 text-gray-400" /></button>
+            </div>
+            <div className="p-6 flex-1 space-y-4">
+                <div>
+                    <label className="label-style">To</label>
+                    <input type="text" value={lead.mobile} disabled className="input-style bg-gray-100" />
+                </div>
+                <div>
+                    <label className="label-style">Message</label>
+                    <textarea 
+                        value={message} 
+                        onChange={e => setMessage(e.target.value)} 
+                        rows={6} 
+                        className="input-style" 
+                        maxLength={160}
+                    />
+                    <p className="text-xs text-right text-gray-500 mt-1">{message.length}/160 characters</p>
+                </div>
+            </div>
+             <div className="p-4 border-t bg-gray-50 flex justify-end gap-3">
+                <button onClick={onClose} className="button-secondary !w-auto">Cancel</button>
+                <button onClick={handleSend} disabled={sending || !lead.mobile} className="button-primary !w-auto min-w-[100px]">
+                    {sending ? 'Sending...' : 'Send SMS'}
+                </button>
+            </div>
+        </div>
+    );
+};
+
+// --- Main Modal Component ---
+
 const LeadDetailModal: React.FC<LeadDetailModalProps> = ({ lead, users, onClose, onUpdateLead, onAddActivity, currentUser, activities, onAddTask }) => {
   const [activeTab, setActiveTab] = useState('Details');
 
@@ -95,9 +189,15 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({ lead, users, onClose,
   const [temperature, setTemperature] = useState<Lead['temperature']>(lead.temperature);
   const [nextFollowUp, setNextFollowUp] = useState(lead.nextFollowUpDate ? new Date(lead.nextFollowUpDate).toISOString().split('T')[0] : '');
   const [createReminder, setCreateReminder] = useState(true);
+  
+  // Activity Logging State
   const [activityType, setActivityType] = useState<ActivityType>(ActivityType.Call);
   const [remarks, setRemarks] = useState('');
   const [duration, setDuration] = useState<string>('');
+
+  // Communication Modal State
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [showSMSModal, setShowSMSModal] = useState(false);
   
   const salesperson = users.find(u => u.id === lead.assignedSalespersonId);
   
@@ -128,7 +228,6 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({ lead, users, onClose,
     // Create a task if reminder requested and date is present
     if (createReminder && nextFollowUp) {
         const isoDate = new Date(nextFollowUp).toISOString();
-        // Append a default time if simple date (e.g. 10 AM) - simplified here by using isoDate
         const taskDate = new Date(nextFollowUp);
         taskDate.setHours(10, 0, 0, 0); // Default 10 AM
 
@@ -156,6 +255,43 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({ lead, users, onClose,
     }
   };
 
+  // --- Communication Handlers ---
+
+  const handleSendEmail = async (subject: string, body: string) => {
+      try {
+          await communicationService.sendEmail(lead.email || '', subject, body);
+          onAddActivity(lead, ActivityType.Email, `[Email Sent] Subject: ${subject}`, undefined);
+          alert("Email sent successfully!");
+      } catch (error) {
+          alert("Failed to send email. Please check internet connection.");
+      }
+  };
+
+  const handleSendSMS = async (message: string) => {
+      try {
+          await communicationService.sendSMS(lead.mobile, message);
+          onAddActivity(lead, ActivityType.WhatsApp, `[SMS Sent] ${message}`, undefined); // Mapping SMS to WA/Msg for now
+          alert("SMS queued for delivery.");
+      } catch (error) {
+          alert("Failed to send SMS.");
+      }
+  };
+
+  const handleInitiateCall = async () => {
+      // 1. Log the attempt immediately
+      onAddActivity(lead, ActivityType.Call, "Outgoing call initiated", undefined);
+      
+      // 2. Simulate API bridge
+      try {
+        await communicationService.initiateCall(lead.mobile, currentUser.name); // Using name as ID for demo
+        
+        // 3. Open system dialer as fallback/confirmation
+        window.location.href = `tel:${lead.mobile}`;
+      } catch (e) {
+          console.error(e);
+      }
+  };
+
   const getTemperatureBadge = (temp?: 'Hot' | 'Warm' | 'Cold') => {
     if (!temp) return <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-gray-100 text-gray-600">Unqualified</span>;
     const colors = {
@@ -168,8 +304,12 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({ lead, users, onClose,
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex justify-center items-center p-4" onClick={onClose}>
-      <div className="bg-base-100 rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+      <div className="bg-base-100 rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden relative" onClick={e => e.stopPropagation()}>
         
+        {/* Communication Modals Layer */}
+        {showEmailModal && <EmailModal lead={lead} onClose={() => setShowEmailModal(false)} onSend={handleSendEmail} />}
+        {showSMSModal && <SMSModal lead={lead} onClose={() => setShowSMSModal(false)} onSend={handleSendSMS} />}
+
         {/* Header */}
         <div className="px-6 py-4 border-b border-border-color bg-white flex justify-between items-start shrink-0">
           <div>
@@ -263,16 +403,31 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({ lead, users, onClose,
                         <div className="card p-4">
                             <h3 className="text-sm font-bold text-gray-500 uppercase mb-3">Communication</h3>
                             <div className="space-y-2">
-                                <a href={`tel:${lead.mobile}`} className="flex items-center w-full p-3 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 font-medium">
-                                    <PhoneIcon className="w-5 h-5 mr-3" /> Call Now
-                                </a>
-                                <a href={`https://wa.me/${lead.mobile.replace(/\D/g, '')}`} target="_blank" className="flex items-center w-full p-3 rounded-lg bg-teal-50 text-teal-700 hover:bg-teal-100 font-medium">
-                                    <ChatBubbleLeftRightIcon className="w-5 h-5 mr-3" /> WhatsApp
-                                </a>
-                                {lead.email && (
-                                    <a href={`mailto:${lead.email}`} className="flex items-center w-full p-3 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 font-medium">
+                                <button 
+                                    onClick={handleInitiateCall} 
+                                    className="flex items-center justify-center w-full p-3 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 font-medium transition-colors border border-green-200"
+                                >
+                                    <PhoneIcon className="w-5 h-5 mr-3" /> Call Customer
+                                </button>
+                                
+                                <button 
+                                    onClick={() => setShowSMSModal(true)} 
+                                    className="flex items-center justify-center w-full p-3 rounded-lg bg-teal-50 text-teal-700 hover:bg-teal-100 font-medium transition-colors border border-teal-200"
+                                >
+                                    <ChatBubbleLeftRightIcon className="w-5 h-5 mr-3" /> Send SMS / WhatsApp
+                                </button>
+                                
+                                {lead.email ? (
+                                    <button 
+                                        onClick={() => setShowEmailModal(true)} 
+                                        className="flex items-center justify-center w-full p-3 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 font-medium transition-colors border border-blue-200"
+                                    >
                                         <MailIcon className="w-5 h-5 mr-3" /> Send Email
-                                    </a>
+                                    </button>
+                                ) : (
+                                    <button disabled className="flex items-center justify-center w-full p-3 rounded-lg bg-gray-100 text-gray-400 cursor-not-allowed">
+                                         <MailIcon className="w-5 h-5 mr-3" /> No Email Available
+                                    </button>
                                 )}
                             </div>
                         </div>
