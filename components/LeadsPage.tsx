@@ -349,11 +349,11 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
             <div className="flex items-center gap-2 self-end md:self-auto">
                 {/* Enabled for all users */}
                 <button 
-                    onClick={() => setShowAddLead(!showAddLead)} 
-                    className={`flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors ${showAddLead ? 'bg-gray-200 text-base-content' : 'bg-primary text-white hover:bg-primary-focus'}`}
+                    onClick={() => setShowAddLead(true)} 
+                    className="flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors bg-primary text-white hover:bg-primary-focus shadow-sm"
                 >
-                    {showAddLead ? <MinusIcon className="w-4 h-4 mr-2" /> : <PlusIcon className="w-4 h-4 mr-2" />}
-                    {showAddLead ? 'Cancel' : 'Add Lead'}
+                    <PlusIcon className="w-4 h-4 mr-2" />
+                    Add Lead
                 </button>
                 
                 {isAdmin && <ImportCSV onImport={onImportLeads} users={users} />}
@@ -361,21 +361,6 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
             </div>
         </div>
         
-        {/* Collapsible Add Lead Form */}
-        <div className={`overflow-hidden transition-all duration-500 ease-in-out ${showAddLead ? 'max-h-[3000px] opacity-100 mb-6' : 'max-h-0 opacity-0'}`}>
-            <div className="pt-1">
-                <AssignLeadForm 
-                    users={users}
-                    currentUser={currentUser}
-                    onAssignLead={(data) => {
-                        onAssignLead(data);
-                        setShowAddLead(false);
-                    }}
-                    onCancel={() => setShowAddLead(false)}
-                />
-            </div>
-        </div>
-
         {/* Main Content Card */}
         <div className="bg-white rounded-xl shadow-card border border-border-color overflow-hidden">
             {/* Status Tabs */}
@@ -507,6 +492,27 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
             </div>
         </div>
       
+        {/* Add Lead Modal */}
+        {showAddLead && (
+            <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+                <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                    <div className="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity" aria-hidden="true" onClick={() => setShowAddLead(false)}></div>
+                    <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                    <div className="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+                        <AssignLeadForm 
+                            users={users}
+                            currentUser={currentUser}
+                            onAssignLead={(data) => {
+                                onAssignLead(data);
+                                setShowAddLead(false);
+                            }}
+                            onCancel={() => setShowAddLead(false)}
+                        />
+                    </div>
+                </div>
+            </div>
+        )}
+
         {selectedLead && (
             <LeadDetailModal 
                 lead={selectedLead} 

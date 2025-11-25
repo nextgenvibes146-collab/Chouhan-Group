@@ -39,10 +39,12 @@ const LoginPage: React.FC<LoginPageProps> = ({ users, onLogin }) => {
   return (
     <div className="flex items-center justify-center h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <div className="w-full max-w-sm p-8 space-y-8 bg-white rounded-2xl shadow-2xl border border-white/50 backdrop-blur-xl">
-        <div className="text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 text-white font-bold text-2xl shadow-lg mb-4">
-                CH
-            </div>
+        <div className="text-center flex flex-col items-center">
+            <img 
+                src="https://chouhanhousing.com/wp-content/uploads/2020/06/logo.png" 
+                alt="Chouhan Group" 
+                className="h-24 w-auto mb-6 object-contain"
+            />
             <h1 className="text-2xl font-bold text-slate-900">Welcome Back</h1>
             <p className="mt-2 text-sm text-slate-500">Chouhan Housing CRM Portal</p>
         </div>
