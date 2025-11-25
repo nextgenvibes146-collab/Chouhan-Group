@@ -232,38 +232,32 @@ const getChouhanParkViewUnits = (): Unit[] => {
     }
 
     // 1. Flats
-    // 06,07,08,15,16,24,32,40,48
     ['06', '07', '08', '15', '16', '24', '32', '40', '48'].forEach(num => 
         addUnit('Flat', `Flat ${num}`, '2 BHK', '25.0 Lac', `${Math.ceil(Math.random() * 4)}th Floor`)
     );
 
     // 2. Pent House
-    // 49, 50
     ['49', '50'].forEach(num => 
         addUnit('Pent House', `PH ${num}`, '3 BHK Pent House', '45.0 Lac', 'Top Floor')
     );
 
     // 3. Bungalow A-Type
-    // A-2, A-6
     ['A-2', 'A-6'].forEach(num => 
         addUnit('Bungalow', num, 'Bungalow A-Type', '75.0 Lac', 'G+1')
     );
 
     // 4. Bungalow B-Type
-    // B-8 to B-21, B-29 to B-35
     const bTypeNums = [...range(8, 21), ...range(29, 35)].map(n => `B-${n}`);
     bTypeNums.forEach(num => 
         addUnit('Bungalow', num, 'Bungalow B-Type', '65.0 Lac', 'G+1')
     );
 
     // 5. Plot A-Type
-    // A-7 to A-9
     range(7, 9).map(n => `A-${n}`).forEach(num => 
         addUnit('Plot', num, 'Plot A-Type', '22.0 Lac')
     );
 
     // 6. Plot B-Type
-    // B-22 to B-28
     range(22, 28).map(n => `B-${n}`).forEach(num => 
         addUnit('Plot', num, 'Plot B-Type', '18.0 Lac')
     );
@@ -302,6 +296,92 @@ const getSunriseCityUnits = (): Unit[] => {
     range(37, 52).forEach(num => addUnit('C', num, '1000 sqft', '15.0 Lac'));
     range(54, 57).forEach(num => addUnit('C', num, '1000 sqft', '15.0 Lac'));
     range(59, 114).forEach(num => addUnit('C', num, '1000 sqft', '15.0 Lac'));
+
+    return units;
+};
+
+// Helper for Green Valley Phase 3
+const getGreenValleyPhase3Units = (): Unit[] => {
+    const units: Unit[] = [];
+    const range = (start: number, end: number) => Array.from({length: end - start + 1}, (_, i) => String(start + i));
+
+    const addUnit = (type: string, block: string, number: string, size: string, price: string) => {
+         units.push({
+            id: `GVP3-${block}-${number}`,
+            unitNumber: `${block}-${number}`,
+            type: 'Plot',
+            status: 'Available',
+            size,
+            price,
+            facing: Math.random() > 0.5 ? 'East' : 'West',
+        });
+    }
+
+    // A-Type
+    // A-1 to 4, 6 to 17, A-19 to 21, 54, 55, A-58 to 64, 68
+    const aNums = [
+        ...range(1, 4), ...range(6, 17), ...range(19, 21), 
+        '54', '55', ...range(58, 64), '68'
+    ];
+    aNums.forEach(num => addUnit('A-Type', 'A', num, '1500 sqft', '25.0 Lac'));
+
+    // B-Type
+    // B-1 to 48, 51 to 60, 75 to 93, 135, 137 to 145, 147 to 148, 150, 151, 154 to 159, 171, 176
+    const bNums = [
+        ...range(1, 48), ...range(51, 60), ...range(75, 93),
+        '135', ...range(137, 145), ...range(147, 148),
+        '150', '151', ...range(154, 159), '171', '176'
+    ];
+    bNums.forEach(num => addUnit('B-Type', 'B', num, '1200 sqft', '20.0 Lac'));
+
+    // C-Type
+    // C-1 to 8, 10 to 49, 52
+    const cNums = [
+        ...range(1, 8), ...range(10, 49), '52'
+    ];
+    cNums.forEach(num => addUnit('C-Type', 'C', num, '1000 sqft', '16.0 Lac'));
+
+    return units;
+};
+
+// Helper for Singapore City Phase 1
+const getSingaporeCityPhase1Units = (): Unit[] => {
+    const units: Unit[] = [];
+    const range = (start: number, end: number) => Array.from({length: end - start + 1}, (_, i) => String(start + i));
+
+    const addUnit = (block: string, number: string, size: string, price: string) => {
+         units.push({
+            id: `SCP1-${block}-${number}`,
+            unitNumber: `${block}-${number}`,
+            type: 'Plot',
+            status: 'Available',
+            size,
+            price,
+            facing: Math.random() > 0.5 ? 'East' : 'West',
+        });
+    }
+
+    // A-Type (10)
+    ['4', '5', ...range(6, 9), ...range(15, 18)].forEach(num => addUnit('A', num, '1500 sqft', '22.5 Lac'));
+
+    // B-Type (11)
+    ['6', '8', ...range(14, 18), '27', '28', '31', '35'].forEach(num => addUnit('B', num, '1200 sqft', '18.0 Lac'));
+
+    // C-Type (5)
+    ['7', '8', '26', '28', '30'].forEach(num => addUnit('C', num, '1000 sqft', '15.0 Lac'));
+
+    // D-Type (39)
+    const dNums = [
+        ...range(5, 9), ...range(11, 13), ...range(17, 28),
+        '34', '42', ...range(49, 53), ...range(57, 65), '71'
+    ];
+    dNums.forEach(num => addUnit('D', num, '1000 sqft', '15.0 Lac'));
+
+    // F-Type (6)
+    range(1, 6).forEach(num => addUnit('F', num, '1200 sqft', '20.0 Lac'));
+
+    // L-Type (20)
+    [...range(3, 8), ...range(13, 26)].forEach(num => addUnit('L', num, '1200 sqft', '18.0 Lac'));
 
     return units;
 };
@@ -368,9 +448,9 @@ export const mockProjects: Project[] = [
         id: 'p8',
         name: 'Chouhan Green Valley P3',
         location: 'Junwani',
-        totalUnits: 120,
-        availableUnits: 60,
-        units: generateUnits('P3', 120, 'Plot')
+        totalUnits: 250,
+        availableUnits: 187,
+        units: getGreenValleyPhase3Units()
     },
     {
         id: 'p9',
@@ -384,9 +464,9 @@ export const mockProjects: Project[] = [
         id: 'p10',
         name: 'Singapore City P1',
         location: 'Junwani',
-        totalUnits: 90,
-        availableUnits: 10,
-        units: generateUnits('SG1', 90, 'Plot')
+        totalUnits: 150,
+        availableUnits: 91,
+        units: getSingaporeCityPhase1Units()
     },
     {
         id: 'p11',
