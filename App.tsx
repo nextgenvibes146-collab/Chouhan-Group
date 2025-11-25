@@ -369,7 +369,7 @@ const App: React.FC = () => {
 
         switch (activeView) {
             case 'Dashboard':
-                Content = <Dashboard leads={visibleLeads} activities={activities} {...commonProps} />;
+                Content = <Dashboard leads={visibleLeads} activities={activities} projects={inventory} {...commonProps} />;
                 break;
             case 'Leads':
             case 'Opportunities':
@@ -432,7 +432,7 @@ const App: React.FC = () => {
                 />;
                 break;
             default:
-                Content = <Dashboard leads={visibleLeads} activities={activities} {...commonProps} />;
+                Content = <Dashboard leads={visibleLeads} activities={activities} projects={inventory} {...commonProps} />;
         }
 
         return (

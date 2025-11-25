@@ -1,13 +1,15 @@
 
 import React, { useState, useMemo } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, Legend } from 'recharts';
 import { Lead, User, Activity, LeadStatus } from '../types';
-import { InformationCircleIcon } from './Icons';
+import { InformationCircleIcon, BuildingOfficeIcon } from './Icons';
+import { Project } from '../data/inventoryData';
 
 interface DashboardProps {
     leads: Lead[];
     users: User[];
     activities: Activity[];
+    projects: Project[];
     currentUser: User;
     onLogout: () => void;
     onNavigate: (view: string) => void;
@@ -221,7 +223,108 @@ const LeadsDashboardTab: React.FC<{ leads: Lead[] }> = ({ leads }) => {
     );
 };
 
-const Dashboard: React.FC<DashboardProps> = ({ leads, users, activities, currentUser, onLogout, onNavigate }) => {
+const InventoryDashboardTab: React.FC<{ projects: Project[] }> = ({ projects }) => {
+    const stats = useMemo(() => {
+        let total = 0;
+        let available = 0;
+        let booked = 0;
+        let totalValue = 0; // Estimate
+        
+        projects.forEach(p => {
+             total += p.units.length; // Use actual unit count
+             p.units.forEach(u => {
+                 if(u.status === 'Available') {
+                     available++;
+                     // Try parse price for estimate
+                     const priceVal = parseFloat(u.price.split(' ')[0]);
+                     if (!isNaN(priceVal)) totalValue += priceVal;
+                 } else if (u.status === 'Booked') {
+                     booked++;
+                 }
+             });
+        });
+
+        return { total, available, booked, totalValue };
+    }, [projects]);
+
+    const projectData = useMemo(() => {
+        return projects.map(p => ({
+            name: p.name,
+            Available: p.units.filter(u => u.status === 'Available').length,
+            Booked: p.units.filter(u => u.status === 'Booked').length,
+        })).sort((a,b) => b.Available - a.Available);
+    }, [projects]);
+
+    return (
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <KpiCard title="Total Inventory" value={stats.total} className="text-slate-700" />
+                <KpiCard title="Available Units" value={stats.available} className="text-emerald-600" />
+                <KpiCard title="Sold/Booked" value={stats.booked} className="text-blue-600" />
+                <KpiCard title="Est. Available Value" value={`₹${stats.totalValue.toFixed(0)} L`} className="text-purple-600" />
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-white p-6 rounded-2xl shadow-card border border-slate-100">
+                    <div className="mb-6 flex justify-between items-center">
+                        <div>
+                            <h3 className="text-lg font-bold text-slate-800">Project Availability</h3>
+                            <p className="text-sm text-slate-500">Inventory distribution by project</p>
+                        </div>
+                    </div>
+                    <ResponsiveContainer width="100%" height={300}>
+                        <BarChart data={projectData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                            <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f1f5f9"/>
+                            <XAxis type="number" hide />
+                            <YAxis dataKey="name" type="category" width={140} tick={{fontSize: 11}} />
+                            <Tooltip cursor={{fill: 'transparent'}} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }} />
+                            <Legend />
+                            <Bar dataKey="Available" fill="#10b981" radius={[0, 4, 4, 0]} barSize={20} />
+                            <Bar dataKey="Booked" fill="#cbd5e1" radius={[0, 4, 4, 0]} barSize={20} />
+                        </BarChart>
+                    </ResponsiveContainer>
+                </div>
+
+                <div className="bg-white p-6 rounded-2xl shadow-card border border-slate-100 overflow-hidden">
+                     <h3 className="text-lg font-bold text-slate-800 mb-4">Inventory Summary</h3>
+                     <div className="overflow-x-auto">
+                        <table className="min-w-full text-sm text-left text-gray-500">
+                            <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+                                <tr>
+                                    <th className="px-4 py-3">Project Name</th>
+                                    <th className="px-4 py-3 text-center">Total</th>
+                                    <th className="px-4 py-3 text-center">Available</th>
+                                    <th className="px-4 py-3 text-center">% Free</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {projects.map((p, idx) => {
+                                    const total = p.units.length;
+                                    const avail = p.units.filter(u => u.status === 'Available').length;
+                                    const percent = total > 0 ? Math.round((avail / total) * 100) : 0;
+                                    return (
+                                        <tr key={p.id} className="border-b hover:bg-gray-50">
+                                            <td className="px-4 py-3 font-medium text-gray-900 truncate max-w-[150px]" title={p.name}>{p.name}</td>
+                                            <td className="px-4 py-3 text-center">{total}</td>
+                                            <td className="px-4 py-3 text-center font-bold text-emerald-600">{avail}</td>
+                                            <td className="px-4 py-3 text-center">
+                                                <div className="w-full bg-gray-200 rounded-full h-1.5 dark:bg-gray-200">
+                                                    <div className="bg-emerald-500 h-1.5 rounded-full" style={{ width: `${percent}%` }}></div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                     </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const Dashboard: React.FC<DashboardProps> = ({ leads, users, activities, projects, currentUser, onLogout, onNavigate }) => {
     const [activeTab, setActiveTab] = useState('Leads');
 
     return (
@@ -235,12 +338,12 @@ const Dashboard: React.FC<DashboardProps> = ({ leads, users, activities, current
             </header>
 
             {/* Main Tabs */}
-            <div className="bg-white p-1 rounded-xl inline-flex shadow-sm border border-slate-100">
-                {['Leads', 'Calls', 'Checkin', 'Sales'].map(tab => (
+            <div className="bg-white p-1 rounded-xl inline-flex shadow-sm border border-slate-100 overflow-x-auto max-w-full">
+                {['Leads', 'Inventory', 'Calls', 'Checkin', 'Sales'].map(tab => (
                     <button 
                         key={tab} 
                         onClick={() => setActiveTab(tab)} 
-                        className={`px-6 py-2.5 text-sm font-bold rounded-lg transition-all ${
+                        className={`px-6 py-2.5 text-sm font-bold rounded-lg transition-all whitespace-nowrap ${
                             activeTab === tab 
                             ? 'bg-slate-900 text-white shadow-md' 
                             : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
@@ -254,7 +357,8 @@ const Dashboard: React.FC<DashboardProps> = ({ leads, users, activities, current
             {/* Tab Content */}
             <div className="min-h-[500px]">
                 {activeTab === 'Leads' && <LeadsDashboardTab leads={leads} />}
-                {activeTab !== 'Leads' && (
+                {activeTab === 'Inventory' && <InventoryDashboardTab projects={projects} />}
+                {activeTab !== 'Leads' && activeTab !== 'Inventory' && (
                     <div className="flex flex-col items-center justify-center h-96 bg-white rounded-2xl border border-dashed border-slate-200">
                          <InformationCircleIcon className="w-12 h-12 text-slate-300 mb-4" />
                          <p className="text-slate-500 font-medium">Analytics for {activeTab} are coming soon.</p>
