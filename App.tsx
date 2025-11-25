@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
 import BottomNavBar from './components/BottomNavBar';
 import Sidebar from './components/Sidebar';
@@ -367,7 +366,10 @@ const App: React.FC = () => {
                 Content = <Dashboard leads={visibleLeads} activities={activities} {...commonProps} />;
                 break;
             case 'Leads':
+            case 'Opportunities':
+            case 'Clients':
                 Content = <LeadsPage 
+                    viewMode={activeView.toLowerCase() as 'leads' | 'opportunities' | 'clients'}
                     leads={visibleLeads} 
                     activities={activities}
                     onUpdateLead={handleUpdateLead} 
@@ -377,6 +379,7 @@ const App: React.FC = () => {
                     onImportLeads={handleImportLeads}
                     targetLeadId={targetLeadId}
                     onClearTargetLead={() => setTargetLeadId(null)}
+                    onAddTask={handleAddTask}
                     {...commonProps} 
                 />;
                 break;
@@ -401,9 +404,11 @@ const App: React.FC = () => {
             case 'Tasks':
                 Content = <TasksPage 
                     tasks={visibleTasks} 
+                    leads={visibleLeads}
                     onAddTask={handleAddTask}
                     onToggleTask={handleToggleTask}
                     onDeleteTask={handleDeleteTask}
+                    onUpdateLead={handleUpdateLead}
                     {...commonProps} 
                 />;
                 break;

@@ -1,9 +1,8 @@
-
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import LeadsTable from './LeadsTable';
 import LeadDetailModal from './LeadDetailModal';
 import AssignLeadForm from './AssignLeadForm';
-import type { Lead, User, ActivityType, Activity } from '../types';
+import type { Lead, User, ActivityType, Activity, Task } from '../types';
 import { LeadStatus, ModeOfEnquiry } from '../types';
 import type { NewLeadData } from '../App';
 import { 
@@ -15,6 +14,7 @@ import {
 } from './Icons';
 
 interface LeadsPageProps {
+  viewMode?: 'leads' | 'opportunities' | 'clients';
   leads: Lead[];
   users: User[];
   currentUser: User;
@@ -24,31 +24,70 @@ interface LeadsPageProps {
   onAssignLead: (newLeadData: NewLeadData) => void;
   onBulkUpdate: (leadIds: string[], newStatus?: LeadStatus, newAssignedSalespersonId?: string) => void;
   onImportLeads: (newLeads: Omit<Lead, 'id' | 'isRead' | 'missedVisitsCount' | 'lastActivityDate' | 'month'>[]) => void;
+  onAddTask: (task: Omit<Task, 'id'>) => void;
   onLogout: () => void;
   onNavigate: (view: string) => void;
   targetLeadId?: string | null;
   onClearTargetLead?: () => void;
 }
 
-const TABS = [
-    { id: 'all', label: 'All Leads' },
-    { id: 'new', label: 'New' },
-    { id: 'followup', label: 'Follow-up' },
-    { id: 'visit', label: 'Visits' },
-    { id: 'negotiation', label: 'Negotiation' },
-    { id: 'booked', label: 'Booked' },
-    { id: 'lost', label: 'Lost' },
-];
+const getTabsForViewMode = (mode: string) => {
+    switch (mode) {
+        case 'leads':
+            return [
+                { id: 'all', label: 'All Inquiries' },
+                { id: 'new', label: 'New Leads' },
+                { id: 'contacted', label: 'Contacted' },
+                { id: 'lost', label: 'Lost / Dead' },
+            ];
+        case 'opportunities':
+            return [
+                { id: 'all', label: 'All Opportunities' },
+                { id: 'qualified', label: 'Qualified' },
+                { id: 'visit', label: 'Site Visits' },
+                { id: 'negotiation', label: 'Negotiation' },
+            ];
+        case 'clients':
+            return [
+                { id: 'all', label: 'All Clients' },
+                { id: 'booked', label: 'Booked' },
+            ];
+        default:
+            return [
+                { id: 'all', label: 'All' },
+            ];
+    }
+};
 
 const getStatusesForTab = (tabId: string): LeadStatus[] | null => {
     switch (tabId) {
+        // Leads View Tabs
         case 'new': return [LeadStatus.New];
-        case 'followup': return [LeadStatus.Contacted, LeadStatus.Qualified, LeadStatus.SiteVisitPending, LeadStatus.ProposalSent];
+        case 'contacted': return [LeadStatus.Contacted];
+        case 'lost': return [LeadStatus.Lost, LeadStatus.Cancelled, LeadStatus.Disqualified];
+        
+        // Opportunities View Tabs
+        case 'qualified': return [LeadStatus.Qualified, LeadStatus.SiteVisitPending, LeadStatus.ProposalSent];
         case 'visit': return [LeadStatus.SiteVisitScheduled, LeadStatus.SiteVisitDone];
         case 'negotiation': return [LeadStatus.Negotiation, LeadStatus.ProposalFinalized];
+        
+        // Clients View Tabs
         case 'booked': return [LeadStatus.Booking, LeadStatus.Booked];
-        case 'lost': return [LeadStatus.Lost, LeadStatus.Cancelled, LeadStatus.Disqualified];
+        
         default: return null;
+    }
+};
+
+const getStatusesForViewMode = (mode: string): LeadStatus[] => {
+    switch (mode) {
+        case 'leads':
+            return [LeadStatus.New, LeadStatus.Contacted, LeadStatus.Lost, LeadStatus.Cancelled, LeadStatus.Disqualified];
+        case 'opportunities':
+            return [LeadStatus.Qualified, LeadStatus.SiteVisitPending, LeadStatus.SiteVisitScheduled, LeadStatus.SiteVisitDone, LeadStatus.ProposalSent, LeadStatus.ProposalFinalized, LeadStatus.Negotiation];
+        case 'clients':
+            return [LeadStatus.Booking, LeadStatus.Booked];
+        default:
+            return Object.values(LeadStatus);
     }
 };
 
@@ -152,7 +191,7 @@ const FilterChip: React.FC<{ label: string; isActive: boolean; onClick: () => vo
     </button>
 );
 
-const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpdateLead, onAddActivity, activities, onAssignLead, onBulkUpdate, onImportLeads, onLogout, onNavigate, targetLeadId, onClearTargetLead }) => {
+const LeadsPage: React.FC<LeadsPageProps> = ({ viewMode = 'leads', leads, users, currentUser, onUpdateLead, onAddActivity, activities, onAssignLead, onBulkUpdate, onImportLeads, onAddTask, onLogout, onNavigate, targetLeadId, onClearTargetLead }) => {
   const [activeTab, setActiveTab] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
   const [showAddLead, setShowAddLead] = useState(false);
@@ -171,6 +210,14 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
     enquiryType: '',
     month: '',
   });
+
+  const tabs = useMemo(() => getTabsForViewMode(viewMode), [viewMode]);
+  
+  // Reset tab when view mode changes
+  useEffect(() => {
+      setActiveTab('all');
+      setSelectedLeadIds(new Set());
+  }, [viewMode]);
 
   const handleOpenModal = useCallback((lead: Lead) => {
     setSelectedLead(lead);
@@ -202,15 +249,17 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
   }, [leads]);
 
   const filteredLeads = useMemo(() => {
-    let filtered = [...leads];
+    // 1. Filter by View Mode (Leads vs Opps vs Clients)
+    const viewModeStatuses = getStatusesForViewMode(viewMode);
+    let filtered = leads.filter(l => viewModeStatuses.includes(l.status));
     
-    // Tab Filter
+    // 2. Filter by Active Tab
     const tabStatuses = getStatusesForTab(activeTab);
     if (tabStatuses) {
         filtered = filtered.filter(l => tabStatuses.includes(l.status));
     }
 
-    // Local Search
+    // 3. Local Search
     if (localSearch) {
         const term = localSearch.toLowerCase();
         filtered = filtered.filter(l => 
@@ -220,7 +269,7 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
         );
     }
     
-    // Advanced Filters
+    // 4. Advanced Filters
     if (filters.salesperson) {
         filtered = filtered.filter(l => l.assignedSalespersonId === filters.salesperson);
     }
@@ -243,7 +292,7 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
     }
 
     return filtered.sort((a, b) => new Date(b.leadDate).getTime() - new Date(a.leadDate).getTime());
-  }, [leads, activeTab, localSearch, filters]);
+  }, [leads, viewMode, activeTab, localSearch, filters]);
 
   const allVisibleLeadsSelected = useMemo(() => {
     if (filteredLeads.length === 0) return false;
@@ -313,7 +362,7 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "leads_export.csv");
+    link.setAttribute("download", `${viewMode}_export.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -341,11 +390,17 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
       setLocalSearch('');
   };
 
+  const getPageTitle = () => {
+      if (viewMode === 'opportunities') return 'Opportunity Pipeline';
+      if (viewMode === 'clients') return 'Client Bookings';
+      return 'Leads Management';
+  }
+
   return (
     <div className="p-4 space-y-4">
         {/* Page Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <h1 className="text-2xl font-bold text-base-content">Leads Management</h1>
+            <h1 className="text-2xl font-bold text-base-content capitalize">{getPageTitle()}</h1>
             <div className="flex items-center gap-2 self-end md:self-auto">
                 {/* Enabled for all users */}
                 <button 
@@ -366,7 +421,7 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
             {/* Status Tabs */}
             <div className="border-b border-border-color overflow-x-auto scrollbar-hide">
                 <div className="flex min-w-max px-2">
-                    {TABS.map(tab => (
+                    {tabs.map(tab => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
@@ -488,7 +543,7 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
             />
             
             <div className="p-3 border-t border-border-color bg-gray-50 text-xs text-center text-muted-content">
-                Showing {filteredLeads.length} leads based on current filters.
+                Showing {filteredLeads.length} items based on current filters.
             </div>
         </div>
       
@@ -522,6 +577,7 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ leads, users, currentUser, onUpda
                 onAddActivity={onAddActivity}
                 currentUser={currentUser}
                 activities={activities.filter(a => a.leadId === selectedLead.id)}
+                onAddTask={onAddTask}
             />
         )}
     </div>

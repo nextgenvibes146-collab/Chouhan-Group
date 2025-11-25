@@ -1,6 +1,5 @@
-
-import React, { useState, useMemo } from 'react';
-import { type Lead, type User, LeadStatus, ActivityType, type Activity } from '../types';
+import React, { useState, useMemo, useEffect } from 'react';
+import { type Lead, type User, LeadStatus, ActivityType, type Activity, type Task } from '../types';
 import { PhoneIcon, MailIcon, MapPinIcon, ChatBubbleIcon, ChatBubbleLeftRightIcon, CurrencyRupeeIcon, DocumentTextIcon } from './Icons';
 import ActivityFeed from './ActivityFeed';
 
@@ -12,6 +11,7 @@ interface LeadDetailModalProps {
   onAddActivity: (lead: Lead, activityType: ActivityType, remarks: string, duration?: number) => void;
   currentUser: User;
   activities: Activity[];
+  onAddTask: (task: Omit<Task, 'id'>) => void;
 }
 
 const TabButton: React.FC<{ label: string, isActive: boolean, onClick: () => void }> = ({ label, isActive, onClick }) => (
@@ -88,19 +88,27 @@ const CostEstimator: React.FC = () => {
     );
 }
 
-const LeadDetailModal: React.FC<LeadDetailModalProps> = ({ lead, users, onClose, onUpdateLead, onAddActivity, currentUser, activities }) => {
+const LeadDetailModal: React.FC<LeadDetailModalProps> = ({ lead, users, onClose, onUpdateLead, onAddActivity, currentUser, activities, onAddTask }) => {
   const [activeTab, setActiveTab] = useState('Details');
 
   const [newStatus, setNewStatus] = useState<LeadStatus>(lead.status);
   const [temperature, setTemperature] = useState<Lead['temperature']>(lead.temperature);
   const [nextFollowUp, setNextFollowUp] = useState(lead.nextFollowUpDate ? new Date(lead.nextFollowUpDate).toISOString().split('T')[0] : '');
+  const [createReminder, setCreateReminder] = useState(true);
   const [activityType, setActivityType] = useState<ActivityType>(ActivityType.Call);
   const [remarks, setRemarks] = useState('');
   const [duration, setDuration] = useState<string>('');
-  const [transferToId, setTransferToId] = useState('');
   
   const salesperson = users.find(u => u.id === lead.assignedSalespersonId);
-  const isAdmin = currentUser.role === 'Admin';
+  
+  // Auto-set next follow-up date for certain statuses if not set
+  useEffect(() => {
+    if (!nextFollowUp && (newStatus === LeadStatus.SiteVisitScheduled || newStatus === LeadStatus.SiteVisitDone || newStatus === LeadStatus.Negotiation)) {
+         const tmrw = new Date();
+         tmrw.setDate(tmrw.getDate() + 1);
+         setNextFollowUp(tmrw.toISOString().split('T')[0]);
+    }
+  }, [newStatus]);
 
   const handleUpdate = () => {
     const updatedLead: Lead = { 
@@ -109,10 +117,32 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({ lead, users, onClose,
         nextFollowUpDate: nextFollowUp ? new Date(nextFollowUp).toISOString() : undefined,
         temperature: temperature,
     };
+    
+    // Auto-update visit date if status implies a visit
     if (newStatus === LeadStatus.SiteVisitScheduled && updatedLead.nextFollowUpDate) {
         updatedLead.visitDate = updatedLead.nextFollowUpDate;
     }
+
     onUpdateLead(updatedLead);
+
+    // Create a task if reminder requested and date is present
+    if (createReminder && nextFollowUp) {
+        const isoDate = new Date(nextFollowUp).toISOString();
+        // Append a default time if simple date (e.g. 10 AM) - simplified here by using isoDate
+        const taskDate = new Date(nextFollowUp);
+        taskDate.setHours(10, 0, 0, 0); // Default 10 AM
+
+        onAddTask({
+            title: `Follow up: ${lead.customerName} (${newStatus})`,
+            assignedToId: lead.assignedSalespersonId || currentUser.id,
+            dueDate: taskDate.toISOString(),
+            isCompleted: false,
+            createdBy: currentUser.name,
+            reminderDate: taskDate.toISOString(),
+            hasReminded: false
+        });
+    }
+
     onClose();
   };
   
@@ -192,6 +222,23 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({ lead, users, onClose,
                                     <input type="date" value={nextFollowUp} onChange={e => setNextFollowUp(e.target.value)} className="input-style" />
                                 </div>
                             </div>
+                            
+                            {/* Reminder Option */}
+                            {nextFollowUp && (
+                                <div className="mt-4 flex items-center bg-blue-50 p-3 rounded-lg border border-blue-100">
+                                    <input 
+                                        type="checkbox" 
+                                        id="createReminder" 
+                                        checked={createReminder} 
+                                        onChange={e => setCreateReminder(e.target.checked)} 
+                                        className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                                    />
+                                    <label htmlFor="createReminder" className="ml-2 block text-sm font-medium text-gray-900">
+                                        Create an automated reminder task for this follow-up
+                                    </label>
+                                </div>
+                            )}
+
                             <div className="mt-4 flex justify-end">
                                 <button onClick={handleUpdate} className="button-primary !w-auto">Update Lead</button>
                             </div>
@@ -267,4 +314,3 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({ lead, users, onClose,
 };
 
 export default LeadDetailModal;
-    

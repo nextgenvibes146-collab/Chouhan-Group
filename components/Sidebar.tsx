@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { HomeIcon, UsersIcon, ChartBarIcon, CalendarIcon, CogIcon, MapPinIcon, DocumentTextIcon, BuildingOfficeIcon } from './Icons';
+import { HomeIcon, UsersIcon, ChartBarIcon, CalendarIcon, CogIcon, MapPinIcon, DocumentTextIcon, BuildingOfficeIcon, TargetIcon, CheckCircleIcon } from './Icons';
 import type { User } from '../types';
 
 interface NavLinkProps {
@@ -21,6 +20,8 @@ const Sidebar: React.FC<{
     const navItems = [
         { name: 'Dashboard', icon: <HomeIcon className="w-5 h-5" />, adminOnly: true },
         { name: 'Leads', icon: <UsersIcon className="w-5 h-5" />, adminOnly: false },
+        { name: 'Opportunities', icon: <TargetIcon className="w-5 h-5" />, adminOnly: false },
+        { name: 'Clients', icon: <CheckCircleIcon className="w-5 h-5" />, adminOnly: false },
         { name: 'Inventory', icon: <BuildingOfficeIcon className="w-5 h-5" />, adminOnly: false },
         { name: 'Calendar', icon: <CalendarIcon className="w-5 h-5" />, adminOnly: false },
         { name: 'Attendance', icon: <MapPinIcon className="w-5 h-5" />, adminOnly: false },
