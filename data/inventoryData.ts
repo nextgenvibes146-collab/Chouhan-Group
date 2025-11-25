@@ -1,10 +1,12 @@
 
 export type InventoryStatus = 'Available' | 'Booked' | 'Hold' | 'Blocked';
 
+export type InventoryType = 'Plot' | 'Flat' | 'Villa' | 'Bungalow' | 'Commercial' | 'Row House' | 'Pent House';
+
 export interface Unit {
     id: string;
     unitNumber: string;
-    type: 'Plot' | 'Flat' | 'Villa' | 'Bungalow' | 'Commercial' | 'Row House';
+    type: InventoryType;
     status: InventoryStatus;
     size: string; // e.g. "1200 sqft"
     price: string; // e.g. "15.5 Lac"
@@ -21,7 +23,7 @@ export interface Project {
     units: Unit[];
 }
 
-const generateUnits = (prefix: string, count: number, type: 'Plot' | 'Flat' | 'Villa' | 'Bungalow' | 'Commercial' | 'Row House', startNum: number = 1): Unit[] => {
+const generateUnits = (prefix: string, count: number, type: InventoryType, startNum: number = 1): Unit[] => {
     const units: Unit[] = [];
     const statuses: InventoryStatus[] = ['Available', 'Available', 'Available', 'Booked', 'Booked', 'Hold'];
     
@@ -36,8 +38,10 @@ const generateUnits = (prefix: string, count: number, type: 'Plot' | 'Flat' | 'V
                 price = `${(parseInt(size) * (1500 + Math.random() * 500) / 100000).toFixed(1)} Lac`;
                 break;
             case 'Flat':
+            case 'Pent House':
                 size = ['2BHK (1100 sqft)', '3BHK (1500 sqft)'][Math.floor(Math.random() * 2)];
                 price = size.includes('2BHK') ? '25.5 Lac' : '35.5 Lac';
+                if (type === 'Pent House') price = '45.5 Lac';
                 break;
             case 'Bungalow':
             case 'Villa':
@@ -65,17 +69,252 @@ const generateUnits = (prefix: string, count: number, type: 'Plot' | 'Flat' | 'V
     return units;
 };
 
+// Helper to generate specific unit lists for Chouhan Green Valley
+const getGreenValleyUnits = (): Unit[] => {
+    const units: Unit[] = [];
+    
+    const addUnits = (block: string, type: InventoryType, size: string, price: string, numbers: string[], floor?: string) => {
+        numbers.forEach(num => {
+            units.push({
+                id: `GV-${block.replace(/\s/g, '')}-${num}`,
+                unitNumber: `${block} ${num}`,
+                type,
+                status: 'Available',
+                size,
+                price,
+                facing: Math.random() > 0.5 ? 'East' : 'North',
+                floor: floor || (type === 'Pent House' ? 'Top Floor' : 'Standard')
+            });
+        });
+    };
+
+    const range = (start: number, end: number) => Array.from({length: end - start + 1}, (_, i) => String(start + i));
+
+    // 3 BHK Pent Houses (Block B)
+    const ph3Price = '42.0 Lac';
+    const ph3Size = '3 BHK Pent House';
+    addUnits('B-4', 'Pent House', ph3Size, ph3Price, ['23A', '24A']);
+    addUnits('B-5', 'Pent House', ph3Size, ph3Price, ['22A', '23A']);
+    addUnits('B-6', 'Pent House', ph3Size, ph3Price, ['22A', '23A']);
+    addUnits('B-7', 'Pent House', ph3Size, ph3Price, ['23A']);
+    addUnits('B-10', 'Pent House', ph3Size, ph3Price, ['21A', '22A']);
+    addUnits('B-11', 'Pent House', ph3Size, ph3Price, ['24A']);
+    addUnits('B-12', 'Pent House', ph3Size, ph3Price, ['21A', '24A']);
+    addUnits('B-13', 'Pent House', ph3Size, ph3Price, ['21A', '24A']);
+    addUnits('B-14', 'Pent House', ph3Size, ph3Price, ['21A', '24A']);
+    addUnits('B-15', 'Pent House', ph3Size, ph3Price, ['22A', '23A']);
+    addUnits('B-16', 'Pent House', ph3Size, ph3Price, ['22A', '23A']);
+    addUnits('B-17', 'Pent House', ph3Size, ph3Price, ['23A', '24A']);
+    
+    // 3 BHK Flats (Generic)
+    addUnits('Block B', 'Flat', '3 BHK', '35.0 Lac', ['19', '20', '23', '24']);
+
+    // 2 BHK Pent Houses (Block D & E)
+    const ph2Price = '32.0 Lac';
+    const ph2Size = '2 BHK Pent House';
+    
+    addUnits('D-1', 'Pent House', ph2Size, ph2Price, ['41A', '42A']);
+    addUnits('D-2', 'Pent House', ph2Size, ph2Price, ['41A', '42A', '43A']);
+    addUnits('D-3', 'Pent House', ph2Size, ph2Price, ['41A', '42A', '43A', '44A']);
+    addUnits('D-4', 'Pent House', ph2Size, ph2Price, ['42A', '43A', '44A']);
+    addUnits('D-6', 'Pent House', ph2Size, ph2Price, ['45A', '46A', '47A', '48A']);
+    addUnits('D-7', 'Pent House', ph2Size, ph2Price, ['45A', '46A', '47A', '48A']);
+    addUnits('D-8', 'Pent House', ph2Size, ph2Price, ['45A', '46A', '47A']);
+    addUnits('D-9', 'Pent House', ph2Size, ph2Price, ['45A', '46A', '48A']);
+    addUnits('D-10', 'Pent House', ph2Size, ph2Price, ['45A', '46A', '47A']);
+    addUnits('D-11', 'Pent House', ph2Size, ph2Price, ['41A', '42A', '43A', '44A']);
+    addUnits('D-12', 'Pent House', ph2Size, ph2Price, ['41A', '42A', '43A', '44A']);
+    
+    addUnits('E-3', 'Pent House', ph2Size, ph2Price, ['42A', '43A']);
+    addUnits('E-4', 'Pent House', ph2Size, ph2Price, ['42A']);
+    addUnits('E-5', 'Pent House', ph2Size, ph2Price, ['42A', '43A', '44A']);
+    addUnits('E-6', 'Pent House', ph2Size, ph2Price, ['41A', '42A', '43A', '44A']);
+
+    // 2 BHK Flats (Block D & E)
+    const flat2Price = '25.0 Lac';
+    const flat2Size = '2 BHK Flat';
+    
+    addUnits('D-6', 'Flat', flat2Size, flat2Price, ['34', '42', '43', '46']);
+    addUnits('D-8', 'Flat', flat2Size, flat2Price, ['42', '43', '46']);
+    addUnits('D-9', 'Flat', flat2Size, flat2Price, ['41', '43']);
+    addUnits('D-10', 'Flat', flat2Size, flat2Price, ['34', '36', '42', '43']);
+    addUnits('D-11', 'Flat', flat2Size, flat2Price, ['34', '39', '42', '43', '46', '47', '48']);
+    addUnits('D-12', 'Flat', flat2Size, flat2Price, ['6', '7', '10', '14', '15', '18', '19', '21', '22', '23', '24', '25', '26', '27', '29', '30', '31', '32', ...range(33, 48)]);
+    
+    addUnits('E-5', 'Flat', flat2Size, flat2Price, ['34', '42', '46', '47']);
+    addUnits('E-6', 'Flat', flat2Size, flat2Price, ['2', '6', '7', '10', '11', '15', '18', '19', '22', '23', '26', '27', '30', '31', '34', '35', '38', '39', '42', '43', '46', '47']);
+
+    // Bungalows
+    addUnits('Aster', 'Bungalow', '4 BHK', '85.0 Lac', ['91', '92', '93', '94', '95', '114', '115', ...range(118, 128), ...range(150, 159)]);
+    addUnits('Iris', 'Bungalow', '5 BHK', '1.10 Cr', [...range(1, 10), '16', '17', '23', '56', '57']);
+    addUnits('Orchid', 'Bungalow', '5 BHK', '1.25 Cr', ['12', '23', '24', '25', '30', '33', '36', '37']);
+    addUnits('Lavender', 'Bungalow', '5 BHK', '1.30 Cr', ['2', '3']);
+    addUnits('Marigold', 'Bungalow', '4 BHK', '90.0 Lac', ['40']);
+
+    return units;
+};
+
+// Helper to generate specific unit lists for Chouhan Town
+const getChouhanTownUnits = (): Unit[] => {
+    const units: Unit[] = [];
+    
+    const addUnits = (block: string, type: InventoryType, size: string, price: string, numbers: string[]) => {
+        numbers.forEach(num => {
+             units.push({
+                id: `CT-${block}-${num.replace(/\s/g, '')}`,
+                unitNumber: `${block}-${num}`,
+                type,
+                status: 'Available',
+                size,
+                price,
+                facing: Math.random() > 0.5 ? 'East' : 'West',
+                floor: type === 'Pent House' ? 'Top Floor' : (type === 'Bungalow' ? 'G+1' : 'Standard')
+            });
+        });
+    };
+
+    const range = (start: number, end: number) => Array.from({length: end - start + 1}, (_, i) => String(start + i));
+
+    // B Blocks - 3 BHK Pent Houses
+    const ph3Price = '45.0 Lac';
+    ['B-1', 'B-2', 'B-3'].forEach(block => {
+        addUnits(block, 'Pent House', '3 BHK', ph3Price, ['23A', '24A']);
+    });
+
+    // D-1
+    addUnits('D-1', 'Flat', '3 BHK', '35.0 Lac', ['45']);
+    addUnits('D-1', 'Pent House', '3 BHK', ph3Price, ['41A', '44A']);
+    addUnits('D-1', 'Pent House', '2 BHK', '32.0 Lac', ['42A', '43A']);
+
+    // D-2
+    addUnits('D-2', 'Pent House', '3 BHK', ph3Price, ['41A', '44A']);
+    addUnits('D-2', 'Pent House', '2 BHK', '32.0 Lac', ['42A', '43A']);
+
+    // E Blocks
+    addUnits('E-5', 'Pent House', '3 BHK', ph3Price, ['21A', '22A']);
+    addUnits('E-6', 'Pent House', '3 BHK', ph3Price, ['21A', '22A']);
+    addUnits('E-8', 'Pent House', '3 BHK', ph3Price, ['24A']);
+    addUnits('E-9', 'Pent House', '3 BHK', ph3Price, ['21A']);
+
+    // E-10
+    addUnits('E-10', 'Flat', '3 BHK', '35.0 Lac', range(1, 4));
+    addUnits('E-10', 'Flat', '3 BHK', '35.0 Lac', ['5', '6']);
+    addUnits('E-10', 'Flat', '3 BHK', '35.0 Lac', ['9', '10']);
+    addUnits('E-10', 'Flat', '3 BHK', '35.0 Lac', ['13', '14', '15']);
+    addUnits('E-10', 'Flat', '3 BHK', '35.0 Lac', range(17, 20));
+    addUnits('E-10', 'Flat', '3 BHK', '35.0 Lac', range(21, 24));
+    addUnits('E-10', 'Pent House', '3 BHK', ph3Price, ['23A', '24A']);
+
+    // Bungalows (Block B & D)
+    const bung4Price = '85.0 Lac';
+    addUnits('Block B', 'Bungalow', '4 BHK', bung4Price, ['21']);
+    addUnits('Block D', 'Bungalow', '4 BHK', bung4Price, ['51', '58', '59', ...range(63, 71), '73']);
+
+    return units;
+};
+
+// Helper to generate specific unit lists for Chouhan Park View
+const getChouhanParkViewUnits = (): Unit[] => {
+    const units: Unit[] = [];
+    const range = (start: number, end: number) => Array.from({length: end - start + 1}, (_, i) => String(start + i));
+
+    const addUnit = (type: InventoryType, number: string, size: string, price: string, floor?: string) => {
+         units.push({
+            id: `CPV-${type.replace(/\s/g, '')}-${number.replace(/\s/g, '')}`,
+            unitNumber: number,
+            type,
+            status: 'Available',
+            size,
+            price,
+            facing: Math.random() > 0.5 ? 'East' : 'North',
+            floor: floor || 'Standard'
+        });
+    }
+
+    // 1. Flats
+    // 06,07,08,15,16,24,32,40,48
+    ['06', '07', '08', '15', '16', '24', '32', '40', '48'].forEach(num => 
+        addUnit('Flat', `Flat ${num}`, '2 BHK', '25.0 Lac', `${Math.ceil(Math.random() * 4)}th Floor`)
+    );
+
+    // 2. Pent House
+    // 49, 50
+    ['49', '50'].forEach(num => 
+        addUnit('Pent House', `PH ${num}`, '3 BHK Pent House', '45.0 Lac', 'Top Floor')
+    );
+
+    // 3. Bungalow A-Type
+    // A-2, A-6
+    ['A-2', 'A-6'].forEach(num => 
+        addUnit('Bungalow', num, 'Bungalow A-Type', '75.0 Lac', 'G+1')
+    );
+
+    // 4. Bungalow B-Type
+    // B-8 to B-21, B-29 to B-35
+    const bTypeNums = [...range(8, 21), ...range(29, 35)].map(n => `B-${n}`);
+    bTypeNums.forEach(num => 
+        addUnit('Bungalow', num, 'Bungalow B-Type', '65.0 Lac', 'G+1')
+    );
+
+    // 5. Plot A-Type
+    // A-7 to A-9
+    range(7, 9).map(n => `A-${n}`).forEach(num => 
+        addUnit('Plot', num, 'Plot A-Type', '22.0 Lac')
+    );
+
+    // 6. Plot B-Type
+    // B-22 to B-28
+    range(22, 28).map(n => `B-${n}`).forEach(num => 
+        addUnit('Plot', num, 'Plot B-Type', '18.0 Lac')
+    );
+
+    return units;
+};
+
+// Helper for Sunrise City
+const getSunriseCityUnits = (): Unit[] => {
+    const units: Unit[] = [];
+    const range = (start: number, end: number) => Array.from({length: end - start + 1}, (_, i) => String(start + i));
+
+    const addUnit = (block: string, number: string, size: string, price: string) => {
+         units.push({
+            id: `SC-${block}-${number}`,
+            unitNumber: `${block}-${number}`,
+            type: 'Plot',
+            status: 'Available',
+            size,
+            price,
+            facing: Math.random() > 0.5 ? 'East' : 'West',
+        });
+    }
+
+    // A-Type: A-2 to A-20 (Quantity 19)
+    range(2, 20).forEach(num => addUnit('A', num, '1500 sqft', '22.5 Lac'));
+
+    // B-Type: B-16 to B-25, 29, 44 to 55 (Quantity 23)
+    range(16, 25).forEach(num => addUnit('B', num, '1200 sqft', '18.0 Lac'));
+    addUnit('B', '29', '1200 sqft', '18.0 Lac');
+    range(44, 55).forEach(num => addUnit('B', num, '1200 sqft', '18.0 Lac'));
+
+    // C-Type: C-8 to 21, 24, 25, 32, 33, 35, 37 to 52, 54 to 57, 59 to 114 (Quantity 95)
+    range(8, 21).forEach(num => addUnit('C', num, '1000 sqft', '15.0 Lac'));
+    ['24', '25', '32', '33', '35'].forEach(num => addUnit('C', num, '1000 sqft', '15.0 Lac'));
+    range(37, 52).forEach(num => addUnit('C', num, '1000 sqft', '15.0 Lac'));
+    range(54, 57).forEach(num => addUnit('C', num, '1000 sqft', '15.0 Lac'));
+    range(59, 114).forEach(num => addUnit('C', num, '1000 sqft', '15.0 Lac'));
+
+    return units;
+};
+
+
 export const mockProjects: Project[] = [
     {
         id: 'p1',
         name: 'Chouhan Park View',
-        location: 'Junwani',
-        totalUnits: 60,
-        availableUnits: 25,
-        units: [
-            ...generateUnits('B', 20, 'Bungalow'),
-            ...generateUnits('F', 40, 'Flat', 21)
-        ]
+        location: 'Junwani, Bhilai',
+        totalUnits: 100,
+        availableUnits: 44,
+        units: getChouhanParkViewUnits()
     },
     {
         id: 'p2',
@@ -106,22 +345,16 @@ export const mockProjects: Project[] = [
         name: 'Chouhan Town',
         location: 'Junwani',
         totalUnits: 80,
-        availableUnits: 30,
-        units: [
-            ...generateUnits('TB', 30, 'Bungalow'),
-            ...generateUnits('TF', 50, 'Flat', 31)
-        ]
+        availableUnits: 55, // Updated approximate count
+        units: getChouhanTownUnits()
     },
     {
         id: 'p6',
-        name: 'Chouhan Green Valley P1',
+        name: 'Chouhan Green Valley',
         location: 'Junwani',
-        totalUnits: 70,
-        availableUnits: 22,
-        units: [
-            ...generateUnits('GVF', 50, 'Flat'),
-            ...generateUnits('GVB', 20, 'Bungalow', 51)
-        ]
+        totalUnits: 250,
+        availableUnits: 176, 
+        units: getGreenValleyUnits()
     },
     {
         id: 'p7',
@@ -143,12 +376,9 @@ export const mockProjects: Project[] = [
         id: 'p9',
         name: 'Sunrise City',
         location: 'Sirsakhurd',
-        totalUnits: 150,
-        availableUnits: 80,
-        units: [
-            ...generateUnits('SP', 120, 'Plot'),
-            ...generateUnits('SC', 30, 'Commercial', 121)
-        ]
+        totalUnits: 200, // Estimated total
+        availableUnits: 137, // Exact count from helper
+        units: getSunriseCityUnits()
     },
     {
         id: 'p10',

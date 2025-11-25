@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
 import BottomNavBar from './components/BottomNavBar';
 import Sidebar from './components/Sidebar';
@@ -5,7 +6,7 @@ import Header from './components/Header';
 import LoginPage from './components/LoginPage';
 import { db } from './services/database'; // Use new DB service
 import { Lead, User, Activity, SalesTarget, Task, LeadStatus, ActivityType, ModeOfEnquiry } from './types';
-import { Project } from './data/inventoryData';
+import { Project, Unit } from './data/inventoryData';
 
 // Lazy load components for better initial load performance
 const Dashboard = React.lazy(() => import('./components/Dashboard'));
@@ -297,6 +298,11 @@ const App: React.FC = () => {
         const updatedInventory = await db.getInventory();
         setInventory(updatedInventory);
     }, []);
+
+    const handleUpdateUnit = useCallback(async (projectId: string, unit: Unit) => {
+        const updatedInventory = await db.updateUnit(projectId, unit);
+        setInventory(updatedInventory);
+    }, []);
     
     const handleResetDatabase = useCallback(async () => {
         if (window.confirm("Are you sure? This will delete all new data and restore the demo dataset.")) {
@@ -384,7 +390,12 @@ const App: React.FC = () => {
                 />;
                 break;
             case 'Inventory':
-                Content = <InventoryPage projects={inventory} onBookUnit={handleBookUnit} />;
+                Content = <InventoryPage 
+                    projects={inventory} 
+                    onBookUnit={handleBookUnit} 
+                    onUpdateUnit={handleUpdateUnit}
+                    currentUser={currentUser!}
+                />;
                 break;
             case 'Calendar':
                 Content = <CalendarPage leads={visibleLeads} tasks={visibleTasks} />;

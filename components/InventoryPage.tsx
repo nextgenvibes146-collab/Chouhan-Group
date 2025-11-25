@@ -1,11 +1,14 @@
 
 import React, { useState, useMemo } from 'react';
 import { Project, Unit, InventoryStatus } from '../data/inventoryData';
-import { BuildingOfficeIcon, InformationCircleIcon, CheckCircleIcon } from './Icons';
+import { BuildingOfficeIcon, PencilSquareIcon, CheckCircleIcon } from './Icons';
+import type { User } from '../types';
 
 interface InventoryPageProps {
     projects: Project[];
     onBookUnit: (unitId: string) => void;
+    onUpdateUnit: (projectId: string, unit: Unit) => void;
+    currentUser: User;
 }
 
 const StatusBadge: React.FC<{ status: InventoryStatus }> = ({ status }) => {
@@ -22,7 +25,11 @@ const StatusBadge: React.FC<{ status: InventoryStatus }> = ({ status }) => {
     );
 };
 
-const UnitCard: React.FC<{ unit: Unit, onClick: () => void }> = ({ unit, onClick }) => {
+const UnitCard: React.FC<{ 
+    unit: Unit, 
+    onClick: () => void, 
+    onEdit?: (e: React.MouseEvent) => void 
+}> = ({ unit, onClick, onEdit }) => {
     const statusColors = {
         'Available': 'bg-white hover:border-green-400 border-gray-200 shadow-sm hover:shadow-md',
         'Booked': 'bg-red-50 border-red-100 opacity-75 cursor-not-allowed',
@@ -33,14 +40,28 @@ const UnitCard: React.FC<{ unit: Unit, onClick: () => void }> = ({ unit, onClick
     return (
         <div 
             onClick={() => unit.status !== 'Booked' && onClick()}
-            className={`p-3 rounded-xl border transition-all duration-200 ${statusColors[unit.status]} flex flex-col justify-between h-28 relative overflow-hidden group`}
+            className={`p-3 rounded-xl border transition-all duration-200 ${statusColors[unit.status]} flex flex-col justify-between h-28 relative overflow-hidden group cursor-pointer`}
         >
             <div className="flex justify-between items-start">
                 <span className="font-bold text-lg text-gray-800">{unit.unitNumber}</span>
-                {unit.status === 'Available' && <div className="h-2 w-2 rounded-full bg-green-500"></div>}
+                {onEdit && (
+                    <button 
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onEdit(e);
+                        }}
+                        className="p-1 text-gray-400 hover:text-blue-600 rounded hover:bg-blue-50 z-10"
+                    >
+                        <PencilSquareIcon className="w-4 h-4" />
+                    </button>
+                )}
+                {!onEdit && unit.status === 'Available' && <div className="h-2 w-2 rounded-full bg-green-500"></div>}
             </div>
             <div>
-                <p className="text-xs text-gray-500 font-medium">{unit.size}</p>
+                <div className="flex justify-between items-baseline">
+                    <p className="text-xs text-gray-500 font-medium">{unit.type}</p>
+                    <p className="text-[10px] text-gray-400">{unit.size}</p>
+                </div>
                 <p className="text-sm font-bold text-primary mt-0.5">{unit.price}</p>
             </div>
             {unit.status === 'Available' && (
@@ -82,18 +103,115 @@ const BookingModal: React.FC<{ unit: Unit; onClose: () => void; onConfirm: () =>
     );
 };
 
-const InventoryPage: React.FC<InventoryPageProps> = ({ projects, onBookUnit }) => {
+const EditUnitModal: React.FC<{ 
+    unit: Unit; 
+    onClose: () => void; 
+    onSave: (updatedUnit: Unit) => void 
+}> = ({ unit, onClose, onSave }) => {
+    const [formData, setFormData] = useState<Unit>({ ...unit });
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        onSave(formData);
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg m-4 flex flex-col max-h-[90vh]">
+                <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                    <h3 className="text-lg font-bold text-gray-900">Edit Details: {unit.unitNumber}</h3>
+                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600">&times;</button>
+                </div>
+                
+                <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="label-style">Unit Number</label>
+                            <input type="text" name="unitNumber" value={formData.unitNumber} onChange={handleChange} className="input-style" />
+                        </div>
+                        <div>
+                            <label className="label-style">Status</label>
+                            <select name="status" value={formData.status} onChange={handleChange} className="input-style">
+                                <option value="Available">Available</option>
+                                <option value="Booked">Booked</option>
+                                <option value="Hold">Hold</option>
+                                <option value="Blocked">Blocked</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                         <div>
+                            <label className="label-style">Type</label>
+                            <select name="type" value={formData.type} onChange={handleChange} className="input-style">
+                                <option value="Plot">Plot</option>
+                                <option value="Flat">Flat</option>
+                                <option value="Pent House">Pent House</option>
+                                <option value="Villa">Villa</option>
+                                <option value="Bungalow">Bungalow</option>
+                                <option value="Row House">Row House</option>
+                                <option value="Commercial">Commercial</option>
+                            </select>
+                        </div>
+                         <div>
+                            <label className="label-style">Price</label>
+                            <input type="text" name="price" value={formData.price} onChange={handleChange} className="input-style" />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="label-style">Size</label>
+                            <input type="text" name="size" value={formData.size} onChange={handleChange} className="input-style" />
+                        </div>
+                        <div>
+                            <label className="label-style">Facing</label>
+                            <input type="text" name="facing" value={formData.facing || ''} onChange={handleChange} className="input-style" />
+                        </div>
+                    </div>
+                     <div>
+                        <label className="label-style">Floor</label>
+                        <input type="text" name="floor" value={formData.floor || ''} onChange={handleChange} className="input-style" />
+                    </div>
+                </form>
+
+                <div className="p-4 border-t border-gray-100 bg-gray-50 rounded-b-2xl flex justify-end gap-3">
+                    <button type="button" onClick={onClose} className="button-secondary !w-auto">Cancel</button>
+                    <button type="button" onClick={handleSubmit} className="button-primary !w-auto">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const InventoryPage: React.FC<InventoryPageProps> = ({ projects, onBookUnit, onUpdateUnit, currentUser }) => {
     const [selectedProjectId, setSelectedProjectId] = useState(projects[0]?.id);
     const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null);
-    const [filter, setFilter] = useState<InventoryStatus | 'All'>('All');
+    const [editingUnit, setEditingUnit] = useState<Unit | null>(null);
+    const [filterStatus, setFilterStatus] = useState<InventoryStatus | 'All'>('All');
+    const [filterType, setFilterType] = useState<string>('All');
 
+    const isAdmin = currentUser.role === 'Admin';
     const selectedProject = projects.find(p => p.id === selectedProjectId);
+
+    const availableTypes = useMemo(() => {
+        if (!selectedProject) return [];
+        const types = new Set(selectedProject.units.map(u => u.type));
+        return Array.from(types);
+    }, [selectedProject]);
 
     const filteredUnits = useMemo(() => {
         if (!selectedProject) return [];
-        if (filter === 'All') return selectedProject.units;
-        return selectedProject.units.filter(u => u.status === filter);
-    }, [selectedProject, filter]);
+        return selectedProject.units.filter(u => {
+            const statusMatch = filterStatus === 'All' || u.status === filterStatus;
+            const typeMatch = filterType === 'All' || u.type === filterType;
+            return statusMatch && typeMatch;
+        });
+    }, [selectedProject, filterStatus, filterType]);
 
     const stats = useMemo(() => {
         if (!selectedProject) return { total: 0, available: 0, booked: 0, hold: 0 };
@@ -112,8 +230,15 @@ const InventoryPage: React.FC<InventoryPageProps> = ({ projects, onBookUnit }) =
         }
     };
 
+    const handleSaveEdit = (updatedUnit: Unit) => {
+        if (selectedProjectId) {
+            onUpdateUnit(selectedProjectId, updatedUnit);
+            setEditingUnit(null);
+        }
+    };
+
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 pb-20">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-base-content">Inventory</h1>
@@ -122,7 +247,10 @@ const InventoryPage: React.FC<InventoryPageProps> = ({ projects, onBookUnit }) =
                 <div className="w-full md:w-64">
                     <select 
                         value={selectedProjectId} 
-                        onChange={(e) => setSelectedProjectId(e.target.value)}
+                        onChange={(e) => {
+                            setSelectedProjectId(e.target.value);
+                            setFilterType('All'); // Reset type filter on project change
+                        }}
                         className="input-style font-semibold"
                     >
                         {projects.map(p => (
@@ -152,15 +280,15 @@ const InventoryPage: React.FC<InventoryPageProps> = ({ projects, onBookUnit }) =
                 </div>
             </div>
 
-            {/* Main Inventory Grid */}
-            <div className="card p-6">
-                <div className="flex flex-wrap gap-2 mb-6 pb-4 border-b border-gray-100">
+            {/* Filters */}
+            <div className="card p-4 flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
+                 <div className="flex flex-wrap gap-2">
                     {['All', 'Available', 'Booked', 'Hold'].map((f) => (
                         <button
                             key={f}
-                            onClick={() => setFilter(f as any)}
+                            onClick={() => setFilterStatus(f as any)}
                             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                                filter === f 
+                                filterStatus === f 
                                 ? 'bg-gray-900 text-white' 
                                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                             }`}
@@ -169,20 +297,40 @@ const InventoryPage: React.FC<InventoryPageProps> = ({ projects, onBookUnit }) =
                         </button>
                     ))}
                 </div>
+                
+                <div className="flex items-center gap-2 w-full md:w-auto">
+                    <span className="text-sm font-bold text-gray-500 uppercase">Type:</span>
+                    <select 
+                        value={filterType} 
+                        onChange={(e) => setFilterType(e.target.value)}
+                        className="input-style py-1.5 !w-auto text-sm"
+                    >
+                        <option value="All">All Types</option>
+                        {availableTypes.map(type => (
+                            <option key={type} value={type}>{type}</option>
+                        ))}
+                    </select>
+                </div>
+            </div>
 
+            {/* Main Inventory Grid */}
+            <div className="card p-6">
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-4">
                     {filteredUnits.map(unit => (
                         <UnitCard 
                             key={unit.id} 
                             unit={unit} 
                             onClick={() => setSelectedUnit(unit)}
+                            onEdit={isAdmin ? (e) => {
+                                setEditingUnit(unit);
+                            } : undefined}
                         />
                     ))}
                 </div>
                 
                 {filteredUnits.length === 0 && (
                     <div className="text-center py-16 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
-                        <p className="text-gray-400 font-medium">No units match the selected filter.</p>
+                        <p className="text-gray-400 font-medium">No units match the selected filters.</p>
                     </div>
                 )}
             </div>
@@ -192,6 +340,14 @@ const InventoryPage: React.FC<InventoryPageProps> = ({ projects, onBookUnit }) =
                     unit={selectedUnit} 
                     onClose={() => setSelectedUnit(null)} 
                     onConfirm={handleBook} 
+                />
+            )}
+
+            {editingUnit && (
+                <EditUnitModal 
+                    unit={editingUnit} 
+                    onClose={() => setEditingUnit(null)} 
+                    onSave={handleSaveEdit} 
                 />
             )}
         </div>

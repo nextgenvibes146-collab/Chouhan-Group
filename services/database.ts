@@ -1,6 +1,6 @@
 
 import { Lead, User, Activity, SalesTarget, Task, LeadStatus, ActivityType, ModeOfEnquiry, VisitStatus } from '../types';
-import { Project } from '../data/inventoryData';
+import { Project, Unit } from '../data/inventoryData';
 import { mockProjects } from '../data/inventoryData';
 import { newRawData } from '../data/mockData';
 
@@ -218,6 +218,19 @@ class DatabaseService {
             )
         }));
         this.save();
+    }
+
+    async updateUnit(projectId: string, updatedUnit: Unit) {
+        const projectIndex = this.data.inventory.findIndex(p => p.id === projectId);
+        if (projectIndex !== -1) {
+            const units = this.data.inventory[projectIndex].units;
+            const unitIndex = units.findIndex(u => u.id === updatedUnit.id);
+            if (unitIndex !== -1) {
+                units[unitIndex] = updatedUnit;
+                this.save();
+            }
+        }
+        return [...this.data.inventory];
     }
 
     async addTask(task: Task) {
