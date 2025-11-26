@@ -233,6 +233,35 @@ class DatabaseService {
         return [...this.data.inventory];
     }
 
+    async addUnit(projectId: string, unit: Unit) {
+        const projectIndex = this.data.inventory.findIndex(p => p.id === projectId);
+        if (projectIndex !== -1) {
+            this.data.inventory[projectIndex].units.push(unit);
+            this.data.inventory[projectIndex].totalUnits += 1;
+            if (unit.status === 'Available') {
+                this.data.inventory[projectIndex].availableUnits += 1;
+            }
+            this.save();
+        }
+        return [...this.data.inventory];
+    }
+
+    async deleteUnit(projectId: string, unitId: string) {
+        const projectIndex = this.data.inventory.findIndex(p => p.id === projectId);
+        if (projectIndex !== -1) {
+            const project = this.data.inventory[projectIndex];
+            const unit = project.units.find(u => u.id === unitId);
+            
+            project.units = project.units.filter(u => u.id !== unitId);
+            project.totalUnits -= 1;
+            if (unit && unit.status === 'Available') {
+                project.availableUnits -= 1;
+            }
+            this.save();
+        }
+        return [...this.data.inventory];
+    }
+
     async addTask(task: Task) {
         this.data.tasks.unshift(task);
         this.save();

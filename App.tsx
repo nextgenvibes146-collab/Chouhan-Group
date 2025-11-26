@@ -303,6 +303,16 @@ const App: React.FC = () => {
         const updatedInventory = await db.updateUnit(projectId, unit);
         setInventory(updatedInventory);
     }, []);
+
+    const handleAddUnit = useCallback(async (projectId: string, unit: Unit) => {
+        const updatedInventory = await db.addUnit(projectId, unit);
+        setInventory(updatedInventory);
+    }, []);
+
+    const handleDeleteUnit = useCallback(async (projectId: string, unitId: string) => {
+        const updatedInventory = await db.deleteUnit(projectId, unitId);
+        setInventory(updatedInventory);
+    }, []);
     
     const handleResetDatabase = useCallback(async () => {
         if (window.confirm("Are you sure? This will delete all new data and restore the demo dataset.")) {
@@ -394,6 +404,8 @@ const App: React.FC = () => {
                     projects={inventory} 
                     onBookUnit={handleBookUnit} 
                     onUpdateUnit={handleUpdateUnit}
+                    onAddUnit={handleAddUnit}
+                    onDeleteUnit={handleDeleteUnit}
                     currentUser={currentUser!}
                 />;
                 break;
