@@ -134,11 +134,9 @@ const App: React.FC = () => {
     
     await db.updateLead(updatedLead);
 
-    // Handle logic for assigning or changing status that might trigger activities
+    // 1. Handle Reassignment
     const originalLead = leads.find(l => l.id === updatedLead.id);
-    if (!originalLead) return;
-
-    if (originalLead.assignedSalespersonId !== updatedLead.assignedSalespersonId) {
+    if (originalLead && originalLead.assignedSalespersonId !== updatedLead.assignedSalespersonId) {
         const newAssignee = users.find(u => u.id === updatedLead.assignedSalespersonId);
         const activity: Activity = {
             id: `act-assign-${Date.now()}`,
@@ -151,6 +149,28 @@ const App: React.FC = () => {
         };
         await db.addActivity(activity);
         setActivities(prev => [activity, ...prev]);
+    }
+
+    // 2. Handle Booking Logic (If bookedUnitId is present and new)
+    if (updatedLead.status === LeadStatus.Booked && updatedLead.bookedUnitId) {
+        if (!originalLead?.bookedUnitId || originalLead.bookedUnitId !== updatedLead.bookedUnitId) {
+            await db.bookUnit(updatedLead.bookedUnitId);
+            const updatedInventory = await db.getInventory();
+            setInventory(updatedInventory);
+            
+            // Log booking activity
+            const bookingActivity: Activity = {
+                id: `act-book-${Date.now()}`,
+                leadId: updatedLead.id,
+                salespersonId: currentUser.id,
+                type: ActivityType.Note,
+                date: new Date().toISOString(),
+                remarks: `Unit ${updatedLead.bookedUnitNumber} in ${updatedLead.bookedProject} has been BOOKED.`,
+                customerName: updatedLead.customerName
+            };
+            await db.addActivity(bookingActivity);
+            setActivities(prev => [bookingActivity, ...prev]);
+        }
     }
     
     // Re-fetch in background to ensure consistency
@@ -396,6 +416,7 @@ const App: React.FC = () => {
                     targetLeadId={targetLeadId}
                     onClearTargetLead={() => setTargetLeadId(null)}
                     onAddTask={handleAddTask}
+                    projects={inventory} // Pass inventory here
                     {...commonProps} 
                 />;
                 break;

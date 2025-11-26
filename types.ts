@@ -58,7 +58,7 @@ export interface Lead {
   email?: string;
   occupation?: string;
   interestedProject?: string;
-  interestedUnit?: string;
+  interestedUnit?: string; // This is usually Property Type (Plot/Flat)
   temperature?: 'Hot' | 'Warm' | 'Cold';
   remarks?: string;
   visitStatus: VisitStatus;
@@ -76,6 +76,11 @@ export interface Lead {
   fundingSource?: 'Self' | 'Bank Loan' | 'Part Loan';
   purpose?: 'Investment' | 'Self Use';
   configuration?: string; // e.g., 2BHK, 3BHK
+  
+  // Booking Specifics
+  bookedProject?: string;
+  bookedUnitNumber?: string;
+  bookedUnitId?: string;
 }
 
 export interface Activity {

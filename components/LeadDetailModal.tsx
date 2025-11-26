@@ -1,9 +1,10 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { type Lead, type User, LeadStatus, ActivityType, type Activity, type Task } from '../types';
-import { PhoneIcon, MailIcon, MapPinIcon, ChatBubbleIcon, ChatBubbleLeftRightIcon, CurrencyRupeeIcon, DocumentTextIcon, XMarkIcon } from './Icons';
+import { PhoneIcon, MailIcon, MapPinIcon, ChatBubbleIcon, ChatBubbleLeftRightIcon, CurrencyRupeeIcon, DocumentTextIcon, XMarkIcon, BuildingOfficeIcon } from './Icons';
 import ActivityFeed from './ActivityFeed';
 import { communicationService } from '../services/communicationService';
+import type { Project, Unit } from '../data/inventoryData';
 
 interface LeadDetailModalProps {
   lead: Lead;
@@ -14,6 +15,7 @@ interface LeadDetailModalProps {
   currentUser: User;
   activities: Activity[];
   onAddTask: (task: Omit<Task, 'id'>) => void;
+  projects?: Project[];
 }
 
 // --- Sub-Components ---
@@ -182,7 +184,7 @@ const SMSModal: React.FC<{ lead: Lead; onClose: () => void; onSend: (message: st
 
 // --- Main Modal Component ---
 
-const LeadDetailModal: React.FC<LeadDetailModalProps> = ({ lead, users, onClose, onUpdateLead, onAddActivity, currentUser, activities, onAddTask }) => {
+const LeadDetailModal: React.FC<LeadDetailModalProps> = ({ lead, users, onClose, onUpdateLead, onAddActivity, currentUser, activities, onAddTask, projects }) => {
   const [activeTab, setActiveTab] = useState('Details');
 
   const [newStatus, setNewStatus] = useState<LeadStatus>(lead.status);
@@ -190,6 +192,10 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({ lead, users, onClose,
   const [nextFollowUp, setNextFollowUp] = useState(lead.nextFollowUpDate ? new Date(lead.nextFollowUpDate).toISOString().split('T')[0] : '');
   const [createReminder, setCreateReminder] = useState(true);
   
+  // Booking Details State
+  const [selectedBookProject, setSelectedBookProject] = useState(lead.bookedProject || lead.interestedProject || '');
+  const [selectedBookUnit, setSelectedBookUnit] = useState(lead.bookedUnitId || '');
+
   // Activity Logging State
   const [activityType, setActivityType] = useState<ActivityType>(ActivityType.Call);
   const [remarks, setRemarks] = useState('');
@@ -200,7 +206,19 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({ lead, users, onClose,
   const [showSMSModal, setShowSMSModal] = useState(false);
   
   const salesperson = users.find(u => u.id === lead.assignedSalespersonId);
+  const isAdmin = currentUser.role === 'Admin';
+  const isBookingStage = newStatus === LeadStatus.Booking || newStatus === LeadStatus.Booked;
   
+  // Derive available units based on selected project
+  const availableUnits = useMemo(() => {
+      if (!projects || !selectedBookProject) return [];
+      const project = projects.find(p => p.name === selectedBookProject);
+      if (!project) return [];
+      
+      // If editing an existing booking, include the currently booked unit so it doesn't disappear
+      return project.units.filter(u => u.status === 'Available' || u.id === lead.bookedUnitId);
+  }, [projects, selectedBookProject, lead.bookedUnitId]);
+
   // Auto-set next follow-up date for certain statuses if not set
   useEffect(() => {
     if (!nextFollowUp && (newStatus === LeadStatus.SiteVisitScheduled || newStatus === LeadStatus.SiteVisitDone || newStatus === LeadStatus.Negotiation)) {
@@ -211,11 +229,26 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({ lead, users, onClose,
   }, [newStatus]);
 
   const handleUpdate = () => {
+    // If booking, validate selections
+    let bookingUpdate = {};
+    if (isBookingStage && isAdmin && selectedBookUnit) {
+        const project = projects?.find(p => p.name === selectedBookProject);
+        const unit = project?.units.find(u => u.id === selectedBookUnit);
+        if (unit) {
+            bookingUpdate = {
+                bookedProject: selectedBookProject,
+                bookedUnitId: unit.id,
+                bookedUnitNumber: unit.unitNumber
+            };
+        }
+    }
+
     const updatedLead: Lead = { 
         ...lead, 
         status: newStatus, 
         nextFollowUpDate: nextFollowUp ? new Date(nextFollowUp).toISOString() : undefined,
         temperature: temperature,
+        ...bookingUpdate
     };
     
     // Auto-update visit date if status implies a visit
@@ -316,6 +349,11 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({ lead, users, onClose,
              <div className="flex items-center gap-3 mb-1">
                 <h2 className="text-2xl font-bold text-gray-900">{lead.customerName}</h2>
                 {getTemperatureBadge(lead.temperature)}
+                {lead.status === LeadStatus.Booked && lead.bookedUnitNumber && (
+                    <span className="px-2 py-0.5 text-xs font-bold rounded-full bg-green-100 text-green-800 border border-green-200">
+                        Unit {lead.bookedUnitNumber}
+                    </span>
+                )}
              </div>
              <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                 <span className="flex items-center"><PhoneIcon className="w-4 h-4 mr-1"/> {lead.mobile}</span>
@@ -363,6 +401,48 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({ lead, users, onClose,
                                 </div>
                             </div>
                             
+                            {/* Admin Only: Inventory Assignment for Booking */}
+                            {isBookingStage && isAdmin && projects && (
+                                <div className="mt-6 pt-6 border-t border-gray-100">
+                                    <h4 className="text-sm font-bold text-primary uppercase tracking-wider mb-3 flex items-center">
+                                        <BuildingOfficeIcon className="w-4 h-4 mr-2" />
+                                        Finalize Inventory Assignment
+                                    </h4>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-green-50 p-4 rounded-lg border border-green-100">
+                                        <div>
+                                            <label className="label-style">Project</label>
+                                            <select 
+                                                value={selectedBookProject} 
+                                                onChange={(e) => {
+                                                    setSelectedBookProject(e.target.value);
+                                                    setSelectedBookUnit('');
+                                                }} 
+                                                className="input-style"
+                                            >
+                                                <option value="">Select Project</option>
+                                                {projects.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="label-style">Unit Number</label>
+                                            <select 
+                                                value={selectedBookUnit} 
+                                                onChange={(e) => setSelectedBookUnit(e.target.value)} 
+                                                className="input-style"
+                                                disabled={!selectedBookProject}
+                                            >
+                                                <option value="">Select Unit</option>
+                                                {availableUnits.map(u => (
+                                                    <option key={u.id} value={u.id}>
+                                                        {u.unitNumber} - {u.type} ({u.price})
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                            
                             {/* Reminder Option */}
                             {nextFollowUp && (
                                 <div className="mt-4 flex items-center bg-blue-50 p-3 rounded-lg border border-blue-100">
@@ -394,6 +474,7 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({ lead, users, onClose,
                                 <DetailItem label="Purpose" value={lead.purpose} />
                                 <DetailItem label="Property Type" value={lead.interestedUnit} />
                                 <DetailItem label="Created On" value={new Date(lead.leadDate).toLocaleDateString()} />
+                                {lead.bookedUnitNumber && <DetailItem label="Booked Unit" value={`${lead.bookedUnitNumber} (${lead.bookedProject})`} />}
                             </div>
                         </div>
                     </div>

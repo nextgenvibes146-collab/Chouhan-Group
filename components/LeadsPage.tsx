@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import LeadsTable from './LeadsTable';
 import LeadDetailModal from './LeadDetailModal';
@@ -5,12 +6,18 @@ import AssignLeadForm from './AssignLeadForm';
 import type { Lead, User, ActivityType, Activity, Task } from '../types';
 import { LeadStatus, ModeOfEnquiry } from '../types';
 import type { NewLeadData } from '../App';
+import type { Project } from '../data/inventoryData';
 import { 
     FunnelIcon,
     XMarkIcon,
     SearchIcon,
     PlusIcon,
-    MinusIcon
+    MinusIcon,
+    UserCircleIcon,
+    CalendarIcon,
+    MapPinIcon,
+    PhoneIcon,
+    CurrencyRupeeIcon
 } from './Icons';
 
 interface LeadsPageProps {
@@ -29,7 +36,133 @@ interface LeadsPageProps {
   onNavigate: (view: string) => void;
   targetLeadId?: string | null;
   onClearTargetLead?: () => void;
+  projects?: Project[]; // Added inventory projects
 }
+
+// --- Pipeline / Kanban Components ---
+
+const PipelineCard: React.FC<{ lead: Lead, user?: User, onClick: () => void }> = ({ lead, user, onClick }) => {
+    return (
+        <div 
+            onClick={onClick}
+            className="bg-white p-3 rounded-lg shadow-sm border border-gray-200 cursor-pointer hover:shadow-md transition-all group relative"
+        >
+            <div className="flex justify-between items-start mb-2">
+                <h4 className="font-bold text-slate-800 text-sm truncate flex-1 pr-2" title={lead.customerName}>{lead.customerName}</h4>
+                {lead.temperature && (
+                    <span className={`w-2 h-2 rounded-full flex-shrink-0 ${lead.temperature === 'Hot' ? 'bg-red-500' : lead.temperature === 'Warm' ? 'bg-orange-400' : 'bg-blue-400'}`} title={lead.temperature}></span>
+                )}
+            </div>
+            
+            <div className="space-y-1.5">
+                <p className="text-xs text-slate-500 flex items-center truncate">
+                    <MapPinIcon className="w-3 h-3 mr-1 text-slate-400" />
+                    {lead.interestedProject || 'No Project'}
+                </p>
+                <p className="text-xs text-slate-500 flex items-center">
+                    <PhoneIcon className="w-3 h-3 mr-1 text-slate-400" />
+                    {lead.mobile}
+                </p>
+                {lead.budget && (
+                    <p className="text-xs text-slate-700 font-medium flex items-center">
+                        <span className="text-slate-400 mr-1">₹</span>
+                        {lead.budget}
+                    </p>
+                )}
+            </div>
+
+            <div className="border-t border-gray-100 mt-3 pt-2 flex justify-between items-center text-[10px] text-slate-400">
+                <div className="flex items-center">
+                    <UserCircleIcon className="w-3 h-3 mr-1" />
+                    <span className="truncate max-w-[80px]">{user?.name || 'Admin'}</span>
+                </div>
+                <div className="flex items-center">
+                    <CalendarIcon className="w-3 h-3 mr-1" />
+                    <span>{new Date(lead.lastActivityDate).toLocaleDateString(undefined, {month:'short', day:'numeric'})}</span>
+                </div>
+            </div>
+            
+            {!lead.isRead && <div className="absolute top-3 right-3 w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>}
+        </div>
+    );
+};
+
+const PipelineBoard: React.FC<{ leads: Lead[], users: User[], onOpenModal: (l: Lead) => void }> = ({ leads, users, onOpenModal }) => {
+    const userMap = new Map(users.map(u => [u.id, u]));
+
+    const columns = [
+        { 
+            id: 'qualified', 
+            title: 'Qualified', 
+            statuses: [LeadStatus.Qualified, LeadStatus.SiteVisitPending, LeadStatus.ProposalSent], 
+            color: 'border-blue-500', 
+            bg: 'bg-blue-50',
+            icon: <UserCircleIcon className="w-4 h-4 text-blue-600" />
+        },
+        { 
+            id: 'visit_scheduled', 
+            title: 'Visit Scheduled', 
+            statuses: [LeadStatus.SiteVisitScheduled], 
+            color: 'border-orange-500', 
+            bg: 'bg-orange-50',
+            icon: <CalendarIcon className="w-4 h-4 text-orange-600" />
+        },
+        { 
+            id: 'visit_done', 
+            title: 'Visit Done', 
+            statuses: [LeadStatus.SiteVisitDone], 
+            color: 'border-purple-500', 
+            bg: 'bg-purple-50',
+            icon: <MapPinIcon className="w-4 h-4 text-purple-600" />
+        },
+        { 
+            id: 'negotiation', 
+            title: 'Negotiation', 
+            statuses: [LeadStatus.Negotiation, LeadStatus.ProposalFinalized], 
+            color: 'border-green-500', 
+            bg: 'bg-green-50',
+            icon: <CurrencyRupeeIcon className="w-4 h-4 text-green-600" />
+        },
+    ];
+
+    return (
+        <div className="flex gap-4 overflow-x-auto pb-4 h-[calc(100vh-200px)] min-h-[500px] p-1">
+            {columns.map(col => {
+                const colLeads = leads.filter(l => col.statuses.includes(l.status));
+                return (
+                    <div key={col.id} className="flex-shrink-0 w-80 flex flex-col rounded-xl bg-gray-50/50 border border-gray-200 shadow-sm h-full">
+                        <div className={`p-3 rounded-t-xl bg-white border-b border-gray-100 border-t-4 ${col.color} flex justify-between items-center sticky top-0 z-10`}>
+                            <div className="flex items-center gap-2">
+                                <div className={`p-1.5 rounded-md ${col.bg}`}>
+                                    {col.icon}
+                                </div>
+                                <h3 className="font-bold text-slate-700 text-sm">{col.title}</h3>
+                            </div>
+                            <span className="bg-gray-100 text-gray-600 text-xs font-bold px-2 py-1 rounded-full">{colLeads.length}</span>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar">
+                            {colLeads.map(lead => (
+                                <PipelineCard 
+                                    key={lead.id} 
+                                    lead={lead} 
+                                    user={userMap.get(lead.assignedSalespersonId)}
+                                    onClick={() => onOpenModal(lead)}
+                                />
+                            ))}
+                            {colLeads.length === 0 && (
+                                <div className="text-center py-10 border-2 border-dashed border-gray-200 rounded-lg">
+                                    <p className="text-xs text-gray-400">No deals in this stage</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )
+            })}
+        </div>
+    )
+}
+
+// --- Helpers ---
 
 const getTabsForViewMode = (mode: string) => {
     switch (mode) {
@@ -42,10 +175,7 @@ const getTabsForViewMode = (mode: string) => {
             ];
         case 'opportunities':
             return [
-                { id: 'all', label: 'All Opportunities' },
-                { id: 'qualified', label: 'Qualified' },
-                { id: 'visit', label: 'Site Visits' },
-                { id: 'negotiation', label: 'Negotiation' },
+                { id: 'all', label: 'Pipeline' },
             ];
         case 'clients':
             return [
@@ -65,11 +195,6 @@ const getStatusesForTab = (tabId: string): LeadStatus[] | null => {
         case 'new': return [LeadStatus.New];
         case 'contacted': return [LeadStatus.Contacted];
         case 'lost': return [LeadStatus.Lost, LeadStatus.Cancelled, LeadStatus.Disqualified];
-        
-        // Opportunities View Tabs
-        case 'qualified': return [LeadStatus.Qualified, LeadStatus.SiteVisitPending, LeadStatus.ProposalSent];
-        case 'visit': return [LeadStatus.SiteVisitScheduled, LeadStatus.SiteVisitDone];
-        case 'negotiation': return [LeadStatus.Negotiation, LeadStatus.ProposalFinalized];
         
         // Clients View Tabs
         case 'booked': return [LeadStatus.Booking, LeadStatus.Booked];
@@ -191,7 +316,7 @@ const FilterChip: React.FC<{ label: string; isActive: boolean; onClick: () => vo
     </button>
 );
 
-const LeadsPage: React.FC<LeadsPageProps> = ({ viewMode = 'leads', leads, users, currentUser, onUpdateLead, onAddActivity, activities, onAssignLead, onBulkUpdate, onImportLeads, onAddTask, onLogout, onNavigate, targetLeadId, onClearTargetLead }) => {
+const LeadsPage: React.FC<LeadsPageProps> = ({ viewMode = 'leads', leads, users, currentUser, onUpdateLead, onAddActivity, activities, onAssignLead, onBulkUpdate, onImportLeads, onAddTask, onLogout, onNavigate, targetLeadId, onClearTargetLead, projects = [] }) => {
   const [activeTab, setActiveTab] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
   const [showAddLead, setShowAddLead] = useState(false);
@@ -397,9 +522,9 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ viewMode = 'leads', leads, users,
   }
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="p-4 space-y-4 h-[calc(100vh-90px)] flex flex-col">
         {/* Page Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
             <h1 className="text-2xl font-bold text-base-content capitalize">{getPageTitle()}</h1>
             <div className="flex items-center gap-2 self-end md:self-auto">
                 {/* Enabled for all users */}
@@ -417,35 +542,37 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ viewMode = 'leads', leads, users,
         </div>
         
         {/* Main Content Card */}
-        <div className="bg-white rounded-xl shadow-card border border-border-color overflow-hidden">
-            {/* Status Tabs */}
-            <div className="border-b border-border-color overflow-x-auto scrollbar-hide">
-                <div className="flex min-w-max px-2">
-                    {tabs.map(tab => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            className={`px-6 py-4 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap ${
-                                activeTab === tab.id 
-                                    ? 'border-primary text-primary' 
-                                    : 'border-transparent text-muted-content hover:text-base-content hover:border-gray-300'
-                            }`}
-                        >
-                            {tab.label}
-                        </button>
-                    ))}
+        <div className="bg-white rounded-xl shadow-card border border-border-color overflow-hidden flex flex-col flex-1">
+            {/* Status Tabs - Hidden for Opportunities */}
+            {viewMode !== 'opportunities' && (
+                <div className="border-b border-border-color overflow-x-auto scrollbar-hide shrink-0">
+                    <div className="flex min-w-max px-2">
+                        {tabs.map(tab => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={`px-6 py-4 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap ${
+                                    activeTab === tab.id 
+                                        ? 'border-primary text-primary' 
+                                        : 'border-transparent text-muted-content hover:text-base-content hover:border-gray-300'
+                                }`}
+                            >
+                                {tab.label}
+                            </button>
+                        ))}
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* Search and Filter Toolbar */}
-            <div className="p-4 border-b border-border-color flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between bg-gray-50/50">
+            <div className="p-4 border-b border-border-color flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between bg-gray-50/50 shrink-0">
                 <div className="relative w-full lg:w-96">
                     <span className="absolute inset-y-0 left-0 flex items-center pl-3">
                         <SearchIcon className="w-4 h-4 text-gray-500" />
                     </span>
                     <input 
                         type="text" 
-                        placeholder="Search in list..." 
+                        placeholder="Search..." 
                         value={localSearch}
                         onChange={(e) => setLocalSearch(e.target.value)}
                         className="w-full py-2 pl-9 pr-4 text-sm bg-white border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all placeholder-gray-500 text-black"
@@ -475,7 +602,7 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ viewMode = 'leads', leads, users,
 
             {/* Advanced Filters Panel */}
             {showFilters && (
-                <div className="p-4 bg-gray-50 border-b border-border-color animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="p-4 bg-gray-50 border-b border-border-color animate-in fade-in slide-in-from-top-2 duration-200 shrink-0">
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         {isAdmin && (
                             <div>
@@ -508,8 +635,8 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ viewMode = 'leads', leads, users,
             )}
 
             {/* Bulk Actions Bar */}
-            {selectedLeadIds.size > 0 && (
-                <div className="bg-blue-50/80 backdrop-blur-sm p-3 border-b border-blue-100 flex flex-wrap items-center gap-3 sticky top-0 z-10">
+            {selectedLeadIds.size > 0 && viewMode !== 'opportunities' && (
+                <div className="bg-blue-50/80 backdrop-blur-sm p-3 border-b border-blue-100 flex flex-wrap items-center gap-3 sticky top-0 z-10 shrink-0">
                     <p className="text-sm font-semibold text-primary">{selectedLeadIds.size} selected</p>
                     <div className="h-4 w-px bg-blue-200 mx-1"></div>
                     <select value={bulkStatus} onChange={e => setBulkStatus(e.target.value)} className="text-sm py-1.5 px-3 rounded-md border-blue-200 focus:ring-primary">
@@ -531,20 +658,27 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ viewMode = 'leads', leads, users,
                 </div>
             )}
 
-            {/* Table Content */}
-            <LeadsTable 
-              leads={filteredLeads} 
-              users={users} 
-              onOpenModal={handleOpenModal}
-              selectedLeadIds={selectedLeadIds}
-              onSelectLead={handleSelectLead}
-              onSelectAll={handleSelectAll}
-              allVisibleLeadsSelected={allVisibleLeadsSelected}
-            />
-            
-            <div className="p-3 border-t border-border-color bg-gray-50 text-xs text-center text-muted-content">
-                Showing {filteredLeads.length} items based on current filters.
-            </div>
+            {/* Main View Area */}
+            {viewMode === 'opportunities' ? (
+                <div className="flex-1 overflow-hidden bg-slate-100/50 p-4">
+                    <PipelineBoard leads={filteredLeads} users={users} onOpenModal={handleOpenModal} />
+                </div>
+            ) : (
+                <div className="flex-1 overflow-auto">
+                    <LeadsTable 
+                        leads={filteredLeads} 
+                        users={users} 
+                        onOpenModal={handleOpenModal}
+                        selectedLeadIds={selectedLeadIds}
+                        onSelectLead={handleSelectLead}
+                        onSelectAll={handleSelectAll}
+                        allVisibleLeadsSelected={allVisibleLeadsSelected}
+                    />
+                    <div className="p-3 border-t border-border-color bg-gray-50 text-xs text-center text-muted-content">
+                        Showing {filteredLeads.length} items based on current filters.
+                    </div>
+                </div>
+            )}
         </div>
       
         {/* Add Lead Modal */}
@@ -578,6 +712,7 @@ const LeadsPage: React.FC<LeadsPageProps> = ({ viewMode = 'leads', leads, users,
                 currentUser={currentUser}
                 activities={activities.filter(a => a.leadId === selectedLead.id)}
                 onAddTask={onAddTask}
+                projects={projects} // Pass inventory
             />
         )}
     </div>
