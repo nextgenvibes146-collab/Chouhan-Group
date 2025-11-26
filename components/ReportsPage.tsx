@@ -1,6 +1,4 @@
 
-
-
 import React, { useState, useMemo } from 'react';
 import { 
     PhoneIcon, 
@@ -54,6 +52,75 @@ const KPICard: React.FC<KpiCardProps> = ({ title, value, subtitle, icon, color }
             </div>
             <div className={`p-3 rounded-lg ${colorStyles[color]}`}>
                 {icon}
+            </div>
+        </div>
+    );
+};
+
+const WorkflowDiagram: React.FC = () => {
+    const steps = [
+        { id: 1, title: 'Intake', desc: 'Lead Capture (Digital, Walk-in, Referral)', color: 'bg-indigo-50 border-indigo-100 text-indigo-800' },
+        { id: 2, title: 'Nurture', desc: 'Qualification & Requirement Analysis', color: 'bg-blue-50 border-blue-100 text-blue-800' },
+        { id: 3, title: 'Active Client', desc: 'Site Visits, Proposal & Negotiation', color: 'bg-amber-50 border-amber-100 text-amber-800' },
+        { id: 4, title: 'Under Contract', desc: 'Booking, Agreement & Documentation', color: 'bg-purple-50 border-purple-100 text-purple-800' },
+        { id: 5, title: 'Closed', desc: 'Registration & Final Payment', color: 'bg-emerald-50 border-emerald-100 text-emerald-800' },
+        { id: 6, title: 'Past Client', desc: 'Handover & Referrals', color: 'bg-slate-50 border-slate-100 text-slate-800' },
+    ];
+
+    return (
+        <div className="card p-6">
+            <div className="mb-8">
+                <h3 className="text-lg font-bold text-base-content">Lead Lifecycle Workflow (Future State)</h3>
+                <p className="text-sm text-muted-content">Standard operating procedure from intake to post-sales.</p>
+            </div>
+            
+            <div className="relative">
+                {/* Desktop View: Horizontal */}
+                <div className="hidden lg:flex justify-between items-start gap-4">
+                     {steps.map((step, index) => (
+                        <div key={step.id} className="flex-1 flex flex-col items-center group relative">
+                            {/* Connector Line */}
+                            {index < steps.length - 1 && (
+                                <div className="absolute top-5 left-1/2 w-full h-0.5 bg-gray-200 -z-10"></div>
+                            )}
+                            
+                            {/* Step Number Circle */}
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white mb-4 shadow-md z-10 transition-transform group-hover:scale-110 ${
+                                index === steps.length - 1 ? 'bg-slate-500' : 'bg-primary'
+                            }`}>
+                                {step.id}
+                            </div>
+                            
+                            {/* Card */}
+                            <div className={`w-full p-4 rounded-xl border text-center min-h-[120px] flex flex-col justify-center transition-all hover:shadow-md ${step.color}`}>
+                                <h4 className="font-bold text-sm mb-1">{step.title}</h4>
+                                <p className="text-xs opacity-90 leading-snug">{step.desc}</p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Mobile View: Vertical */}
+                <div className="lg:hidden space-y-6">
+                    {steps.map((step, index) => (
+                        <div key={step.id} className="flex gap-4">
+                            <div className="flex flex-col items-center">
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-white text-xs ${
+                                     index === steps.length - 1 ? 'bg-slate-500' : 'bg-primary'
+                                }`}>
+                                    {step.id}
+                                </div>
+                                {index < steps.length - 1 && (
+                                    <div className="w-0.5 h-full bg-gray-200 my-1"></div>
+                                )}
+                            </div>
+                            <div className={`flex-1 p-4 rounded-xl border ${step.color}`}>
+                                <h4 className="font-bold text-sm mb-1">{step.title}</h4>
+                                <p className="text-xs opacity-90">{step.desc}</p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
         </div>
     );
@@ -115,37 +182,45 @@ const RevenueChart: React.FC<{ leads: Lead[] }> = ({ leads }) => {
     );
 };
 
-const LostReasonChart: React.FC<{ leads: Lead[] }> = ({ leads }) => {
+const LostOpportunityAnalysis: React.FC<{ leads: Lead[] }> = ({ leads }) => {
     const data = useMemo(() => {
         const lostLeads = leads.filter(l => l.status === LeadStatus.Lost || l.status === LeadStatus.Cancelled || l.status === LeadStatus.Disqualified);
+        const totalLost = lostLeads.length;
         const reasons: Record<string, number> = {};
         
         lostLeads.forEach(lead => {
-            let reason = 'Other';
+            let reason = 'Other / No Reason';
             const remark = (lead.lastRemark || '').toLowerCase();
             
-            if (remark.includes('price') || remark.includes('budget') || remark.includes('expensive')) reason = 'Budget Issue';
-            else if (remark.includes('location') || remark.includes('distance') || remark.includes('area')) reason = 'Location Preference';
-            else if (remark.includes('plan') || remark.includes('drop')) reason = 'Plan Dropped';
-            else if (remark.includes('competitor') || remark.includes('bought') || remark.includes('other project')) reason = 'Lost to Competitor';
-            else if (remark.includes('loan') || remark.includes('finance')) reason = 'Loan Rejected';
-            else if (lead.status === LeadStatus.Disqualified) reason = 'Disqualified';
+            if (remark.includes('price') || remark.includes('budget') || remark.includes('expensive') || remark.includes('cost') || remark.includes('rate')) reason = 'Budget Constraints';
+            else if (remark.includes('location') || remark.includes('distance') || remark.includes('area') || remark.includes('far') || remark.includes('connectivity')) reason = 'Location Mismatch';
+            else if (remark.includes('plan') || remark.includes('drop') || remark.includes('later') || remark.includes('postpone')) reason = 'Plan Dropped/Postponed';
+            else if (remark.includes('competitor') || remark.includes('bought') || remark.includes('other project') || remark.includes('elsewhere')) reason = 'Lost to Competitor';
+            else if (remark.includes('loan') || remark.includes('finance') || remark.includes('cibil') || remark.includes('bank')) reason = 'Finance/Loan Rejection';
+            else if (lead.status === LeadStatus.Disqualified || remark.includes('not interested') || remark.includes('wrong number') || remark.includes('junk') || remark.includes('dnd')) reason = 'Disqualified/Not Interested';
 
             reasons[reason] = (reasons[reason] || 0) + 1;
         });
 
-        return Object.entries(reasons).map(([name, value]) => ({ name, value })).sort((a,b) => b.value - a.value);
+        return Object.entries(reasons)
+            .map(([name, value]) => ({ 
+                name, 
+                value,
+                percentage: totalLost > 0 ? ((value / totalLost) * 100).toFixed(1) : '0' 
+            }))
+            .sort((a,b) => b.value - a.value);
     }, [leads]);
 
-    const COLORS = ['#ef4444', '#f97316', '#f59e0b', '#8b5cf6', '#64748b', '#94a3b8'];
+    const COLORS = ['#ef4444', '#f97316', '#f59e0b', '#8b5cf6', '#3b82f6', '#64748b', '#94a3b8'];
 
     return (
-        <div className="card p-6">
+        <div className="card p-6 h-full flex flex-col">
             <div className="mb-4">
                 <h3 className="text-lg font-bold text-base-content">Lost Opportunity Analysis</h3>
-                <p className="text-sm text-muted-content">Why are deals falling through?</p>
+                <p className="text-sm text-muted-content">Breakdown of reasons for disqualification or loss.</p>
             </div>
-            <div className="h-64">
+            
+            <div className="flex-1 min-h-[200px]">
                 <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                         <Pie
@@ -161,13 +236,32 @@ const LostReasonChart: React.FC<{ leads: Lead[] }> = ({ leads }) => {
                                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                             ))}
                         </Pie>
-                        <Tooltip />
-                        <Legend verticalAlign="bottom" height={36}/>
+                        <Tooltip 
+                            contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}
+                        />
                     </PieChart>
                 </ResponsiveContainer>
             </div>
-            <div className="mt-4 text-center">
-                <p className="text-xs text-muted-content">Based on {data.reduce((acc, curr) => acc + curr.value, 0)} lost leads</p>
+            
+            <div className="mt-6 space-y-3 overflow-y-auto max-h-60 pr-2">
+                {data.map((item, index) => (
+                    <div key={item.name} className="flex items-center justify-between text-sm group hover:bg-gray-50 p-1 rounded">
+                        <div className="flex items-center">
+                            <span className="w-3 h-3 rounded-full mr-2 shrink-0" style={{ backgroundColor: COLORS[index % COLORS.length] }}></span>
+                            <span className="text-slate-700 font-medium truncate max-w-[150px]" title={item.name}>{item.name}</span>
+                        </div>
+                        <div className="font-bold text-slate-900 whitespace-nowrap">
+                            {item.value} <span className="text-slate-400 text-xs ml-1 font-normal">({item.percentage}%)</span>
+                        </div>
+                    </div>
+                ))}
+                {data.length === 0 && <p className="text-center text-muted-content text-sm py-4">No lost leads data available.</p>}
+            </div>
+            
+            <div className="mt-4 pt-4 border-t border-gray-100 text-center">
+                 <p className="text-xs text-muted-content">
+                    Based on {data.reduce((acc, curr) => acc + curr.value, 0)} lost/disqualified leads.
+                 </p>
             </div>
         </div>
     );
@@ -404,6 +498,8 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ leads, users, currentUser, on
                     color="orange" 
                 />
             </div>
+            
+            <WorkflowDiagram />
 
             {/* Charts Row 1 */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -411,7 +507,7 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ leads, users, currentUser, on
                     <RevenueChart leads={leads} />
                 </div>
                 <div>
-                    <LostReasonChart leads={leads} />
+                    <LostOpportunityAnalysis leads={leads} />
                 </div>
             </div>
 
@@ -441,6 +537,7 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ leads, users, currentUser, on
                     onAddActivity={onAddActivity}
                     currentUser={currentUser}
                     activities={activities.filter(a => a.leadId === selectedLead.id)}
+                    onAddTask={() => {}} // Pass dummy or real onAddTask if available
                 />
             )}
         </div>
